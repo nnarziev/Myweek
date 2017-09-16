@@ -1,9 +1,11 @@
 package com.example.negmat.myweek_1;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -22,6 +24,7 @@ import butterknife.OnClick;
 
 public class SignIn extends AppCompatActivity {
 
+    public static final String PREFS_NAME = "UserLogin";
     private final short RES_OK = 0,
             RES_SRV_ERR = 1,
             RES_USR_NOT_EXS = 2;
@@ -35,6 +38,9 @@ public class SignIn extends AppCompatActivity {
     @BindView(R.id.btn_signup)
     TextView btnSignUp;
 
+    String usrLogin;
+    String usrPass;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,12 +48,24 @@ public class SignIn extends AppCompatActivity {
         ButterKnife.bind(this);
         getSupportActionBar().setTitle("Sign in");
 
+        usrLogin = login.getText().toString();
+        usrPass = userPassword.getText().toString();
+
+        SharedPreferences shPref = getSharedPreferences(PREFS_NAME, 0);
+        if(shPref.contains("Login") && shPref.contains("Password")){
+            SignIn(shPref.getString("Login", null), shPref.getString("Password", null));
+        }
+
+        btnSignIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SignIn(usrLogin, usrPass);
+            }
+        });
     }
 
-    @OnClick(R.id.btn_signin)
-    public void SignIn() {
-        String usrLogin = login.getText().toString();
-        String usrPass = userPassword.getText().toString();
+    public void SignIn(final String usrLogin, final String usrPass) {
+
         JsonObject jsonSend = new JsonObject();
         jsonSend.addProperty("login", usrLogin);
         jsonSend.addProperty("password", usrPass);
@@ -64,9 +82,13 @@ public class SignIn extends AppCompatActivity {
                         //process data or error
                         try {
                             JSONObject json = new JSONObject(String.valueOf(result));
-                            int resultNumber = 2;//json.getInt("result");
+                            int resultNumber = 0;//json.getInt("result");
                             switch (resultNumber) {
                                 case RES_OK:
+                                    SharedPreferences login = getSharedPreferences(PREFS_NAME, 0);
+                                    SharedPreferences.Editor editor = login.edit();
+                                    editor.putString("Login", usrLogin);
+                                    editor.putString("Password", usrPass);
                                     Intent intent = new Intent(SignIn.this, MainActivity.class);
                                     intent.putExtra("result", resultNumber);
                                     startActivity(intent);
