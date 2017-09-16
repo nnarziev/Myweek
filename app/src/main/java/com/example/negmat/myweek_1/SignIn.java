@@ -22,6 +22,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+
 public class SignIn extends AppCompatActivity {
 
     public static final String PREFS_NAME = "UserLogin";
@@ -55,6 +56,9 @@ public class SignIn extends AppCompatActivity {
         if(shPref.contains("Login") && shPref.contains("Password")){
             SignIn(shPref.getString("Login", null), shPref.getString("Password", null));
         }
+        else
+            Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
+
 
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -89,6 +93,7 @@ public class SignIn extends AppCompatActivity {
                                     SharedPreferences.Editor editor = login.edit();
                                     editor.putString("Login", usrLogin);
                                     editor.putString("Password", usrPass);
+                                    editor.commit();
                                     Intent intent = new Intent(SignIn.this, MainActivity.class);
                                     intent.putExtra("result", resultNumber);
                                     startActivity(intent);
