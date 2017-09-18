@@ -13,9 +13,10 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class SignUp extends AppCompatActivity {
-    boolean userRegister(){
+    boolean userRegister() {
         return true;
     }
+
     @BindView(R.id.txt_name)
     EditText name;
     @BindView(R.id.txt_login)
@@ -36,12 +37,12 @@ public class SignUp extends AppCompatActivity {
     }
 
     @OnClick(R.id.btn_register)
-    public void Register(){
-        if(userRegister()){
+    public void Register() {
+        if (userRegister()) {
             Toast.makeText(this, "Registration is successfull", Toast.LENGTH_SHORT).show();
             Intent i2 = new Intent(this, SignIn.class);
             startActivity(i2);
-            overridePendingTransition( R.anim.slide_in_up, R.anim.slide_out_up );
+            overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
         }
     }
 }

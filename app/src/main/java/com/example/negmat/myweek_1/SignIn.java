@@ -53,10 +53,9 @@ public class SignIn extends AppCompatActivity {
         usrPass = userPassword.getText().toString();
 
         SharedPreferences shPref = getSharedPreferences(PREFS_NAME, 0);
-        if(shPref.contains("Login") && shPref.contains("Password")){
+        if (shPref.contains("Login") && shPref.contains("Password")) {
             SignIn(shPref.getString("Login", null), shPref.getString("Password", null));
-        }
-        else
+        } else
             Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
 
 
