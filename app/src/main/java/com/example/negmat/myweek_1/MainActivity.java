@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate {
         if (result.isEmpty()) {
             Speech.getInstance().say("Repeat please");
         } else {
-            //Speech.getInstance().say(result);
+            /*Speech.getInstance().say(result);*/
         }
     }
 
