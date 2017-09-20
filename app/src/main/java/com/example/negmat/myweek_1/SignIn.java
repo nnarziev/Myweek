@@ -2,6 +2,7 @@ package com.example.negmat.myweek_1;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -47,14 +48,16 @@ public class SignIn extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
         ButterKnife.bind(this);
-        getSupportActionBar().setTitle("Sign in");
+        ActionBar bar = getSupportActionBar();
+        if (bar != null)
+            setTitle("Sign in");
 
         usrLogin = login.getText().toString();
         usrPass = userPassword.getText().toString();
 
         SharedPreferences shPref = getSharedPreferences(PREFS_NAME, 0);
         if (shPref.contains("Login") && shPref.contains("Password")) {
-            SignIn(shPref.getString("Login", null), shPref.getString("Password", null));
+            Sign_In(shPref.getString("Login", null), shPref.getString("Password", null));
         } else
             Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
 
@@ -62,12 +65,13 @@ public class SignIn extends AppCompatActivity {
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SignIn(usrLogin, usrPass);
+                Sign_In(usrLogin, usrPass);
             }
         });
     }
 
-    public void SignIn(final String usrLogin, final String usrPass) {
+    @SuppressWarnings("unused")
+    public void Sign_In(final String usrLogin, final String usrPass) {
 
         JsonObject jsonSend = new JsonObject();
         jsonSend.addProperty("login", usrLogin);
@@ -92,7 +96,7 @@ public class SignIn extends AppCompatActivity {
                                     SharedPreferences.Editor editor = login.edit();
                                     editor.putString("Login", usrLogin);
                                     editor.putString("Password", usrPass);
-                                    editor.commit();
+                                    editor.apply();
                                     Intent intent = new Intent(SignIn.this, MainActivity.class);
                                     intent.putExtra("result", resultNumber);
                                     startActivity(intent);

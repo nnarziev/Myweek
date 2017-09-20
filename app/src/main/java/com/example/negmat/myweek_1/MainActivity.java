@@ -1,175 +1,77 @@
 package com.example.negmat.myweek_1;
 
-import android.Manifest;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.webkit.PermissionRequest;
+import android.os.PersistableBundle;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
+import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.GridLayout;
+import android.widget.Space;
 
-import net.gotev.speech.GoogleVoiceTypingDisabledException;
-import net.gotev.speech.Logger;
-import net.gotev.speech.Speech;
-import net.gotev.speech.SpeechDelegate;
-import net.gotev.speech.SpeechRecognitionNotAvailable;
-import net.gotev.speech.SpeechUtil;
-
-import org.w3c.dom.Text;
-
-import java.security.PermissionCollection;
-import java.security.Permissions;
-import java.util.List;
+import org.json.JSONObject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity implements SpeechDelegate {
-
-    public static final String PREFS_NAME = "UserLogin";
-    private static final int REQUEST_MICROPHONE = 1;
-    @BindView(R.id.btn_logout)
-    Button btnLogout;
-    @BindView(R.id.btn_speech)
-    ImageButton btnSpeech;
-    @BindView(R.id.text)
-    TextView text;
-
+@SuppressWarnings("unused")
+public class MainActivity extends AppCompatActivity {
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
+        super.onCreate(savedInstanceState, persistentState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        getSupportActionBar().setTitle("Main activity");
 
-        Speech.init(this, getPackageName());
-        Logger.setLogLevel(Logger.LogLevel.DEBUG);
-
+        initialize();
     }
 
-    @OnClick(R.id.btn_logout)
-    public void LogOut() {
-        SharedPreferences shPref = getSharedPreferences(PREFS_NAME, 0);
-        SharedPreferences.Editor editor = shPref.edit();
-        editor.clear();
-        editor.commit();
-        Intent intent = new Intent(MainActivity.this, SignIn.class);
-        startActivity(intent);
+    // region Constants
+    private final short GRID_ADDITEM = 2;
+    private final short GRID_DELETEITEM = 3;
+    // endregion
+
+    // region Variables
+    @BindView(R.id.event_grid)
+    protected GridLayout event_grid;
+    // endregion
+
+    // region Initialization Functions
+    private void initialize() {
+        initGrid();
     }
 
-    @OnClick(R.id.btn_speech)
-    public void Speech() {
-        //granting permission to user
-        if (ContextCompat.checkSelfPermission(MainActivity.this,
-                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+    private void initGrid() {
+        // TODO: download and save the events of the user to a variable
 
-            ActivityCompat.requestPermissions(MainActivity.this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_MICROPHONE);
+        // clean out the gridlayout
+        event_grid.removeAllViews();
 
+        // TODO: set downloaded events into gridlayout
+        int gridWidth = event_grid.getMeasuredWidth();
+        int cellDimen = gridWidth / event_grid.getColumnCount();
+        {
+            for (int n = 0; n < event_grid.getColumnCount(); n++) {
+                for (int m = 0; m < event_grid.getRowCount(); m++) {
+                    // TODO: check for existing data downloaded from server
 
-        }
-        onRecordAudioPermissionGranted();
-
-    }
-
-    private void onRecordAudioPermissionGranted() {
-        btnSpeech.setVisibility(View.GONE);
-
-        try {
-            Speech.getInstance().stopTextToSpeech();
-            Speech.getInstance().startListening((SpeechDelegate) MainActivity.this);
-
-        } catch (SpeechRecognitionNotAvailable exc) {
-            showSpeechNotSupportedDialog();
-
-        } catch (GoogleVoiceTypingDisabledException exc) {
-            showEnableGoogleVoiceTyping();
-        }
-    }
-
-
-    @Override
-    public void onStartOfSpeech() {
-
-    }
-
-    @Override
-    public void onSpeechRmsChanged(float value) {
-
-    }
-
-    @Override
-    public void onSpeechPartialResults(List<String> results) {
-        text.setText("");
-        for (String partial : results) {
-            text.append(partial + " ");
-        }
-    }
-
-    @Override
-    public void onSpeechResult(String result) {
-        btnSpeech.setVisibility(View.VISIBLE);
-        text.setText(result);
-
-        if (result.isEmpty()) {
-            Speech.getInstance().say("Repeat please");
-        } else {
-            /*Speech.getInstance().say(result);*/
-        }
-    }
-
-    public void showSpeechNotSupportedDialog() {
-        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case DialogInterface.BUTTON_POSITIVE:
-                        SpeechUtil.redirectUserToGoogleAppOnPlayStore(MainActivity.this);
-                        break;
-
-                    case DialogInterface.BUTTON_NEGATIVE:
-                        break;
+                    // TODO: case where no data exists
+                    Button space = new Button(getApplicationContext());
+                    space.setBackgroundColor(Color.RED);
+                    event_grid.addView(space, cellDimen, cellDimen);
                 }
             }
-        };
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Speech recognition is not available on this device. Do you want to install Google app to have speech recognition?")
-                .setCancelable(false)
-                .setPositiveButton("Yes", dialogClickListener)
-                .setNegativeButton("No", dialogClickListener)
-                .show();
+        }
     }
 
-    private void showEnableGoogleVoiceTyping() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Please enable Google Voice Typing to use speech recognition!")
-                .setCancelable(false)
-                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        // do nothing
-                    }
-                })
-                .show();
-    }
+    private void updateGrid(short action, short cellX, short cellY) {
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // prevent memory leaks when activity is destroyed
-        Speech.getInstance().shutdown();
+        // aoidjsoidjasoijdoiasj
+        if (action == GRID_ADDITEM) {
+
+        } else if (action == GRID_DELETEITEM) {
+
+        }
     }
+    // endregion
 }

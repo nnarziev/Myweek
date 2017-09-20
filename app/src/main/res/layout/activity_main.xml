@@ -5,42 +5,25 @@
     android:layout_height="match_parent"
     tools:context="com.example.negmat.myweek_1.MainActivity">
 
-    <LinearLayout
+    <GridLayout
+        android:id="@+id/event_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="8"
+        android:orientation="vertical"
+        android:rowCount="25">
+
+    </GridLayout>
+
+    <ImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:orientation="vertical">
-
-
-        <TextView
-            android:id="@+id/text"
-            android:layout_width="400px"
-            android:layout_height="wrap_content"
-            android:minLines="3"
-            android:maxLines="3"
-            android:textSize="20dp"
-            android:text="text"
-            android:textColor="@android:color/black"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true" />
-
-
-
-        <ImageButton
-            android:background="@android:color/transparent"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:id="@+id/btn_speech"
-            android:layout_gravity="center"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:src="@drawable/ic_mic" />
-        <Button
-            android:id="@+id/btn_logout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Log out"/>
-    </LinearLayout>
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="20dp"
+        android:layout_marginEnd="20dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/app_name"
+        android:src="@drawable/img_add" />
 
 </RelativeLayout>

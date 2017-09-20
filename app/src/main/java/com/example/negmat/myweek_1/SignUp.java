@@ -1,9 +1,9 @@
 package com.example.negmat.myweek_1;
 
 import android.content.Intent;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,7 +33,9 @@ public class SignUp extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
         ButterKnife.bind(this);
-        getSupportActionBar().setTitle("Registration");
+        ActionBar bar = getSupportActionBar();
+        if (bar != null)
+            bar.setTitle("Registration");
     }
 
     @OnClick(R.id.btn_register)
