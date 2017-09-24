@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         // TODO: download and save the events of the user to a variable
 
         // clean out the gridlayout
-        event_grid.removeAllViews();
+        //event_grid.removeAllViews();
 
         // TODO: set downloaded events into gridlayout
         int gridWidth = event_grid.getMeasuredWidth();
