@@ -132,11 +132,13 @@ public class SignIn extends AppCompatActivity {
     }
     // endregion
 
-
+    //region Sign up button handler
     @OnClick(R.id.btn_signup)
     public void SignUp() {
         Intent i2 = new Intent(this, SignUp.class);
         startActivity(i2);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
     }
+    //endregion
+
 }
