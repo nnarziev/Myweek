@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/text"
-        android:layout_width="400px"
+        android:layout_width="800px"
         android:layout_height="wrap_content"
         android:gravity="top|center_horizontal"
         android:maxLines="3"
@@ -27,9 +27,9 @@
         android:src="@drawable/ic_mic" />
 
     <Button
-        android:id="@+id/btn_logout"
+        android:id="@+id/btn_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="Log out" />
+        android:text="Cancel" />
 </LinearLayout>

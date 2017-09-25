@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.GridLayout;
@@ -24,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        //initialize();
+        initialize();
     }
 
     // region Constants
@@ -58,9 +57,8 @@ public class MainActivity extends AppCompatActivity {
 
                     // TODO: case where no data exists
                     Button space = new Button(getApplicationContext());
-                    event_grid=(GridLayout)View.inflate(this,R.layout.activity_main,null);
-                    //space.setBackgroundColor(Color.RED);
-                    event_grid.addView(space);
+                    space.setBackgroundColor(Color.RED);
+                    event_grid.addView(space, cellDimen, cellDimen);
                 }
             }
         }
