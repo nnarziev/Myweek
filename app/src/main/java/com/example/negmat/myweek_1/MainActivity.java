@@ -91,4 +91,5 @@ public class MainActivity extends AppCompatActivity {
         AddEventDialog dialog = new AddEventDialog();
         dialog.show(manager, "Dialog");
     }
+    // endregion
 }

@@ -31,8 +31,9 @@ public class SignIn extends AppCompatActivity {
             RES_SRV_ERR = 1,
             RES_USR_NOT_EXS = 2;
 
+
     @BindView(R.id.txt_login)
-    EditText login;
+    EditText userLogin;
     @BindView(R.id.txt_password)
     EditText userPassword;
     @BindView(R.id.btn_signin)
@@ -52,7 +53,7 @@ public class SignIn extends AppCompatActivity {
         if (bar != null)
             setTitle("Sign in");
 
-        usrLogin = login.getText().toString();
+        usrLogin = userLogin.getText().toString();
         usrPass = userPassword.getText().toString();
 
         SharedPreferences shPref = getSharedPreferences(PREFS_NAME, 0);
@@ -70,53 +71,67 @@ public class SignIn extends AppCompatActivity {
         });
     }
 
+    // region Sign In Function
     @SuppressWarnings("unused")
     public void Sign_In(final String usrLogin, final String usrPass) {
 
-        JsonObject jsonSend = new JsonObject();
-        jsonSend.addProperty("login", usrLogin);
-        jsonSend.addProperty("password", usrPass);
+        if(validationCheck(usrLogin, usrPass)){
+            JsonObject jsonSend = new JsonObject();
+            jsonSend.addProperty("login", usrLogin);
+            jsonSend.addProperty("password", usrPass);
 
-        String url = "http://api.icndb.com/jokes/count";
+            String url = "http://api.icndb.com/jokes/count";
 
-        Ion.with(getApplicationContext())
-                .load(url)
-                .setJsonObjectBody(jsonSend)
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
-                    @Override
-                    public void onCompleted(Exception e, JsonObject result) {
-                        //process data or error
-                        try {
-                            JSONObject json = new JSONObject(String.valueOf(result));
-                            int resultNumber = 0;//json.getInt("result");
-                            switch (resultNumber) {
-                                case RES_OK:
-                                    SharedPreferences login = getSharedPreferences(PREFS_NAME, 0);
-                                    SharedPreferences.Editor editor = login.edit();
-                                    editor.putString("Login", usrLogin);
-                                    editor.putString("Password", usrPass);
-                                    editor.apply();
-                                    Intent intent = new Intent(SignIn.this, MainActivity.class);
-                                    intent.putExtra("result", resultNumber);
-                                    startActivity(intent);
-                                    overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
-                                    break;
-                                case RES_SRV_ERR:
-                                    Toast.makeText(SignIn.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case RES_USR_NOT_EXS:
-                                    Toast.makeText(SignIn.this, "No such user exists", Toast.LENGTH_SHORT).show();
-                                    break;
-                                default:
-                                    break;
+            Ion.with(getApplicationContext())
+                    .load(url)
+                    .setJsonObjectBody(jsonSend)
+                    .asJsonObject()
+                    .setCallback(new FutureCallback<JsonObject>() {
+                        @Override
+                        public void onCompleted(Exception e, JsonObject result) {
+                            //process data or error
+                            try {
+                                JSONObject json = new JSONObject(String.valueOf(result));
+                                int resultNumber = 0;//json.getInt("result");
+                                switch (resultNumber) {
+                                    case RES_OK:
+                                        SharedPreferences login = getSharedPreferences(PREFS_NAME, 0);
+                                        SharedPreferences.Editor editor = login.edit();
+                                        editor.putString("Login", usrLogin);
+                                        editor.putString("Password", usrPass);
+                                        editor.apply();
+                                        Intent intent = new Intent(SignIn.this, MainActivity.class);
+                                        intent.putExtra("result", resultNumber);
+                                        startActivity(intent);
+                                        overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
+                                        break;
+                                    case RES_SRV_ERR:
+                                        Toast.makeText(SignIn.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                        break;
+                                    case RES_USR_NOT_EXS:
+                                        Toast.makeText(SignIn.this, "No such user exists", Toast.LENGTH_SHORT).show();
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            } catch (JSONException e1) {
+                                Log.wtf("json", e1);
                             }
-                        } catch (JSONException e1) {
-                            Log.wtf("json", e1);
                         }
-                    }
-                });
+                    });
+        } else Toast.makeText(this, "Wrong input...", Toast.LENGTH_SHORT).show();
+
+
     }
+    // endregion
+
+    // region Validation Function
+    public boolean validationCheck(String login, String password){
+        //TODO: validate the input data
+            return true;
+    }
+    // endregion
+
 
     @OnClick(R.id.btn_signup)
     public void SignUp() {
