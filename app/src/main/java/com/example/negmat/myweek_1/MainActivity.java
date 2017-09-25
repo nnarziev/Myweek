@@ -1,28 +1,37 @@
 package com.example.negmat.myweek_1;
 
+import android.content.Context;
 import android.graphics.Color;
+import android.app.DialogFragment;
+import android.app.FragmentManager;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.AttributeSet;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.Space;
 
 import org.json.JSONObject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 @SuppressWarnings("unused")
 public class MainActivity extends AppCompatActivity {
+
+    @BindView(R.id.btn_add_event) ImageButton btnAddEvent;
+
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
-        super.onCreate(savedInstanceState, persistentState);
+    protected void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
         initialize();
     }
 
@@ -72,6 +81,15 @@ public class MainActivity extends AppCompatActivity {
         } else if (action == GRID_DELETEITEM) {
 
         }
+    }
+    // endregion
+
+    // region Add an event button handling
+    @OnClick(R.id.btn_add_event)
+    public void addEvent(){
+        FragmentManager manager = getFragmentManager();
+        AddEventDialog dialog = new AddEventDialog();
+        dialog.show(manager, "Dialog");
     }
     // endregion
 }
