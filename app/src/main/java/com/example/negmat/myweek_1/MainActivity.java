@@ -4,17 +4,20 @@ import android.content.Context;
 import android.graphics.Color;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
+import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.Space;
+import android.widget.TextView;
 
 import org.json.JSONObject;
 
@@ -57,17 +60,30 @@ public class MainActivity extends AppCompatActivity {
         event_grid.removeAllViews();
 
         // TODO: set downloaded events into gridlayout
-        int gridWidth = event_grid.getMeasuredWidth();
-        int cellDimen = gridWidth / event_grid.getColumnCount();
+        //int gridWidth = event_grid.getMeasuredWidth();
+
+
+
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+
+
+
+        int cellDimen = width / event_grid.getColumnCount();
         {
             for (int n = 0; n < event_grid.getColumnCount(); n++) {
                 for (int m = 0; m < event_grid.getRowCount(); m++) {
                     // TODO: check for existing data downloaded from server
 
                     // TODO: case where no data exists
-                    Button space = new Button(getApplicationContext());
-                    space.setBackgroundColor(Color.RED);
-                    event_grid.addView(space, cellDimen, cellDimen);
+                    TextView space = new TextView(getApplicationContext());
+                    space.setBackgroundResource(R.drawable.cell_shape);
+                    space.setText("key");
+                    space.setWidth(cellDimen);
+                    space.setHeight(cellDimen);
+                    event_grid.addView(space);
                 }
             }
         }

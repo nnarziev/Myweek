@@ -5,15 +5,20 @@
     android:layout_height="match_parent"
     tools:context="com.example.negmat.myweek_1.MainActivity">
 
-    <GridLayout
-        android:id="@+id/event_grid"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="8"
-        android:orientation="vertical"
-        android:rowCount="25">
+        android:layout_height="match_parent">
+        <GridLayout
+            android:id="@+id/event_grid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="8"
+            android:orientation="vertical"
+            android:rowCount="25">
 
-    </GridLayout>
+        </GridLayout>
+    </ScrollView>
+
 
     <ImageButton
         android:id="@+id/btn_add_event"
