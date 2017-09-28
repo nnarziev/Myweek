@@ -46,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     // region Variables
     @BindView(R.id.event_grid)
     protected GridLayout event_grid;
+    private String[] weekDays;
+    private int hour=1;
+    private int count=0;//counter for change day half
     // endregion
 
     // region Initialization Functions
@@ -68,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         Point size = new Point();
         display.getSize(size);
         int width = size.x;
+        weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
 
 
 
@@ -80,7 +84,30 @@ public class MainActivity extends AppCompatActivity {
                     // TODO: case where no data exists
                     TextView space = new TextView(getApplicationContext());
                     space.setBackgroundResource(R.drawable.cell_shape);
-                    space.setText("key");
+                    if(m==0 && n<8)
+                    {
+                        space.setText(weekDays[n]);
+                    }
+                    if(n==0 && m>0)
+                    {
+                        if(count==0)
+                        {
+                            space.setText(hour+"am");
+                        }else{
+                            space.setText(hour+"pm");
+                            if(hour==11)
+                                count=-1;
+                        }
+
+                        if(hour==11)
+                            count++;
+                        if(hour==12)
+                        {
+                            hour=0;
+                        }
+                        hour++;
+                    }
+
                     space.setWidth(cellDimen);
                     space.setHeight(cellDimen);
                     event_grid.addView(space);
