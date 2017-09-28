@@ -35,7 +35,7 @@ public class SignUp extends AppCompatActivity {
         ButterKnife.bind(this);
         ActionBar bar = getSupportActionBar();
         if (bar != null)
-            bar.setTitle("Registration");
+            bar.setTitle("Sign up");
     }
 
     // region Registration button handler
