@@ -103,6 +103,7 @@ public class SignIn extends AppCompatActivity {
                                         Intent intent = new Intent(SignIn.this, MainActivity.class);
                                         intent.putExtra("result", resultNumber);
                                         startActivity(intent);
+                                        finish();
                                         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
                                         break;
                                     case RES_SRV_ERR:
