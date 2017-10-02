@@ -75,7 +75,7 @@ public class SignIn extends AppCompatActivity {
     @SuppressWarnings("unused")
     public void Sign_In(final String usrLogin, final String usrPass) {
 
-        if(validationCheck(usrLogin, usrPass)){
+        if (validationCheck(usrLogin, usrPass)) {
             JsonObject jsonSend = new JsonObject();
             jsonSend.addProperty("login", usrLogin);
             jsonSend.addProperty("password", usrPass);
@@ -127,9 +127,9 @@ public class SignIn extends AppCompatActivity {
     // endregion
 
     // region Validation Function
-    public boolean validationCheck(String login, String password){
+    public boolean validationCheck(String login, String password) {
         //TODO: validate the input data
-            return true;
+        return true;
     }
     // endregion
 

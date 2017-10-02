@@ -28,16 +28,20 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class AddEventDialog extends DialogFragment implements SpeechDelegate{
+public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
     private static final int REQUEST_MICROPHONE = 2;
-    @BindView(R.id.text) TextView text;
-    @BindView(R.id.btn_speech) ImageButton btnSpeech;
-    @BindView(R.id.btn_cancel) Button btnCancel;
+    @BindView(R.id.text)
+    TextView text;
+    @BindView(R.id.btn_speech)
+    ImageButton btnSpeech;
+    @BindView(R.id.btn_cancel)
+    Button btnCancel;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.add_event_dialog, null);
-        ButterKnife.bind(this,view);
+        ButterKnife.bind(this, view);
         setCancelable(false);
 
         Speech.init(getActivity(), getActivity().getPackageName());
@@ -134,7 +138,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate{
     }
 
     @OnClick(R.id.btn_speech)
-    public void Speech(){
+    public void Speech() {
         //granting permission to user
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),
@@ -145,10 +149,9 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate{
     }
 
     @OnClick(R.id.btn_cancel)
-    public void AddEventCancel(){
+    public void AddEventCancel() {
         dismiss();
     }
-
 
 
 }

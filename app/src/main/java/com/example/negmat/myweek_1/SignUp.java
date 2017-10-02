@@ -45,25 +45,23 @@ public class SignUp extends AppCompatActivity {
         String usrLogin = login.getText().toString();
         String usrPassword = password.getText().toString();
         String usrConfirmPass = confPassword.getText().toString();
-        if(validationCheck(usrEmail, usrLogin,usrPassword,usrConfirmPass)){
+        if (validationCheck(usrEmail, usrLogin, usrPassword, usrConfirmPass)) {
             if (userRegister()) {
                 Toast.makeText(this, "Registration is successfull", Toast.LENGTH_SHORT).show();
                 Intent i2 = new Intent(this, SignIn.class);
                 startActivity(i2);
                 overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
-            }
-            else {
+            } else {
                 Toast.makeText(this, "Registration failed", Toast.LENGTH_SHORT).show();
             }
-        }
-        else{
+        } else {
             Toast.makeText(this, "Wrong input", Toast.LENGTH_SHORT).show();
         }
     }
     //endregion
 
     // region Validation Function
-    public boolean validationCheck(String email, String login, String password, String confirmPass){
+    public boolean validationCheck(String email, String login, String password, String confirmPass) {
         //TODO: validate the input data
         return true;
     }
