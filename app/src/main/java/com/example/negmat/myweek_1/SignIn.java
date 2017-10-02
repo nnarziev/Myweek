@@ -28,8 +28,8 @@ public class SignIn extends AppCompatActivity {
 
     public static final String PREFS_NAME = "UserLogin";
     private final short RES_OK = 0,
-            RES_SRV_ERR = 1,
-            RES_USR_NOT_EXS = 2;
+            RES_SRV_ERR = -1,
+            RES_FAIL = 1;
 
 
     @BindView(R.id.txt_login)
@@ -77,13 +77,13 @@ public class SignIn extends AppCompatActivity {
 
         if (validationCheck(usrLogin, usrPass)) {
             JsonObject jsonSend = new JsonObject();
-            jsonSend.addProperty("login", usrLogin);
+            jsonSend.addProperty("username", usrLogin);
             jsonSend.addProperty("password", usrPass);
 
-            String url = "http://api.icndb.com/jokes/count";
+            String url = "https://qobiljon.pythonanywhere.com/users/login";
 
             Ion.with(getApplicationContext())
-                    .load(url)
+                    .load("POST", url).addHeader("Content-Type", "application/json")
                     .setJsonObjectBody(jsonSend)
                     .asJsonObject()
                     .setCallback(new FutureCallback<JsonObject>() {
@@ -92,7 +92,7 @@ public class SignIn extends AppCompatActivity {
                             //process data or error
                             try {
                                 JSONObject json = new JSONObject(String.valueOf(result));
-                                int resultNumber = 0;//json.getInt("result");
+                                int resultNumber = json.getInt("result");
                                 switch (resultNumber) {
                                     case RES_OK:
                                         SharedPreferences login = getSharedPreferences(PREFS_NAME, 0);
@@ -101,7 +101,6 @@ public class SignIn extends AppCompatActivity {
                                         editor.putString("Password", usrPass);
                                         editor.apply();
                                         Intent intent = new Intent(SignIn.this, MainActivity.class);
-                                        intent.putExtra("result", resultNumber);
                                         startActivity(intent);
                                         finish();
                                         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
@@ -109,8 +108,8 @@ public class SignIn extends AppCompatActivity {
                                     case RES_SRV_ERR:
                                         Toast.makeText(SignIn.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
                                         break;
-                                    case RES_USR_NOT_EXS:
-                                        Toast.makeText(SignIn.this, "No such user exists", Toast.LENGTH_SHORT).show();
+                                    case RES_FAIL:
+                                        Toast.makeText(SignIn.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
                                         break;
                                     default:
                                         break;
