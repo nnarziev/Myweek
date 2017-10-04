@@ -41,8 +41,7 @@ public class SignIn extends AppCompatActivity {
     @BindView(R.id.btn_signup)
     TextView btnSignUp;
 
-    String usrLogin;
-    String usrPass;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,8 +52,10 @@ public class SignIn extends AppCompatActivity {
         if (bar != null)
             setTitle("Sign in");
 
-        usrLogin = userLogin.getText().toString();
-        usrPass = userPassword.getText().toString();
+        final String[] usrLogin = new String[1];
+        final String[] usrPass = new String[1];
+        usrLogin[0] = userLogin.getText().toString();
+        usrPass[0] = userPassword.getText().toString();
 
         SharedPreferences shPref = getSharedPreferences(PREFS_NAME, 0);
         if (shPref.contains("Login") && shPref.contains("Password")) {
@@ -66,15 +67,16 @@ public class SignIn extends AppCompatActivity {
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Sign_In(usrLogin, usrPass);
+                usrLogin[0] = userLogin.getText().toString();
+                usrPass[0] = userPassword.getText().toString();
+                Sign_In(usrLogin[0], usrPass[0]);
             }
         });
     }
 
     // region Sign In Function
     @SuppressWarnings("unused")
-    public void Sign_In(final String usrLogin, final String usrPass) {
-
+    public void Sign_In(String usrLogin, String usrPass) {
         if (validationCheck(usrLogin, usrPass)) {
             JsonObject jsonSend = new JsonObject();
             jsonSend.addProperty("username", usrLogin);
@@ -82,8 +84,11 @@ public class SignIn extends AppCompatActivity {
 
             String url = "https://qobiljon.pythonanywhere.com/users/login";
 
+            final String finalUsrLogin = usrLogin;
+            final String finalUsrPass = usrPass;
             Ion.with(getApplicationContext())
-                    .load("POST", url).addHeader("Content-Type", "application/json")
+                    .load("POST", url)
+                    .addHeader("Content-Type", "application/json")
                     .setJsonObjectBody(jsonSend)
                     .asJsonObject()
                     .setCallback(new FutureCallback<JsonObject>() {
@@ -97,8 +102,8 @@ public class SignIn extends AppCompatActivity {
                                     case RES_OK:
                                         SharedPreferences login = getSharedPreferences(PREFS_NAME, 0);
                                         SharedPreferences.Editor editor = login.edit();
-                                        editor.putString("Login", usrLogin);
-                                        editor.putString("Password", usrPass);
+                                        editor.putString("Login", finalUsrLogin);
+                                        editor.putString("Password", finalUsrPass);
                                         editor.apply();
                                         Intent intent = new Intent(SignIn.this, MainActivity.class);
                                         startActivity(intent);

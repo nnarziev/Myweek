@@ -1,5 +1,6 @@
 package com.example.negmat.myweek_1;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,6 +10,7 @@ import android.app.FragmentManager;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.SupportMenuInflater;
@@ -25,8 +27,15 @@ import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.Space;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONObject;
+
+import java.text.DateFormat;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -37,6 +46,15 @@ public class MainActivity extends AppCompatActivity {
 
     @BindView(R.id.btn_add_event)
     ImageButton btnAddEvent;
+    @BindView(R.id.txt_current_date)
+    TextView txtCurrentDate;
+    @BindView(R.id.txt_selected_week)
+    TextView txtSelectedWeek;
+    @BindView(R.id.btn_arrow_left)
+    ImageButton btnArrowLeft;
+    @BindView(R.id.btn_arrow_right)
+    ImageButton btnArrowRight;
+
     public static final String PREFS_NAME = "UserLogin";
 
     @Override
@@ -90,7 +108,14 @@ public class MainActivity extends AppCompatActivity {
 
     // region Initialization Functions
     private void initialize() {
-        initGrid();
+        //Initialize current time and current week
+        Calendar c = Calendar.getInstance();
+        String currentDateString = DateFormat.getDateInstance().format(new Date());
+        @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", c.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[c.get(Calendar.MONTH)].substring(0, 3), c.get(Calendar.YEAR));
+        txtCurrentDate.setText(currentDateString);
+        txtSelectedWeek.setText(selectedWeek);
+
+        initGrid(); //initialize the grid view
     }
 
     private void initGrid() {
