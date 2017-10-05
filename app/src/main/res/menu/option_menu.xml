@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/logout"
         android:title="Log out" />
+    <item
+        android:id="@+id/sync"
+        android:icon="@drawable/ic_sync_black_24dp"
+        app:showAsAction="ifRoom"
+        android:title="sync" />
 </menu>

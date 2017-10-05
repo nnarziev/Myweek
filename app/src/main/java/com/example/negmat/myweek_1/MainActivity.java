@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static final String PREFS_NAME = "UserLogin";
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +88,9 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
                 return true;
+            case R.id.sync:
+                initialize();
+                Toast.makeText(this, "Syncronized", Toast.LENGTH_SHORT).show();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -99,17 +103,17 @@ public class MainActivity extends AppCompatActivity {
     // endregion
 
     // region Variables
-    @BindView(R.id.event_grid)
-    protected GridLayout event_grid;
+    @BindView(R.id.event_grid) protected GridLayout event_grid;
     private String[] weekDays;
     private int hour = 1;
     private int count = 0;//counter for change day half
+    Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
     // endregion
 
     // region Initialization Functions
     private void initialize() {
         //Initialize current time and current week
-        Calendar c = Calendar.getInstance();
+        Calendar c = Calendar.getInstance(); //always shows current date
         String currentDateString = DateFormat.getDateInstance().format(new Date());
         @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", c.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[c.get(Calendar.MONTH)].substring(0, 3), c.get(Calendar.YEAR));
         txtCurrentDate.setText(currentDateString);
@@ -192,4 +196,24 @@ public class MainActivity extends AppCompatActivity {
         dialog.show(manager, "Dialog");
     }
     // endregion
+
+    //region Arrows buttons handling
+
+    // Right button handling
+    @OnClick(R.id.btn_arrow_right)
+    public void weekRight(){
+        selCalDate.add(Calendar.DATE, 7);
+        @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
+        txtSelectedWeek.setText(selectedWeek);
+    }
+
+    //Lefat buttin handling
+    @OnClick(R.id.btn_arrow_left)
+    public void weekLeft(){
+        selCalDate.add(Calendar.DATE, -7);
+        @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
+        txtSelectedWeek.setText(selectedWeek);
+    }
+
+    //endregion
 }
