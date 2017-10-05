@@ -202,9 +202,9 @@ public class MainActivity extends AppCompatActivity {
 
     //region Date picker dialog
     int DIALOG_DATE = 1;
-    int myYear = 2011;
-    int myMonth = 02;
-    int myDay = 03;
+    int myYear = selCalDate.get(selCalDate.YEAR);
+    int myMonth = selCalDate.get(selCalDate.MONTH);
+    int myDay = selCalDate.get(selCalDate.DAY_OF_MONTH);
     @OnClick(R.id.txt_selected_week)
     public void SelectWeek(){
         showDialog(DIALOG_DATE);
