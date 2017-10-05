@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     // region Variables
     @BindView(R.id.event_grid) protected GridLayout event_grid;
+    @BindView(R.id.event_grid_fixed) protected GridLayout event_grid_fixed;
     private String[] weekDays;
     private int hour = 1;
     private int count = 0;//counter for change day half
@@ -140,6 +141,8 @@ public class MainActivity extends AppCompatActivity {
         display.getSize(size);
         int width = size.x;
         weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+
+
 
 
         int cellDimen = width / event_grid.getColumnCount();
@@ -189,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+
     // endregion
 
     // region Add an event button handling
