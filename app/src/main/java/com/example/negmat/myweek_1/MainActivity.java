@@ -1,6 +1,8 @@
 package com.example.negmat.myweek_1;
 
 import android.annotation.SuppressLint;
+import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -23,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.Space;
@@ -196,6 +199,35 @@ public class MainActivity extends AppCompatActivity {
         dialog.show(manager, "Dialog");
     }
     // endregion
+
+    //region Date picker dialog
+    int DIALOG_DATE = 1;
+    int myYear = 2011;
+    int myMonth = 02;
+    int myDay = 03;
+    @OnClick(R.id.txt_selected_week)
+    public void SelectWeek(){
+        showDialog(DIALOG_DATE);
+    }
+
+    protected Dialog onCreateDialog(int id) {
+        if (id == DIALOG_DATE) {
+            DatePickerDialog tpd = new DatePickerDialog(this, myCallBack, myYear, myMonth, myDay);
+            return tpd;
+        }
+        return super.onCreateDialog(id);
+    }
+
+    DatePickerDialog.OnDateSetListener myCallBack = new DatePickerDialog.OnDateSetListener() {
+
+        public void onDateSet(DatePicker view, int year, int monthOfYear,
+                              int dayOfMonth) {
+            selCalDate.set(year, monthOfYear, dayOfMonth);
+            @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
+            txtSelectedWeek.setText(selectedWeek);
+        }
+    };
+    //endregion
 
     //region Arrows buttons handling
 
