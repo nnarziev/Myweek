@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.graphics.Point;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.IntDef;
@@ -156,13 +157,16 @@ public class MainActivity extends AppCompatActivity {
                     TextView space = new TextView(getApplicationContext());
                     space.setBackgroundResource(R.drawable.cell_shape);
                     if (m == 0 && n < 8) {
+                        space.setTypeface(null, Typeface.BOLD);
                         space.setText(weekDays[n]);
                         space.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
                     }
                     if (n == 0 && m > 0) {
                         if (count == 0) {
+                            space.setTypeface(null, Typeface.BOLD);
                             space.setText(hour + "am");
                         } else {
+                            space.setTypeface(null, Typeface.BOLD);
                             space.setText(hour + "pm");
                             if (hour == 11)
                                 count = -1;
