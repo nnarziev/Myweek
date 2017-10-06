@@ -18,6 +18,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.SupportMenuInflater;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.Menu;
@@ -33,6 +34,11 @@ import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.DateFormat;
@@ -94,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.sync:
                 initialize();
+                //sendDate();
                 Toast.makeText(this, "Syncronized", Toast.LENGTH_SHORT).show();
             default:
                 return super.onOptionsItemSelected(item);
@@ -104,6 +111,9 @@ public class MainActivity extends AppCompatActivity {
     // region Constants
     private final short GRID_ADDITEM = 2;
     private final short GRID_DELETEITEM = 3;
+    private final short RES_OK = 0,
+            RES_SRV_ERR = -1,
+            RES_FAIL = 1;
     // endregion
 
     // region Variables
@@ -130,6 +140,9 @@ public class MainActivity extends AppCompatActivity {
     private void initGrid() {
         // TODO: download and save the events of the user to a variable
 
+
+
+
         // clean out the gridlayout
         event_grid.removeAllViews();
 
@@ -142,9 +155,6 @@ public class MainActivity extends AppCompatActivity {
         display.getSize(size);
         int width = size.x;
         weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
-
-
-
 
         int cellDimen = width / event_grid.getColumnCount();
         {
@@ -164,9 +174,11 @@ public class MainActivity extends AppCompatActivity {
                     if (n == 0 && m > 0) {
                         if (count == 0) {
                             space.setTypeface(null, Typeface.BOLD);
+                            space.setGravity(Gravity.CENTER_HORIZONTAL);
                             space.setText(hour + "am");
                         } else {
                             space.setTypeface(null, Typeface.BOLD);
+                            space.setGravity(Gravity.CENTER_HORIZONTAL);
                             space.setText(hour + "pm");
                             if (hour == 11)
                                 count = -1;
@@ -189,14 +201,15 @@ public class MainActivity extends AppCompatActivity {
 
 
         for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
-            TextView name = new TextView(getApplicationContext());
+            TextView weekNames = new TextView(getApplicationContext());
 
-            name.setBackgroundResource(R.drawable.cell_shape);
-            name.setText(weekDays[i]);
-            name.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-            name.setWidth(cellDimen);
-            name.setHeight(cellDimen);
-            grid_fixed.addView(name);
+            weekNames.setBackgroundResource(R.drawable.cell_shape);
+            weekNames.setTypeface(null, Typeface.BOLD);
+            weekNames.setText(weekDays[i]);
+            weekNames.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+            weekNames.setWidth(cellDimen);
+            weekNames.setHeight(cellDimen);
+            grid_fixed.addView(weekNames);
         }
     }
 
@@ -244,7 +257,8 @@ public class MainActivity extends AppCompatActivity {
         public void onDateSet(DatePicker view, int year, int monthOfYear,
                               int dayOfMonth) {
             selCalDate.set(year, monthOfYear, dayOfMonth);
-            @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
+            @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
+                    new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
             txtSelectedWeek.setText(selectedWeek);
         }
     };
@@ -256,7 +270,8 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btn_arrow_right)
     public void weekRight(){
         selCalDate.add(Calendar.DATE, 7);
-        @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
+        @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
+                new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
         txtSelectedWeek.setText(selectedWeek);
     }
 
@@ -264,9 +279,53 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.btn_arrow_left)
     public void weekLeft(){
         selCalDate.add(Calendar.DATE, -7);
-        @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH), new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
+        @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
+                new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
         txtSelectedWeek.setText(selectedWeek);
     }
 
+    //endregion
+
+    //region Function to send start date of week
+    public void sendDate(){
+        int move = selCalDate.get(selCalDate.DAY_OF_WEEK)- selCalDate.getFirstDayOfWeek();
+        Calendar c = selCalDate;
+        c.add(selCalDate.DATE, -move+1);
+        String start_time = String.format("%02d%02d%d", c.get(c.DAY_OF_MONTH), c.get(c.MONTH)+1, c.get(c.YEAR));
+        Toast.makeText(this, start_time, Toast.LENGTH_SHORT).show();
+        JsonObject jsonSend = new JsonObject();
+        jsonSend.addProperty("start_time", start_time);
+        String url = " http://qobiljon.pythonanywhere.com/events/load_week";
+        Ion.with(getApplicationContext())
+                .load("POST", url)
+                .addHeader("Content-Type", "application/json")
+                .setJsonObjectBody(jsonSend)
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        //process data or error
+                        try {
+                            JSONObject json = new JSONObject(String.valueOf(result));
+                            int resultNumber = json.getInt("result");
+                            switch (resultNumber) {
+                                case RES_OK:
+                                    //TODO: take array of JSON array objects and return this
+                                    break;
+                                case RES_SRV_ERR:
+                                    Toast.makeText(getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case RES_FAIL:
+                                    Toast.makeText(getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } catch (JSONException e1) {
+                            Log.wtf("json", e1);
+                        }
+                    }
+                });
+    }
     //endregion
 }

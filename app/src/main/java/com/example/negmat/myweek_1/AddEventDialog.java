@@ -40,7 +40,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.add_event_dialog, null);
+        View view = inflater.inflate(R.layout.add_event_dialog, container, false);
         ButterKnife.bind(this, view);
         setCancelable(false);
 
@@ -152,6 +152,5 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     public void AddEventCancel() {
         dismiss();
     }
-
 
 }

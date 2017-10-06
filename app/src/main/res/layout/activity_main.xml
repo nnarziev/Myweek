@@ -43,10 +43,13 @@
 
 
     </LinearLayout>
+
+
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="75dp">
+        android:layout_below="@+id/weekChoice">
 
         <GridLayout
             android:id="@+id/event_grid"
@@ -59,15 +62,14 @@
         </GridLayout>
     </ScrollView>
 
-
     <GridLayout
         android:id="@+id/grid_fixed"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/weekChoice"
         android:columnCount="8">
-
     </GridLayout>
+
 
     <ImageButton
         android:id="@+id/btn_add_event"

@@ -29,7 +29,6 @@
         android:layout_marginTop="10dp"
         android:background="#fff"
         android:hint="Login"
-        android:inputType="textPassword"
         android:padding="13dp" />
 
     <EditText
