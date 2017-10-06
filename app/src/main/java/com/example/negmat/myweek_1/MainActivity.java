@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     // region Variables
     @BindView(R.id.event_grid) protected GridLayout event_grid;
-    @BindView(R.id.event_grid_fixed) protected GridLayout event_grid_fixed;
+    @BindView(R.id.grid_fixed) protected GridLayout grid_fixed;
     private String[] weekDays;
     private int hour = 1;
     private int count = 0;//counter for change day half
@@ -147,6 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
         int cellDimen = width / event_grid.getColumnCount();
         {
+
             for (int n = 0; n < event_grid.getColumnCount(); n++) {
                 for (int m = 0; m < event_grid.getRowCount(); m++) {
                     // TODO: check for existing data downloaded from server
@@ -180,6 +181,18 @@ public class MainActivity extends AppCompatActivity {
                     event_grid.addView(space);
                 }
             }
+        }
+
+
+        for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
+            TextView name = new TextView(getApplicationContext());
+
+            name.setBackgroundResource(R.drawable.cell_shape);
+            name.setText(weekDays[i]);
+            name.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+            name.setWidth(cellDimen);
+            name.setHeight(cellDimen);
+            grid_fixed.addView(name);
         }
     }
 

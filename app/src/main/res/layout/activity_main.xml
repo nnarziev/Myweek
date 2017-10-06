@@ -7,6 +7,7 @@
     tools:context="com.example.negmat.myweek_1.MainActivity">
 
     <LinearLayout
+        android:id="@+id/weekChoice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
@@ -40,13 +41,7 @@
                 android:background="@drawable/ic_keyboard_arrow_right_black_24dp"/>
         </LinearLayout>
 
-        <GridLayout
-            android:id="@+id/event_grid_fixed"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="8">
 
-        </GridLayout>
     </LinearLayout>
     <ScrollView
         android:layout_width="match_parent"
@@ -64,6 +59,15 @@
         </GridLayout>
     </ScrollView>
 
+
+    <GridLayout
+        android:id="@+id/grid_fixed"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/weekChoice"
+        android:columnCount="8">
+
+    </GridLayout>
 
     <ImageButton
         android:id="@+id/btn_add_event"
