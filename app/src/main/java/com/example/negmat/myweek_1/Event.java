@@ -1,5 +1,10 @@
 package com.example.negmat.myweek_1;
 
+import com.google.gson.JsonObject;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.Date;
 
 /**
@@ -16,8 +21,9 @@ public class Event {
     //endregion
 
     private String username;
-    private String start_time;
-    private String repeat_mode;
+    private int start_time;
+    private int repeat_mode;
+    private short length;
     private Boolean is_active;
     private String event_name = "";
     private String event_note = "";
@@ -25,24 +31,33 @@ public class Event {
     private String reason;
     //endregion
 
-    //region Constructor
-
-    public Event(String username, String start_time, String repeat_mode, Boolean is_active,
-                 String event_name, String event_note, long event_id, String reason) {
+    //region original Constructor
+    public Event(String username, int start_time, int repeat_mode, short length, Boolean is_active, String event_name, String event_note, long event_id, String reason) {
         this.username = username;
         this.start_time = start_time;
         this.repeat_mode = repeat_mode;
+        this.length = length;
         this.is_active = is_active;
         this.event_name = event_name;
         this.event_note = event_note;
         this.event_id = event_id;
         this.reason = reason;
     }
+    //endregion
 
+    //region Constructor for fetch event
+    public Event(String username, int start_time, int repeat_mode, short length, String event_name, String event_note, long event_id) {
+        this.username = username;
+        this.start_time = start_time;
+        this.repeat_mode = repeat_mode;
+        this.length = length;
+        this.event_name = event_name;
+        this.event_note = event_note;
+        this.event_id = event_id;
+    }
     //endregion
 
     //region Setters and Getters
-
     public String getUsername() {
         return username;
     }
@@ -51,20 +66,28 @@ public class Event {
         this.username = username;
     }
 
-    public String getStart_time() {
+    public int getStart_time() {
         return start_time;
     }
 
-    public void setStart_time(String start_time) {
+    public void setStart_time(int start_time) {
         this.start_time = start_time;
     }
 
-    public String getRepeat_mode() {
+    public int getRepeat_mode() {
         return repeat_mode;
     }
 
-    public void setRepeat_mode(String repeat_mode) {
+    public void setRepeat_mode(int repeat_mode) {
         this.repeat_mode = repeat_mode;
+    }
+
+    public short getLength() {
+        return length;
+    }
+
+    public void setLength(short length) {
+        this.length = length;
     }
 
     public Boolean getIs_active() {
@@ -106,7 +129,33 @@ public class Event {
     public void setReason(String reason) {
         this.reason = reason;
     }
+    //endregion
 
-    //endregion\
+    public static Event parseJson(JSONObject data){
+
+        String username;
+        int start_time;
+        int repeat_mode;
+        String event_name;
+        String event_note;
+        long event_id;
+        short length;
+        try {
+            username = data.getString("username");
+            start_time = data.getInt("start_time");
+            repeat_mode = data.getInt("repeat_mode");
+            event_name = data.getString("event_name");
+            event_note = data.getString("event_note");
+            event_id = data.getLong("event_id");
+            length = (short) data.getInt("length");
+            Event obj = new Event(username, start_time, repeat_mode, length, event_name, event_note, event_id);
+            return obj;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
 
 }

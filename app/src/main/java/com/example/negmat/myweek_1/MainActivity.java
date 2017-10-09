@@ -37,15 +37,25 @@ import android.widget.Toast;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.builder.MultipartBodyBuilder;
+import com.squareup.okhttp.MultipartBuilder;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -64,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
     ImageButton btnArrowLeft;
     @BindView(R.id.btn_arrow_right)
     ImageButton btnArrowRight;
+    @BindView(R.id.grid_fixed)
+    GridLayout grid_fixed;
 
     public static final String PREFS_NAME = "UserLogin";
 
@@ -73,7 +85,46 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        //region Fixed head with week names
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int cellDimen = width / grid_fixed.getColumnCount();
+        weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+        for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
+            TextView weekNames = new TextView(getApplicationContext());
+            weekNames.setBackgroundResource(R.drawable.cell_shape);
+            weekNames.setTypeface(null, Typeface.BOLD);
+            weekNames.setText(weekDays[i]);
+            weekNames.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+            weekNames.setWidth(cellDimen);
+            weekNames.setHeight(cellDimen);
+            grid_fixed.addView(weekNames);
+        }
+        //endregion
+
         initialize();
+
+        /*Executor exec = Executors.newCachedThreadPool();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        MainActivity.this.finish();
+                    }
+                });
+            }
+        });*/
     }
 
     // region Options menu create function
@@ -99,9 +150,17 @@ public class MainActivity extends AppCompatActivity {
                 finish();
                 return true;
             case R.id.sync:
-                initialize();
-                //sendDate();
-                Toast.makeText(this, "Syncronized", Toast.LENGTH_SHORT).show();
+                //initialize();
+                sendStartDate();
+                /*Executor exec = Executors.newCachedThreadPool();
+                exec.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        String res = raw_json("http://qobiljon.pythonanywhere.com/users/login", 1710020100, 1710022400);
+                        Log.v("RESULT: ", res);
+                    }
+                });*/
+                //Toast.makeText(this, "Syncronized", Toast.LENGTH_SHORT).show();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -117,8 +176,8 @@ public class MainActivity extends AppCompatActivity {
     // endregion
 
     // region Variables
-    @BindView(R.id.event_grid) protected GridLayout event_grid;
-    @BindView(R.id.grid_fixed) protected GridLayout grid_fixed;
+    @BindView(R.id.event_grid)
+    protected GridLayout event_grid;
     private String[] weekDays;
     private int hour = 1;
     private int count = 0;//counter for change day half
@@ -141,8 +200,6 @@ public class MainActivity extends AppCompatActivity {
         // TODO: download and save the events of the user to a variable
 
 
-
-
         // clean out the gridlayout
         event_grid.removeAllViews();
 
@@ -154,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
         Point size = new Point();
         display.getSize(size);
         int width = size.x;
-        weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+
 
         int cellDimen = width / event_grid.getColumnCount();
         {
@@ -200,17 +257,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
-            TextView weekNames = new TextView(getApplicationContext());
-
-            weekNames.setBackgroundResource(R.drawable.cell_shape);
-            weekNames.setTypeface(null, Typeface.BOLD);
-            weekNames.setText(weekDays[i]);
-            weekNames.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-            weekNames.setWidth(cellDimen);
-            weekNames.setHeight(cellDimen);
-            grid_fixed.addView(weekNames);
-        }
     }
 
     private void updateGrid(short action, short cellX, short cellY) {
@@ -239,8 +285,9 @@ public class MainActivity extends AppCompatActivity {
     int myYear = selCalDate.get(selCalDate.YEAR);
     int myMonth = selCalDate.get(selCalDate.MONTH);
     int myDay = selCalDate.get(selCalDate.DAY_OF_MONTH);
+
     @OnClick(R.id.txt_selected_week)
-    public void SelectWeek(){
+    public void SelectWeek() {
         showDialog(DIALOG_DATE);
     }
 
@@ -268,7 +315,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Right button handling
     @OnClick(R.id.btn_arrow_right)
-    public void weekRight(){
+    public void weekRight() {
         selCalDate.add(Calendar.DATE, 7);
         @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
                 new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
@@ -277,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
 
     //Lefat buttin handling
     @OnClick(R.id.btn_arrow_left)
-    public void weekLeft(){
+    public void weekLeft() {
         selCalDate.add(Calendar.DATE, -7);
         @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
                 new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
@@ -287,15 +334,36 @@ public class MainActivity extends AppCompatActivity {
     //endregion
 
     //region Function to send start date of week
-    public void sendDate(){
-        int move = selCalDate.get(selCalDate.DAY_OF_WEEK)- selCalDate.getFirstDayOfWeek();
+    public void sendStartDate() {
+        int week_start_hour = 1;
+        int week_end_hour = 24;
+        int minute = 0;
+        int move = selCalDate.get(selCalDate.DAY_OF_WEEK) - selCalDate.getFirstDayOfWeek();
         Calendar c = selCalDate;
-        c.add(selCalDate.DATE, -move+1);
-        String start_time = String.format("%02d%02d%d", c.get(c.DAY_OF_MONTH), c.get(c.MONTH)+1, c.get(c.YEAR));
-        Toast.makeText(this, start_time, Toast.LENGTH_SHORT).show();
+        c.add(selCalDate.DATE, -move + 1);
+
+        //String start_date = String.format("%02d%02d%02d%02d%02d", c.get(c.YEAR)-2000, c.get(c.MONTH)+1, c.get(c.DAY_OF_MONTH), week_start_hour, minute);
+        int start_date = (c.get(c.YEAR) - 2000) * 100000000 + (c.get(c.MONTH) + 1) * 1000000 + c.get(c.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
+        c.add(c.DATE, 6);
+        int end_date = (c.get(c.YEAR) - 2000) * 100000000 + (c.get(c.MONTH) + 1) * 1000000 + c.get(c.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
+        //String end_date = String.format("%02d%02d%02d%02d%02d", c.get(c.YEAR) - 2000, c.get(c.MONTH) + 1, c.get(c.DAY_OF_MONTH), week_end_hour, minute);
+
+        selCalDate = Calendar.getInstance();
+        c = selCalDate;
+        Log.v("Start date: ", start_date + "");
+        Log.v("End date: ", end_date + "");
+        /*Toast.makeText(this, "Start date: "+start_date, Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "End date: "+end_date, Toast.LENGTH_LONG).show();*/
+        SharedPreferences pref = getSharedPreferences(PREFS_NAME, 0);
+        String usrName = pref.getString("Login", null);
+        String usrPassword = pref.getString("Password", null);
+
         JsonObject jsonSend = new JsonObject();
-        jsonSend.addProperty("start_time", start_time);
-        String url = " http://qobiljon.pythonanywhere.com/events/load_week";
+        jsonSend.addProperty("username", usrName);
+        jsonSend.addProperty("password", usrPassword);
+        jsonSend.addProperty("period_from", 1710020100);
+        jsonSend.addProperty("period_till", 1710092400);
+        String url = "http://qobiljon.pythonanywhere.com/events/fetch";
         Ion.with(getApplicationContext())
                 .load("POST", url)
                 .addHeader("Content-Type", "application/json")
@@ -308,9 +376,33 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             JSONObject json = new JSONObject(String.valueOf(result));
                             int resultNumber = json.getInt("result");
+                            JSONArray jArray = json.getJSONArray("array");
                             switch (resultNumber) {
                                 case RES_OK:
-                                    //TODO: take array of JSON array objects and return this
+                                    //TODO: take array of JSON objects and return this
+                                    //JSONObject js = new JSONObject(String.valueOf(jArray));
+                                    JSONArray jarray = json.getJSONArray("array");
+                                    final Event[] events = new Event[jarray.length()];
+                                    for(int n = 0; n < jarray.length(); n++)
+                                        events[n] = Event.parseJson(jarray.getJSONObject(n));
+
+
+                                    String eventName = events[0].getEvent_name();
+                                    Toast.makeText(MainActivity.this, eventName, Toast.LENGTH_SHORT).show();
+                                    runOnUiThread(new Runnable(){
+                                        @Override
+                                        public void run() {
+                                            for(Event event : events){
+                                                //TODO: assign each even to its appropriate cell
+                                                for (int n = 0; n < event_grid.getColumnCount(); n++) {
+                                                    for (int m = 0; m < event_grid.getRowCount(); m++) {
+
+
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
                                     break;
                                 case RES_SRV_ERR:
                                     Toast.makeText(getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();

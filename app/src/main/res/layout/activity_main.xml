@@ -58,9 +58,10 @@
             android:columnCount="8"
             android:orientation="vertical"
             android:rowCount="25">
-
         </GridLayout>
+
     </ScrollView>
+
 
     <GridLayout
         android:id="@+id/grid_fixed"
