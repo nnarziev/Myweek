@@ -316,7 +316,8 @@ public class MainActivity extends AppCompatActivity {
                 return;
             long event_id = ((long) textView.getTag());
 
-            Toast.makeText(MainActivity.this, textView.getText().toString(), Toast.LENGTH_SHORT).show();
+            ViewEventDialog ved=new ViewEventDialog(MainActivity.this,textView.getText().toString());
+            ved.show();
         }
     };
 
