@@ -184,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
     private int hour = 1;
     private int count = 0;//counter for change day half
     Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
-    int n,m;
     // endregion
 
     // region Initialization Functions
@@ -199,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
         initGrid(); //initialize the grid view
     }
 
-    TextView[][] space = new TextView[8][25];
+    TextView[][] tv = new TextView[8][25];
 
     private void initGrid() {
         // TODO: download and save the events of the user to a variable
@@ -221,29 +220,28 @@ public class MainActivity extends AppCompatActivity {
         int cellDimen = width / event_grid.getColumnCount();
         {
 
-            for (n = 0; n < event_grid.getColumnCount(); n++) {
-                for (m = 0; m < event_grid.getRowCount(); m++) {
+            for (int n = 0; n < event_grid.getColumnCount(); n++) {
+                for (int m = 0; m < event_grid.getRowCount(); m++) {
                     // TODO: check for existing data downloaded from server
 
                     // TODO: case where no data exists
-                    //final TextView space = new TextView(getApplicationContext());
-                    space[n][m] = new TextView(getApplicationContext());
-                    space[n][m].setBackgroundResource(R.drawable.cell_shape);
-                    space[n][m].setText("hello");
+                    //TextView space = new TextView(getApplicationContext());
+                    tv[n][m] = new TextView(getApplicationContext());
+                    tv[n][m].setBackgroundResource(R.drawable.cell_shape);
                     if (m == 0 && n < 8) {
-                        space[n][m].setTypeface(null, Typeface.BOLD);
-                        space[n][m].setText(weekDays[n]);
-                        space[n][m].setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+                        tv[n][m].setTypeface(null, Typeface.BOLD);
+                        tv[n][m].setText(weekDays[n]);
+                        tv[n][m].setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
                     }
                     if (n == 0 && m > 0) {
                         if (count == 0) {
-                            space[n][m].setTypeface(null, Typeface.BOLD);
-                            space[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
-                            space[n][m].setText(hour + "am");
+                            tv[n][m].setTypeface(null, Typeface.BOLD);
+                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            tv[n][m].setText(hour + "am");
                         } else {
-                            space[n][m].setTypeface(null, Typeface.BOLD);
-                            space[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
-                            space[n][m].setText(hour + "pm");
+                            tv[n][m].setTypeface(null, Typeface.BOLD);
+                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            tv[n][m].setText(hour + "pm");
                             if (hour == 11)
                                 count = -1;
                         }
@@ -254,26 +252,14 @@ public class MainActivity extends AppCompatActivity {
                             hour = 0;
                         }
                         hour++;
-                    } else if(!space[n][m].getText().toString().isEmpty()){
-
-                        space[n][m].setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-
-                                /*FragmentManager manager = getFragmentManager();
-                                ViewEventDialog ved=new ViewEventDialog(MainActivity.this,space[n][m].getText().toString());
-                                ved.show();*/
-                            }
-                        });
                     }
 
-
-                    space[n][m].setWidth(cellDimen);
-                    space[n][m].setHeight(cellDimen);
+                    tv[n][m].setWidth(cellDimen);
+                    tv[n][m].setHeight(cellDimen);
 
                     //event_grid.addView(space);
 
-                    event_grid.addView(space[n][m]);
+                    event_grid.addView(tv[n][m]);
                 }
             }
         }
@@ -292,27 +278,50 @@ public class MainActivity extends AppCompatActivity {
         short end_month = (short) (((double) till / 100000000 - (till / 100000000)) * 100);
         short end_year = 2017;
 
-        if(true){
+        Calendar cal = Calendar.getInstance();
+        cal.set(start_year, start_month, start_day);
+        if (cal.get(Calendar.WEEK_OF_MONTH) == selCalDate.get(Calendar.WEEK_OF_MONTH)) {
+            for (Event event : events) {
+                //TODO: assign each even to its appropriate cell
+                short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
+                short day = (short) (((double) event.getStart_time() / 1000000 - (event.getStart_time() / 1000000)) * 100);
+                short month = (short) (((double) event.getStart_time() / 100000000 - (event.getStart_time() / 100000000)) * 100);
+                short year = 2017;
 
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.DAY_OF_MONTH, day);
+                calendar.set(Calendar.MONTH, month - 1);
+                calendar.set(Calendar.YEAR, year);
+                short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
+                tv[day_of_week][time].setText(event.getEvent_name());
+                tv[day_of_week][time].setTag(event.getEvent_id());
+            }
+        } else {
+            initGrid();
         }
-        for (Event event : events) {
-            //TODO: assign each even to its appropriate cell
-            short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
-            short day = (short) (((double) event.getStart_time() / 1000000 - (event.getStart_time() / 1000000)) * 100);
-            short month = (short) (((double) event.getStart_time() / 100000000 - (event.getStart_time() / 100000000)) * 100);
-            short year = 2017;
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Calendar.DAY_OF_MONTH, day);
-            calendar.set(Calendar.MONTH, month - 1);
-            calendar.set(Calendar.YEAR, year);
-            short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
-            space[day_of_week][time].setText(event.getEvent_name());
+        for (int n = 0; n < event_grid.getColumnCount(); n++) {
+            for (int m = 0; m < event_grid.getRowCount(); m++) {
+                if (!tv[n][m].getText().toString().equals("")) {
+                    tv[n][m].setOnClickListener(onTextClick);
+                }
+            }
         }
     }
 
-    private void updateGrid(short action, short cellX, short cellY) {
+    private View.OnClickListener onTextClick = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            TextView textView = ((TextView) view);
+            if (textView.getTag() == null)
+                return;
 
+            long event_id = ((long) textView.getTag());
+
+            Toast.makeText(MainActivity.this, textView.getText().toString(), Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private void updateGrid(short action, short cellX, short cellY) {
         // aoidjsoidjasoijdoiasj
         if (action == GRID_ADDITEM) {
 
@@ -359,6 +368,7 @@ public class MainActivity extends AppCompatActivity {
             @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
                     new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
             txtSelectedWeek.setText(selectedWeek);
+            sendStartDate();
         }
     };
     //endregion
@@ -372,6 +382,7 @@ public class MainActivity extends AppCompatActivity {
         @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
                 new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
         txtSelectedWeek.setText(selectedWeek);
+        sendStartDate();
     }
 
     // Left buttin handling
@@ -381,6 +392,7 @@ public class MainActivity extends AppCompatActivity {
         @SuppressLint("DefaultLocale") String selectedWeek = String.format("Week %d, %s., %d", selCalDate.get(Calendar.WEEK_OF_MONTH),
                 new DateFormatSymbols().getMonths()[selCalDate.get(Calendar.MONTH)].substring(0, 3), selCalDate.get(Calendar.YEAR));
         txtSelectedWeek.setText(selectedWeek);
+        sendStartDate();
     }
 
     //endregion
@@ -444,7 +456,6 @@ public class MainActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-
                                             populateGrid(events, 1710020100, 1710092400);
                                             Toast.makeText(MainActivity.this, String.valueOf(selCalDate.get(Calendar.MONTH)) + String.valueOf(selCalDate.get(Calendar.DAY_OF_MONTH)), Toast.LENGTH_SHORT).show();
                                         }
