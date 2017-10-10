@@ -184,6 +184,7 @@ public class MainActivity extends AppCompatActivity {
     private int hour = 1;
     private int count = 0;//counter for change day half
     Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
+    int n,m;
     // endregion
 
     // region Initialization Functions
@@ -198,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         initGrid(); //initialize the grid view
     }
 
-    TextView[][] tv = new TextView[8][25];
+    TextView[][] space = new TextView[8][25];
 
     private void initGrid() {
         // TODO: download and save the events of the user to a variable
@@ -220,28 +221,29 @@ public class MainActivity extends AppCompatActivity {
         int cellDimen = width / event_grid.getColumnCount();
         {
 
-            for (int n = 0; n < event_grid.getColumnCount(); n++) {
-                for (int m = 0; m < event_grid.getRowCount(); m++) {
+            for (n = 0; n < event_grid.getColumnCount(); n++) {
+                for (m = 0; m < event_grid.getRowCount(); m++) {
                     // TODO: check for existing data downloaded from server
 
                     // TODO: case where no data exists
-                    //TextView space = new TextView(getApplicationContext());
-                    tv[n][m] = new TextView(getApplicationContext());
-                    tv[n][m].setBackgroundResource(R.drawable.cell_shape);
+                    //final TextView space = new TextView(getApplicationContext());
+                    space[n][m] = new TextView(getApplicationContext());
+                    space[n][m].setBackgroundResource(R.drawable.cell_shape);
+                    space[n][m].setText("hello");
                     if (m == 0 && n < 8) {
-                        tv[n][m].setTypeface(null, Typeface.BOLD);
-                        tv[n][m].setText(weekDays[n]);
-                        tv[n][m].setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+                        space[n][m].setTypeface(null, Typeface.BOLD);
+                        space[n][m].setText(weekDays[n]);
+                        space[n][m].setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
                     }
                     if (n == 0 && m > 0) {
                         if (count == 0) {
-                            tv[n][m].setTypeface(null, Typeface.BOLD);
-                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
-                            tv[n][m].setText(hour + "am");
+                            space[n][m].setTypeface(null, Typeface.BOLD);
+                            space[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            space[n][m].setText(hour + "am");
                         } else {
-                            tv[n][m].setTypeface(null, Typeface.BOLD);
-                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
-                            tv[n][m].setText(hour + "pm");
+                            space[n][m].setTypeface(null, Typeface.BOLD);
+                            space[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            space[n][m].setText(hour + "pm");
                             if (hour == 11)
                                 count = -1;
                         }
@@ -252,14 +254,26 @@ public class MainActivity extends AppCompatActivity {
                             hour = 0;
                         }
                         hour++;
+                    } else if(!space[n][m].getText().toString().isEmpty()){
+
+                        space[n][m].setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+
+                                /*FragmentManager manager = getFragmentManager();
+                                ViewEventDialog ved=new ViewEventDialog(MainActivity.this,space[n][m].getText().toString());
+                                ved.show();*/
+                            }
+                        });
                     }
 
-                    tv[n][m].setWidth(cellDimen);
-                    tv[n][m].setHeight(cellDimen);
+
+                    space[n][m].setWidth(cellDimen);
+                    space[n][m].setHeight(cellDimen);
 
                     //event_grid.addView(space);
 
-                    event_grid.addView(tv[n][m]);
+                    event_grid.addView(space[n][m]);
                 }
             }
         }
@@ -293,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(Calendar.MONTH, month - 1);
             calendar.set(Calendar.YEAR, year);
             short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
-            tv[day_of_week][time].setText(event.getEvent_name());
+            space[day_of_week][time].setText(event.getEvent_name());
         }
     }
 
