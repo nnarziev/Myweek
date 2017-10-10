@@ -13,6 +13,7 @@ import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.PersistableBundle;
+import android.renderscript.Sampler;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -86,24 +87,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        //region Fixed head with week names
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
-        int width = size.x;
-        int cellDimen = width / grid_fixed.getColumnCount();
-        weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
-        for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
-            TextView weekNames = new TextView(getApplicationContext());
-            weekNames.setBackgroundResource(R.drawable.cell_shape);
-            weekNames.setTypeface(null, Typeface.BOLD);
-            weekNames.setText(weekDays[i]);
-            weekNames.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
-            weekNames.setWidth(cellDimen);
-            weekNames.setHeight(cellDimen);
-            grid_fixed.addView(weekNames);
-        }
-        //endregion
+
 
         initialize();
 
@@ -193,6 +177,26 @@ public class MainActivity extends AppCompatActivity {
         txtCurrentDate.setText(currentDateString);
         txtSelectedWeek.setText(selectedWeek);
 
+
+        //region Fixed head with week names
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+        int width = size.x;
+        int cellDimen = width / grid_fixed.getColumnCount();
+        weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+        for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
+            TextView weekNames = new TextView(getApplicationContext());
+            weekNames.setBackgroundResource(R.drawable.cell_shape);
+            weekNames.setTypeface(null, Typeface.BOLD);
+            weekNames.setText(weekDays[i]);
+            weekNames.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+            weekNames.setWidth(cellDimen);
+            weekNames.setHeight(cellDimen);
+            grid_fixed.addView(weekNames);
+        }
+        //endregion
+
         initGrid(); //initialize the grid view
     }
 
@@ -221,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
                     // TODO: check for existing data downloaded from server
 
                     // TODO: case where no data exists
-                    TextView space = new TextView(getApplicationContext());
+                    final TextView space = new TextView(getApplicationContext());
                     space.setBackgroundResource(R.drawable.cell_shape);
                     if (m == 0 && n < 8) {
                         space.setTypeface(null, Typeface.BOLD);
@@ -240,6 +244,14 @@ public class MainActivity extends AppCompatActivity {
                             if (hour == 11)
                                 count = -1;
                         }
+
+                        space.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                ViewEventDialog ved=new ViewEventDialog(MainActivity.this,space.getText().toString());
+                                ved.show();
+                            }
+                        });
 
                         if (hour == 11)
                             count++;
