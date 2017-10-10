@@ -314,7 +314,6 @@ public class MainActivity extends AppCompatActivity {
             TextView textView = ((TextView) view);
             if (textView.getTag() == null)
                 return;
-
             long event_id = ((long) textView.getTag());
 
             Toast.makeText(MainActivity.this, textView.getText().toString(), Toast.LENGTH_SHORT).show();
