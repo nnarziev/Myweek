@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.SupportMenuInflater;
 import android.util.AttributeSet;
@@ -36,6 +37,7 @@ import android.widget.Toast;
 
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.body.StreamBody;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.builder.MultipartBodyBuilder;
 import com.squareup.okhttp.MultipartBuilder;
@@ -92,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
         display.getSize(size);
         int width = size.x;
         int cellDimen = width / grid_fixed.getColumnCount();
-        weekDays = new String[]{"", "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
+        weekDays = new String[]{"", "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
         for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
             TextView weekNames = new TextView(getApplicationContext());
             weekNames.setBackgroundResource(R.drawable.cell_shape);
@@ -196,6 +198,8 @@ public class MainActivity extends AppCompatActivity {
         initGrid(); //initialize the grid view
     }
 
+    TextView[][] tv = new TextView[8][25];
+
     private void initGrid() {
         // TODO: download and save the events of the user to a variable
 
@@ -221,22 +225,23 @@ public class MainActivity extends AppCompatActivity {
                     // TODO: check for existing data downloaded from server
 
                     // TODO: case where no data exists
-                    TextView space = new TextView(getApplicationContext());
-                    space.setBackgroundResource(R.drawable.cell_shape);
+                    //TextView space = new TextView(getApplicationContext());
+                    tv[n][m] = new TextView(getApplicationContext());
+                    tv[n][m].setBackgroundResource(R.drawable.cell_shape);
                     if (m == 0 && n < 8) {
-                        space.setTypeface(null, Typeface.BOLD);
-                        space.setText(weekDays[n]);
-                        space.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+                        tv[n][m].setTypeface(null, Typeface.BOLD);
+                        tv[n][m].setText(weekDays[n]);
+                        tv[n][m].setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
                     }
                     if (n == 0 && m > 0) {
                         if (count == 0) {
-                            space.setTypeface(null, Typeface.BOLD);
-                            space.setGravity(Gravity.CENTER_HORIZONTAL);
-                            space.setText(hour + "am");
+                            tv[n][m].setTypeface(null, Typeface.BOLD);
+                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            tv[n][m].setText(hour + "am");
                         } else {
-                            space.setTypeface(null, Typeface.BOLD);
-                            space.setGravity(Gravity.CENTER_HORIZONTAL);
-                            space.setText(hour + "pm");
+                            tv[n][m].setTypeface(null, Typeface.BOLD);
+                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            tv[n][m].setText(hour + "pm");
                             if (hour == 11)
                                 count = -1;
                         }
@@ -249,14 +254,47 @@ public class MainActivity extends AppCompatActivity {
                         hour++;
                     }
 
-                    space.setWidth(cellDimen);
-                    space.setHeight(cellDimen);
-                    event_grid.addView(space);
+                    tv[n][m].setWidth(cellDimen);
+                    tv[n][m].setHeight(cellDimen);
+
+                    //event_grid.addView(space);
+
+                    event_grid.addView(tv[n][m]);
                 }
             }
         }
 
 
+    }
+
+    private void populateGrid(Event[] events, int from, int till) {
+        short start_time = (short) (((double) from / 10000 - (from / 10000)) * 100);
+        short start_day = (short) (((double) from / 1000000 - (from / 1000000)) * 100);
+        short start_month = (short) (((double) from / 100000000 - (from / 100000000)) * 100);
+        short start_year = 2017;
+
+        short end_time = (short) (((double) till / 10000 - (till / 10000)) * 100);
+        short end_day = (short) (((double) till / 1000000 - (till / 1000000)) * 100);
+        short end_month = (short) (((double) till / 100000000 - (till / 100000000)) * 100);
+        short end_year = 2017;
+
+
+
+
+        for (Event event : events) {
+            //TODO: assign each even to its appropriate cell
+            short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
+            short day = (short) (((double) event.getStart_time() / 1000000 - (event.getStart_time() / 1000000)) * 100);
+            short month = (short) (((double) event.getStart_time() / 100000000 - (event.getStart_time() / 100000000)) * 100);
+            short year = 2017;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.DAY_OF_MONTH, day);
+            calendar.set(Calendar.MONTH, month - 1);
+            calendar.set(Calendar.YEAR, year);
+            short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
+            tv[day_of_week][time].setText(event.getEvent_name());
+        }
     }
 
     private void updateGrid(short action, short cellX, short cellY) {
@@ -282,9 +320,9 @@ public class MainActivity extends AppCompatActivity {
 
     //region Date picker dialog
     int DIALOG_DATE = 1;
-    int myYear = selCalDate.get(selCalDate.YEAR);
-    int myMonth = selCalDate.get(selCalDate.MONTH);
-    int myDay = selCalDate.get(selCalDate.DAY_OF_MONTH);
+    int myYear = selCalDate.get(Calendar.YEAR);
+    int myMonth = selCalDate.get(Calendar.MONTH);
+    int myDay = selCalDate.get(Calendar.DAY_OF_MONTH);
 
     @OnClick(R.id.txt_selected_week)
     public void SelectWeek() {
@@ -322,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
         txtSelectedWeek.setText(selectedWeek);
     }
 
-    //Lefat buttin handling
+    // Left buttin handling
     @OnClick(R.id.btn_arrow_left)
     public void weekLeft() {
         selCalDate.add(Calendar.DATE, -7);
@@ -338,18 +376,18 @@ public class MainActivity extends AppCompatActivity {
         int week_start_hour = 1;
         int week_end_hour = 24;
         int minute = 0;
-        int move = selCalDate.get(selCalDate.DAY_OF_WEEK) - selCalDate.getFirstDayOfWeek();
-        Calendar c = selCalDate;
-        c.add(selCalDate.DATE, -move + 1);
-
+        int move = selCalDate.get(Calendar.DAY_OF_WEEK) - selCalDate.getFirstDayOfWeek();
+        Calendar c = Calendar.getInstance();
+        c.setTime(selCalDate.getTime());
+        c.add(Calendar.DATE, -move + 1);
         //String start_date = String.format("%02d%02d%02d%02d%02d", c.get(c.YEAR)-2000, c.get(c.MONTH)+1, c.get(c.DAY_OF_MONTH), week_start_hour, minute);
-        int start_date = (c.get(c.YEAR) - 2000) * 100000000 + (c.get(c.MONTH) + 1) * 1000000 + c.get(c.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
-        c.add(c.DATE, 6);
-        int end_date = (c.get(c.YEAR) - 2000) * 100000000 + (c.get(c.MONTH) + 1) * 1000000 + c.get(c.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
+        int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
+        c.add(Calendar.DATE, 6);
+        int end_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
         //String end_date = String.format("%02d%02d%02d%02d%02d", c.get(c.YEAR) - 2000, c.get(c.MONTH) + 1, c.get(c.DAY_OF_MONTH), week_end_hour, minute);
 
-        selCalDate = Calendar.getInstance();
-        c = selCalDate;
+        /*selCalDate = Calendar.getInstance();
+        c = selCalDate;*/
         Log.v("Start date: ", start_date + "");
         Log.v("End date: ", end_date + "");
         /*Toast.makeText(this, "Start date: "+start_date, Toast.LENGTH_LONG).show();
@@ -383,24 +421,18 @@ public class MainActivity extends AppCompatActivity {
                                     //JSONObject js = new JSONObject(String.valueOf(jArray));
                                     JSONArray jarray = json.getJSONArray("array");
                                     final Event[] events = new Event[jarray.length()];
-                                    for(int n = 0; n < jarray.length(); n++)
+                                    for (int n = 0; n < jarray.length(); n++)
                                         events[n] = Event.parseJson(jarray.getJSONObject(n));
 
 
                                     String eventName = events[0].getEvent_name();
-                                    Toast.makeText(MainActivity.this, eventName, Toast.LENGTH_SHORT).show();
-                                    runOnUiThread(new Runnable(){
+                                    //Toast.makeText(MainActivity.this, eventName, Toast.LENGTH_SHORT).show();
+                                    runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            for(Event event : events){
-                                                //TODO: assign each even to its appropriate cell
-                                                for (int n = 0; n < event_grid.getColumnCount(); n++) {
-                                                    for (int m = 0; m < event_grid.getRowCount(); m++) {
 
-
-                                                    }
-                                                }
-                                            }
+                                            populateGrid(events, 1710020100, 1710092400);
+                                            Toast.makeText(MainActivity.this, String.valueOf(selCalDate.get(Calendar.MONTH)) + String.valueOf(selCalDate.get(Calendar.DAY_OF_MONTH)), Toast.LENGTH_SHORT).show();
                                         }
                                     });
                                     break;
