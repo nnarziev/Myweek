@@ -278,9 +278,9 @@ public class MainActivity extends AppCompatActivity {
         short end_month = (short) (((double) till / 100000000 - (till / 100000000)) * 100);
         short end_year = 2017;
 
+        if(true){
 
-
-
+        }
         for (Event event : events) {
             //TODO: assign each even to its appropriate cell
             short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
