@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="80dp"
-    android:background="#3E80B4"
+    android:layout_height="wrap_content"
     android:orientation="vertical" >
 
     <TextView
@@ -12,8 +11,8 @@
         android:layout_gravity="center"
         android:layout_margin="10dp"
         android:text="event text"
-        android:textColor="@android:color/white"
         android:textSize="15dp"
+        android:textColor="#000"
         android:textStyle="bold"/>
 
 
@@ -21,39 +20,39 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:background="#3E80B4"
-        android:orientation="horizontal" >
+        android:orientation="horizontal"
+        android:layout_margin="15dp">
 
         <Button
             android:id="@+id/btn_edit"
             android:layout_width="100dp"
             android:layout_height="30dp"
-            android:background="@android:color/white"
             android:clickable="true"
             android:text="edit"
-            android:textColor="#5DBCD2"
-            android:textStyle="bold" />
+            android:background="#f060"
+            android:textColor="#fff"
+            android:textStyle="bold"/>
 
         <Button
             android:id="@+id/btn_delete"
             android:layout_width="100dp"
             android:layout_height="30dp"
             android:layout_marginLeft="5dp"
-            android:background="@android:color/white"
             android:clickable="true"
             android:text="delete"
-            android:textColor="#5DBCD2"
-            android:textStyle="bold" />
+            android:background="#f060"
+            android:textColor="#fff"
+            android:textStyle="bold"/>
         <Button
             android:id="@+id/btn_cancel"
             android:layout_width="100dp"
             android:layout_height="30dp"
             android:layout_marginLeft="5dp"
-            android:background="@android:color/white"
             android:clickable="true"
             android:text="cancel"
-            android:textColor="#5DBCD2"
-            android:textStyle="bold" />
+            android:background="#f060"
+            android:textColor="#fff"
+            android:textStyle="bold"/>
     </LinearLayout>
 
 </LinearLayout>

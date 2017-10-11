@@ -3,7 +3,9 @@ package com.example.negmat.myweek_1;
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.SearchManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -195,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
         txtCurrentDate.setText(currentDateString);
         txtSelectedWeek.setText(selectedWeek);
 
+        sendStartDate();
         initGrid(); //initialize the grid view
     }
 
@@ -273,14 +276,10 @@ public class MainActivity extends AppCompatActivity {
         short start_month = (short) (((double) from / 100000000 - (from / 100000000)) * 100);
         short start_year = 2017;
 
-        short end_time = (short) (((double) till / 10000 - (till / 10000)) * 100);
-        short end_day = (short) (((double) till / 1000000 - (till / 1000000)) * 100);
-        short end_month = (short) (((double) till / 100000000 - (till / 100000000)) * 100);
-        short end_year = 2017;
-
         Calendar cal = Calendar.getInstance();
         cal.set(start_year, start_month, start_day);
         if (cal.get(Calendar.WEEK_OF_MONTH) == selCalDate.get(Calendar.WEEK_OF_MONTH) && num_of_events!=0) {
+            initGrid();
             for (Event event : events) {
                 //TODO: assign each even to its appropriate cell
                 short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
@@ -316,8 +315,19 @@ public class MainActivity extends AppCompatActivity {
                 return;
             long event_id = ((long) textView.getTag());
 
-            ViewEventDialog ved=new ViewEventDialog(MainActivity.this,textView.getText().toString());
+            ViewEventDialog ved = new ViewEventDialog(MainActivity.this, textView.getText().toString(),event_id);
+
+            //TODO: show all needed info of event on dialog (Event name, Evebt note, Event time)
+            //TODO: make all fields of event info editable and save after edit
+
             ved.show();
+            ved.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    sendStartDate();
+                }
+            });
+
         }
     };
 
