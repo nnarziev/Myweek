@@ -267,7 +267,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void populateGrid(Event[] events, int from, int till) {
+    private void populateGrid(Event[] events, int from, int till, short num_of_events) {
         short start_time = (short) (((double) from / 10000 - (from / 10000)) * 100);
         short start_day = (short) (((double) from / 1000000 - (from / 1000000)) * 100);
         short start_month = (short) (((double) from / 100000000 - (from / 100000000)) * 100);
@@ -280,7 +280,7 @@ public class MainActivity extends AppCompatActivity {
 
         Calendar cal = Calendar.getInstance();
         cal.set(start_year, start_month, start_day);
-        if (cal.get(Calendar.WEEK_OF_MONTH) == selCalDate.get(Calendar.WEEK_OF_MONTH)) {
+        if (cal.get(Calendar.WEEK_OF_MONTH) == selCalDate.get(Calendar.WEEK_OF_MONTH) && num_of_events!=0) {
             for (Event event : events) {
                 //TODO: assign each even to its appropriate cell
                 short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
@@ -407,17 +407,18 @@ public class MainActivity extends AppCompatActivity {
         c.setTime(selCalDate.getTime());
         c.add(Calendar.DATE, -move + 1);
         //String start_date = String.format("%02d%02d%02d%02d%02d", c.get(c.YEAR)-2000, c.get(c.MONTH)+1, c.get(c.DAY_OF_MONTH), week_start_hour, minute);
-        int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
+        final int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
         c.add(Calendar.DATE, 6);
-        int end_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
+        final int end_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_end_hour * 100 + minute;
         //String end_date = String.format("%02d%02d%02d%02d%02d", c.get(c.YEAR) - 2000, c.get(c.MONTH) + 1, c.get(c.DAY_OF_MONTH), week_end_hour, minute);
 
         /*selCalDate = Calendar.getInstance();
         c = selCalDate;*/
-        Log.v("Start date: ", start_date + "");
-        Log.v("End date: ", end_date + "");
+        /*Log.v("Start date: ", start_date + "");
+        Log.v("End date: ", end_date + "");*/
         /*Toast.makeText(this, "Start date: "+start_date, Toast.LENGTH_LONG).show();
         Toast.makeText(this, "End date: "+end_date, Toast.LENGTH_LONG).show();*/
+
         SharedPreferences pref = getSharedPreferences(PREFS_NAME, 0);
         String usrName = pref.getString("Login", null);
         String usrPassword = pref.getString("Password", null);
@@ -425,8 +426,8 @@ public class MainActivity extends AppCompatActivity {
         JsonObject jsonSend = new JsonObject();
         jsonSend.addProperty("username", usrName);
         jsonSend.addProperty("password", usrPassword);
-        jsonSend.addProperty("period_from", 1710020100);
-        jsonSend.addProperty("period_till", 1710092400);
+        jsonSend.addProperty("period_from", start_date);
+        jsonSend.addProperty("period_till", end_date);
         String url = "http://qobiljon.pythonanywhere.com/events/fetch";
         Ion.with(getApplicationContext())
                 .load("POST", url)
@@ -440,24 +441,23 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             JSONObject json = new JSONObject(String.valueOf(result));
                             int resultNumber = json.getInt("result");
-                            JSONArray jArray = json.getJSONArray("array");
                             switch (resultNumber) {
                                 case RES_OK:
                                     //TODO: take array of JSON objects and return this
                                     //JSONObject js = new JSONObject(String.valueOf(jArray));
-                                    JSONArray jarray = json.getJSONArray("array");
+                                    final JSONArray jarray = json.getJSONArray("array");
                                     final Event[] events = new Event[jarray.length()];
-                                    for (int n = 0; n < jarray.length(); n++)
-                                        events[n] = Event.parseJson(jarray.getJSONObject(n));
-
-
-                                    String eventName = events[0].getEvent_name();
-                                    //Toast.makeText(MainActivity.this, eventName, Toast.LENGTH_SHORT).show();
+                                    if(jarray.length()!=0){
+                                        for (int n = 0; n < jarray.length(); n++)
+                                            events[n] = Event.parseJson(jarray.getJSONObject(n));
+                                        String eventName = events[0].getEvent_name();
+                                    }
+                                    else
+                                        Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            populateGrid(events, 1710020100, 1710092400);
-                                            Toast.makeText(MainActivity.this, String.valueOf(selCalDate.get(Calendar.MONTH)) + String.valueOf(selCalDate.get(Calendar.DAY_OF_MONTH)), Toast.LENGTH_SHORT).show();
+                                            populateGrid(events, start_date, end_date, (short) jarray.length());
                                         }
                                     });
                                     break;
