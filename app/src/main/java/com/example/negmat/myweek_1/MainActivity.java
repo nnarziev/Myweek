@@ -314,7 +314,16 @@ public class MainActivity extends AppCompatActivity {
             if (textView.getTag() == null)
                 return;
             long event_id = ((long) textView.getTag());
+            int index=0;
+            for(int i=0;i<events.length;i++){
+                if(events[i].getEvent_id()==event_id){
+                    index=i;
+                    break;
+                }
+            }
+            //String event_text;
 
+            Toast.makeText(MainActivity.this, events[index].getEvent_name().toString()+events[index].getEvent_note().toString()+"\n"+events[index].getStart_time(), Toast.LENGTH_SHORT).show();
             ViewEventDialog ved = new ViewEventDialog(MainActivity.this, textView.getText().toString(),event_id);
 
             //TODO: show all needed info of event on dialog (Event name, Evebt note, Event time)
@@ -406,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //endregion
-
+    Event[] events;//TODO: use for print events from db
     //region Function to send start date of week
     public void sendStartDate() {
         int week_start_hour = 1;
@@ -456,11 +465,11 @@ public class MainActivity extends AppCompatActivity {
                                     //TODO: take array of JSON objects and return this
                                     //JSONObject js = new JSONObject(String.valueOf(jArray));
                                     final JSONArray jarray = json.getJSONArray("array");
-                                    final Event[] events = new Event[jarray.length()];
+                                    events = new Event[jarray.length()];
                                     if(jarray.length()!=0){
                                         for (int n = 0; n < jarray.length(); n++)
                                             events[n] = Event.parseJson(jarray.getJSONObject(n));
-                                        String eventName = events[0].getEvent_name();
+                                        //String eventName = events[0].getEvent_name();
                                     }
                                     else
                                         Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
