@@ -1,7 +1,7 @@
 package com.example.negmat.myweek_1;
 
 import android.Manifest;
-import android.app.Activity;
+import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -35,7 +35,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import butterknife.BindView;
@@ -44,7 +43,7 @@ import butterknife.OnClick;
 
 public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
-    private String event_name="";
+    private String event_name = "";
     private static final int REQUEST_MICROPHONE = 2;
     @BindView(R.id.text)
     TextView text;
@@ -58,7 +57,6 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.add_event_dialog, container, false);
         ButterKnife.bind(this, view);
-        setCancelable(false);
 
         Speech.init(getActivity(), getActivity().getPackageName());
         Logger.setLogLevel(Logger.LogLevel.DEBUG);
@@ -96,7 +94,8 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         }*/
         event_name = result.toString();
         //TODO: take a result and make string matchig and find the category id and send to suggest API
-        int category_id = 0;
+        int category_id = stringMatchingWithCategories(result.toString());
+
         suggestTime(category_id);
         //TODO: after time was suggested, use create event API
 
@@ -261,9 +260,13 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                                 case Constants.RES_OK:
 
                                     final int suggested_time = json.getInt("suggested_time");
-                                    Toast.makeText(getActivity(), category_id+"\n"+event_name+"\n"+suggested_time, Toast.LENGTH_SHORT).show();
-
-                                            createEvent(category_id, suggested_time, 120, (short) 60, true, event_name, "");
+                                    Toast.makeText(getActivity(), category_id + "\n" + event_name + "\n" + suggested_time, Toast.LENGTH_SHORT).show();
+                                    /*ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), event_name, String.valueOf(suggested_time), "some note");
+                                    conf.show();*/
+                                    FragmentManager manager = getFragmentManager();
+                                    ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), event_name, String.valueOf(suggested_time), "some note");
+                                    conf.show(manager, "ConfirmDialog");
+                                    //createEvent(category_id, suggested_time, 120, (short) 60, true, event_name, "");
 
 
                                     //Toast.makeText(getActivity(), String.valueOf(json.getInt("suggested_time")), Toast.LENGTH_SHORT).show();
@@ -284,51 +287,11 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                 });
     }
 
-    public void createEvent(int category_id, int suggested_time, int repeat_mode, short length, boolean is_active, String event_name, String event_note) {
-        SharedPreferences pref = getActivity().getSharedPreferences(Constants.PREFS_NAME, 0);
-        String usrName = pref.getString("Login", null);
-        String usrPassword = pref.getString("Password", null);
 
-        JsonObject jsonSend = new JsonObject();
-        jsonSend.addProperty("username", usrName);
-        jsonSend.addProperty("password", usrPassword);
-        jsonSend.addProperty("category_id", category_id);
-        jsonSend.addProperty("start_time", suggested_time);
-        jsonSend.addProperty("repeat_mode", repeat_mode);
-        jsonSend.addProperty("length", length);
-        jsonSend.addProperty("is_active", is_active);
-        jsonSend.addProperty("event_name", event_name);
-        jsonSend.addProperty("event_note", event_note);
-        String url = "http://qobiljon.pythonanywhere.com/events/create";
-        Ion.with(getActivity().getApplicationContext())
-                .load("POST", url)
-                .addHeader("Content-Type", "application/json")
-                .setJsonObjectBody(jsonSend)
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
-                    @Override
-                    public void onCompleted(Exception e, JsonObject result) {
-                        //process data or error
-                        try {
-                            JSONObject json = new JSONObject(String.valueOf(result));
-                            short resultNumber = (short) json.getInt("result");
-                            switch (resultNumber) {
-                                case Constants.RES_OK:
-                                    Toast.makeText(getActivity(), "Event was created", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case Constants.RES_SRV_ERR:
-                                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case Constants.RES_FAIL:
-                                    Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        } catch (JSONException e1) {
-                            Log.v("json", String.valueOf(e1));
-                        }
-                    }
-                });
+
+    public int stringMatchingWithCategories(String event_text) {
+
+        return 0;
     }
+
 }
