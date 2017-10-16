@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -58,6 +59,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -269,32 +272,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void populateGrid(Event[] events, int from, int till, short num_of_events) {
-        short start_time = (short) (((double) from / 10000 - (from / 10000)) * 100);
-        short start_day = (short) (((double) from / 1000000 - (from / 1000000)) * 100);
-        short start_month = (short) (((double) from / 100000000 - (from / 100000000)) * 100);
-        short start_year = 2017;
-
-        short end_time = (short) (((double) till / 10000 - (till / 10000)) * 100);
-        short end_day = (short) (((double) till / 1000000 - (till / 1000000)) * 100);
-        short end_month = (short) (((double) till / 100000000 - (till / 100000000)) * 100);
-        short end_year = 2017;
+        initGrid();
+        short start_time = (short) (from%10000/100);
+        short start_day = (short) (from%1000000/10000);
+        short start_month = (short) (from%100000000/1000000);
+        short start_year = (short) (from/100000000);
 
         Calendar cal = Calendar.getInstance();
-        cal.set(start_year, start_month, start_day);
+        cal.set(start_year+2000, start_month, start_day);
         if (cal.get(Calendar.WEEK_OF_MONTH) == selCalDate.get(Calendar.WEEK_OF_MONTH) && num_of_events!=0) {
             for (Event event : events) {
                 //TODO: assign each even to its appropriate cell
-                short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
-                short day = (short) (((double) event.getStart_time() / 1000000 - (event.getStart_time() / 1000000)) * 100);
-                short month = (short) (((double) event.getStart_time() / 100000000 - (event.getStart_time() / 100000000)) * 100);
-                short year = 2017;
+                //Toast.makeText(this, String.valueOf(event.getStart_time()), Toast.LENGTH_SHORT).show();
+                short time = (short) (event.getStart_time()%10000/100);
+                short day = (short) (event.getStart_time()%1000000/10000);
+                short month = (short) (event.getStart_time()%100000000/1000000);
+                short year = (short) (event.getStart_time()/100000000);
 
                 Calendar calendar = Calendar.getInstance();
                 calendar.set(Calendar.DAY_OF_MONTH, day);
                 calendar.set(Calendar.MONTH, month - 1);
-                calendar.set(Calendar.YEAR, year);
+                calendar.set(Calendar.YEAR, year+2000);
                 short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
-                Toast.makeText(this, "day of week: "+ day_of_week+"\ntime: "+time, Toast.LENGTH_SHORT).show();
 
                 tv[day_of_week][time].setText(event.getEvent_name());
                 tv[day_of_week][time].setTag(event.getEvent_id());
@@ -321,6 +320,12 @@ public class MainActivity extends AppCompatActivity {
 
             ViewEventDialog ved = new ViewEventDialog(MainActivity.this,textView.getText().toString(), event_id);
             ved.show();
+            ved.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialogInterface) {
+                    sendStartDate();
+                }
+            });
         }
     };
 
@@ -338,6 +343,13 @@ public class MainActivity extends AppCompatActivity {
     // region Add an event button handling
     @OnClick(R.id.btn_add_event)
     public void addEvent() {
+        /*String a = "hello my name is Nematjon, I am a 4th year student! I like playing chess";
+        Pattern pattern = Pattern.compile("playing");
+        Matcher matcher = pattern.matcher(a);
+        if(matcher.find()){
+            Toast.makeText(this, matcher.group(0), Toast.LENGTH_SHORT).show();
+        }else
+            Toast.makeText(this, "Could not find", Toast.LENGTH_SHORT).show();*/
         FragmentManager manager = getFragmentManager();
         AddEventDialog dialog = new AddEventDialog();
         dialog.show(manager, "Dialog");
@@ -408,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
         int move = selCalDate.get(Calendar.DAY_OF_WEEK) - selCalDate.getFirstDayOfWeek();
         Calendar c = Calendar.getInstance();
         c.setTime(selCalDate.getTime());
-        c.add(Calendar.DATE, -move + 1);
+        c.add(Calendar.DATE, -move);
         //String start_date = String.format("%02d%02d%02d%02d%02d", c.get(c.YEAR)-2000, c.get(c.MONTH)+1, c.get(c.DAY_OF_MONTH), week_start_hour, minute);
         final int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
         c.add(Calendar.DATE, 6);

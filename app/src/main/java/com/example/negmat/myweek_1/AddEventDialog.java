@@ -44,7 +44,7 @@ import butterknife.OnClick;
 
 public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
-    private int suggested_time=0;
+    private String event_name="";
     private static final int REQUEST_MICROPHONE = 2;
     @BindView(R.id.text)
     TextView text;
@@ -94,11 +94,10 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         } /*else {
             //Speech.getInstance().say(result);
         }*/
-
+        event_name = result.toString();
         //TODO: take a result and make string matchig and find the category id and send to suggest API
         int category_id = 0;
         suggestTime(category_id);
-        Toast.makeText(getActivity(), String.valueOf(suggested_time), Toast.LENGTH_SHORT).show();
         //TODO: after time was suggested, use create event API
 
     }
@@ -235,7 +234,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                 });
     }
 
-    public void suggestTime(int category_id){
+    public void suggestTime(final int category_id) {
 
         SharedPreferences pref = getActivity().getSharedPreferences(Constants.PREFS_NAME, 0);
         String usrName = pref.getString("Login", null);
@@ -256,11 +255,18 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     public void onCompleted(Exception e, JsonObject result) {
                         //process data or error
                         try {
-                            JSONObject json = new JSONObject(String.valueOf(result));
+                            final JSONObject json = new JSONObject(String.valueOf(result));
                             short resultNumber = (short) json.getInt("result");
                             switch (resultNumber) {
                                 case Constants.RES_OK:
-                                    suggested_time = json.getInt("suggested_time");
+
+                                    final int suggested_time = json.getInt("suggested_time");
+                                    Toast.makeText(getActivity(), category_id+"\n"+event_name+"\n"+suggested_time, Toast.LENGTH_SHORT).show();
+
+                                            createEvent(category_id, suggested_time, 120, (short) 60, true, event_name, "");
+
+
+                                    //Toast.makeText(getActivity(), String.valueOf(json.getInt("suggested_time")), Toast.LENGTH_SHORT).show();
                                     break;
                                 case Constants.RES_SRV_ERR:
                                     Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
@@ -273,6 +279,54 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                             }
                         } catch (JSONException e1) {
                             Log.wtf("json", e1);
+                        }
+                    }
+                });
+    }
+
+    public void createEvent(int category_id, int suggested_time, int repeat_mode, short length, boolean is_active, String event_name, String event_note) {
+        SharedPreferences pref = getActivity().getSharedPreferences(Constants.PREFS_NAME, 0);
+        String usrName = pref.getString("Login", null);
+        String usrPassword = pref.getString("Password", null);
+
+        JsonObject jsonSend = new JsonObject();
+        jsonSend.addProperty("username", usrName);
+        jsonSend.addProperty("password", usrPassword);
+        jsonSend.addProperty("category_id", category_id);
+        jsonSend.addProperty("start_time", suggested_time);
+        jsonSend.addProperty("repeat_mode", repeat_mode);
+        jsonSend.addProperty("length", length);
+        jsonSend.addProperty("is_active", is_active);
+        jsonSend.addProperty("event_name", event_name);
+        jsonSend.addProperty("event_note", event_note);
+        String url = "http://qobiljon.pythonanywhere.com/events/create";
+        Ion.with(getActivity().getApplicationContext())
+                .load("POST", url)
+                .addHeader("Content-Type", "application/json")
+                .setJsonObjectBody(jsonSend)
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        //process data or error
+                        try {
+                            JSONObject json = new JSONObject(String.valueOf(result));
+                            short resultNumber = (short) json.getInt("result");
+                            switch (resultNumber) {
+                                case Constants.RES_OK:
+                                    Toast.makeText(getActivity(), "Event was created", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case Constants.RES_SRV_ERR:
+                                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case Constants.RES_FAIL:
+                                    Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } catch (JSONException e1) {
+                            Log.v("json", String.valueOf(e1));
                         }
                     }
                 });
