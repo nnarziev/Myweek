@@ -1,19 +1,27 @@
 package com.example.negmat.myweek_1;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
 
 import net.gotev.speech.GoogleVoiceTypingDisabledException;
 import net.gotev.speech.Logger;
@@ -22,6 +30,12 @@ import net.gotev.speech.SpeechDelegate;
 import net.gotev.speech.SpeechRecognitionNotAvailable;
 import net.gotev.speech.SpeechUtil;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import butterknife.BindView;
@@ -30,6 +44,7 @@ import butterknife.OnClick;
 
 public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
+    private int suggested_time=0;
     private static final int REQUEST_MICROPHONE = 2;
     @BindView(R.id.text)
     TextView text;
@@ -37,6 +52,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     ImageButton btnSpeech;
     @BindView(R.id.btn_cancel)
     Button btnCancel;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -46,6 +62,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
         Speech.init(getActivity(), getActivity().getPackageName());
         Logger.setLogLevel(Logger.LogLevel.DEBUG);
+        getCategoties();
         return view;
     }
 
@@ -77,6 +94,13 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         } /*else {
             //Speech.getInstance().say(result);
         }*/
+
+        //TODO: take a result and make string matchig and find the category id and send to suggest API
+        int category_id = 0;
+        suggestTime(category_id);
+        Toast.makeText(getActivity(), String.valueOf(suggested_time), Toast.LENGTH_SHORT).show();
+        //TODO: after time was suggested, use create event API
+
     }
 
     @Override
@@ -153,4 +177,104 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         dismiss();
     }
 
+    private HashMap<String, Integer> category_ids = new HashMap<>();
+
+    public void getCategoties() {
+        SharedPreferences pref = getActivity().getSharedPreferences(Constants.PREFS_NAME, 0);
+        String usrName = pref.getString("Login", null);
+        String usrPassword = pref.getString("Password", null);
+
+        JsonObject jsonSend = new JsonObject();
+        jsonSend.addProperty("username", usrName);
+        jsonSend.addProperty("password", usrPassword);
+        String url = "http://qobiljon.pythonanywhere.com/events/categories";
+        Ion.with(getActivity().getApplicationContext())
+                .load("POST", url)
+                .addHeader("Content-Type", "application/json")
+                .setJsonObjectBody(jsonSend)
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        //process data or error
+                        try {
+                            JSONObject json = new JSONObject(String.valueOf(result));
+                            short resultNumber = (short) json.getInt("result");
+                            switch (resultNumber) {
+                                case Constants.RES_OK:
+                                    //TODO: take array of JSON objects and return this
+                                    //JSONObject js = new JSONObject(String.valueOf(jArray));
+                                    final int length = json.getInt("length");
+                                    final JSONArray jarray = json.getJSONArray("categories");
+                                    category_ids.clear();
+
+                                    for (int i = 0; i < length; i++) {
+                                        String cat_name = jarray.getJSONObject(i).names().getString(0);
+                                        category_ids.put(cat_name, jarray.getJSONObject(i).getInt(cat_name));
+                                    }
+
+                                    for (String name : category_ids.keySet()) {
+                                        String key = name.toString();
+                                        String value = category_ids.get(name).toString();
+                                        Log.v(key, ": " + value);
+                                    }
+                                    break;
+                                case Constants.RES_SRV_ERR:
+                                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case Constants.RES_FAIL:
+                                    Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } catch (JSONException e1) {
+                            Log.wtf("json", e1);
+                        }
+                    }
+                });
+    }
+
+    public void suggestTime(int category_id){
+
+        SharedPreferences pref = getActivity().getSharedPreferences(Constants.PREFS_NAME, 0);
+        String usrName = pref.getString("Login", null);
+        String usrPassword = pref.getString("Password", null);
+
+        JsonObject jsonSend = new JsonObject();
+        jsonSend.addProperty("username", usrName);
+        jsonSend.addProperty("password", usrPassword);
+        jsonSend.addProperty("category_id", category_id);
+        String url = "http://qobiljon.pythonanywhere.com/events/suggest";
+        Ion.with(getActivity().getApplicationContext())
+                .load("POST", url)
+                .addHeader("Content-Type", "application/json")
+                .setJsonObjectBody(jsonSend)
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        //process data or error
+                        try {
+                            JSONObject json = new JSONObject(String.valueOf(result));
+                            short resultNumber = (short) json.getInt("result");
+                            switch (resultNumber) {
+                                case Constants.RES_OK:
+                                    suggested_time = json.getInt("suggested_time");
+                                    break;
+                                case Constants.RES_SRV_ERR:
+                                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case Constants.RES_FAIL:
+                                    Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } catch (JSONException e1) {
+                            Log.wtf("json", e1);
+                        }
+                    }
+                });
+    }
 }

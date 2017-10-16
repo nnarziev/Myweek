@@ -3,9 +3,7 @@ package com.example.negmat.myweek_1;
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
-import android.app.SearchManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -197,8 +195,8 @@ public class MainActivity extends AppCompatActivity {
         txtCurrentDate.setText(currentDateString);
         txtSelectedWeek.setText(selectedWeek);
 
-        sendStartDate();
         initGrid(); //initialize the grid view
+        sendStartDate();
     }
 
     TextView[][] tv = new TextView[8][25];
@@ -276,10 +274,14 @@ public class MainActivity extends AppCompatActivity {
         short start_month = (short) (((double) from / 100000000 - (from / 100000000)) * 100);
         short start_year = 2017;
 
+        short end_time = (short) (((double) till / 10000 - (till / 10000)) * 100);
+        short end_day = (short) (((double) till / 1000000 - (till / 1000000)) * 100);
+        short end_month = (short) (((double) till / 100000000 - (till / 100000000)) * 100);
+        short end_year = 2017;
+
         Calendar cal = Calendar.getInstance();
         cal.set(start_year, start_month, start_day);
         if (cal.get(Calendar.WEEK_OF_MONTH) == selCalDate.get(Calendar.WEEK_OF_MONTH) && num_of_events!=0) {
-            initGrid();
             for (Event event : events) {
                 //TODO: assign each even to its appropriate cell
                 short time = (short) (((double) event.getStart_time() / 10000 - (event.getStart_time() / 10000)) * 100);
@@ -292,6 +294,8 @@ public class MainActivity extends AppCompatActivity {
                 calendar.set(Calendar.MONTH, month - 1);
                 calendar.set(Calendar.YEAR, year);
                 short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
+                Toast.makeText(this, "day of week: "+ day_of_week+"\ntime: "+time, Toast.LENGTH_SHORT).show();
+
                 tv[day_of_week][time].setText(event.getEvent_name());
                 tv[day_of_week][time].setTag(event.getEvent_id());
             }
@@ -314,29 +318,9 @@ public class MainActivity extends AppCompatActivity {
             if (textView.getTag() == null)
                 return;
             long event_id = ((long) textView.getTag());
-            int index=0;
-            for(int i=0;i<events.length;i++){
-                if(events[i].getEvent_id()==event_id){
-                    index=i;
-                    break;
-                }
-            }
-            //String event_text;
 
-            Toast.makeText(MainActivity.this, events[index].getEvent_name().toString()+events[index].getEvent_note().toString()+"\n"+events[index].getStart_time(), Toast.LENGTH_SHORT).show();
-            ViewEventDialog ved = new ViewEventDialog(MainActivity.this, textView.getText().toString(),event_id);
-
-            //TODO: show all needed info of event on dialog (Event name, Evebt note, Event time)
-            //TODO: make all fields of event info editable and save after edit
-
+            ViewEventDialog ved = new ViewEventDialog(MainActivity.this,textView.getText().toString(), event_id);
             ved.show();
-            ved.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialogInterface) {
-                    sendStartDate();
-                }
-            });
-
         }
     };
 
@@ -415,7 +399,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //endregion
-    Event[] events;//TODO: use for print events from db
+
     //region Function to send start date of week
     public void sendStartDate() {
         int week_start_hour = 1;
@@ -465,11 +449,11 @@ public class MainActivity extends AppCompatActivity {
                                     //TODO: take array of JSON objects and return this
                                     //JSONObject js = new JSONObject(String.valueOf(jArray));
                                     final JSONArray jarray = json.getJSONArray("array");
-                                    events = new Event[jarray.length()];
+                                    final Event[] events = new Event[jarray.length()];
                                     if(jarray.length()!=0){
                                         for (int n = 0; n < jarray.length(); n++)
                                             events[n] = Event.parseJson(jarray.getJSONObject(n));
-                                        //String eventName = events[0].getEvent_name();
+                                        String eventName = events[0].getEvent_name();
                                     }
                                     else
                                         Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
