@@ -179,6 +179,8 @@ public class MainActivity extends AppCompatActivity {
 
     TextView[][] tv = new TextView[8][25];
 
+    Event[] events;//global array of events to use in several functions
+
     private void initGrid() {
         // TODO: download and save the events of the user to a variable
 
@@ -197,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         int cellDimen = width / event_grid.getColumnCount();
+        int height=cellDimen*event_grid.getRowCount();
         {
 
             for (int n = 0; n < event_grid.getColumnCount(); n++) {
@@ -233,16 +236,74 @@ public class MainActivity extends AppCompatActivity {
                         hour++;
                     }
 
+
                     tv[n][m].setWidth(cellDimen);
                     tv[n][m].setHeight(cellDimen);
 
+                    //GridLayout.Spec row1 = GridLayout.spec(0, 2);
                     //event_grid.addView(space);
+/*
+                    if (n == 0 && m == 0) {
+                        Button btn=new Button(getApplicationContext());
+                        GridLayout.LayoutParams param =new GridLayout.LayoutParams();
+                        param.height = GridLayout.LayoutParams.WRAP_CONTENT;
+                        param.width = GridLayout.LayoutParams.WRAP_CONTENT;
+                        param.columnSpec = GridLayout.spec(n,2);
+                        param.rowSpec = GridLayout.spec(m);
+                        event_grid.addView(btn,param);
+                    }*/
+
+
+                    //btn.setLayoutParams(param);
+
 
                     event_grid.addView(tv[n][m]);
                 }
             }
         }
 
+
+
+
+        /*{
+
+            for (int n = 0; n < event_grid.getColumnCount(); n++) {
+                for (int m = 0; m < event_grid.getRowCount(); m++) {
+
+                    TextView space = new TextView(getApplicationContext());
+                    //tv[n][m] = new TextView(getApplicationContext());
+                    //tv[n][m].setBackgroundResource(R.drawable.cell_shape);
+                    if (m == 0 && n < 8) {
+                        //tv[n][m].setTypeface(null, Typeface.BOLD);
+                        //tv[n][m].setText(weekDays[n]);
+                        //tv[n][m].setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+                    }
+                    if (n == 0 && m > 0) {
+                        if (count == 0) {
+                            tv[n][m].setTypeface(null, Typeface.BOLD);
+                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            tv[n][m].setText(hour + "am");
+                        } else {
+                            tv[n][m].setTypeface(null, Typeface.BOLD);
+                            tv[n][m].setGravity(Gravity.CENTER_HORIZONTAL);
+                            tv[n][m].setText(hour + "pm");
+                            if (hour == 11)
+                                count = -1;
+                        }
+
+                        if (hour == 11)
+                            count++;
+                        if (hour == 12) {
+                            hour = 0;
+                        }
+                        hour++;
+                    }
+
+
+
+                }
+            }
+        }*/
 
     }
 
@@ -293,7 +354,37 @@ public class MainActivity extends AppCompatActivity {
                 return;
             long event_id = ((long) textView.getTag());
 
-            ViewEventDialog ved = new ViewEventDialog(MainActivity.this,textView.getText().toString(), event_id);
+            int index=0;//index of event in array
+            //take an index of event
+            //if current event_id==event[index].getEventId()
+            for(int i=0;i<events.length;i++)
+            {
+                if(event_id==events[i].getEvent_id())
+                {
+                    index=i;break;
+                }
+            }
+
+            short time = (short) (events[index].getStart_time()%10000/100);
+            short day = (short) (events[index].getStart_time()%1000000/10000);
+            short month = (short) (events[index].getStart_time()%100000000/1000000);
+            short year = (short) (events[index].getStart_time()/100000000);
+
+            String event_name=events[index].getEvent_name();
+            String note=events[index].getEvent_note();
+            int duration=events[index].getLength();
+            int repeat=events[index].getRepeat_mode();
+            String reason=events[index].getReason();
+
+            if(reason==null)
+                reason="no reason";
+
+            @SuppressLint("DefaultLocale") String eventInfo = String.format("%s\n%s\nDate: %s. %d, %d\nFrom: %d:00\nDuration: %d min\nRepeat: %d times\nReason: %s", event_name, note,
+                    new DateFormatSymbols().getMonths()[month].substring(0, 3),day,year+2000, time,duration, repeat,reason);
+
+            Toast.makeText(MainActivity.this, String.valueOf(index), Toast.LENGTH_SHORT).show();
+            //make event global and show all info on it
+            ViewEventDialog ved = new ViewEventDialog(MainActivity.this,eventInfo, event_id);
             ved.show();
             ved.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
@@ -436,11 +527,11 @@ public class MainActivity extends AppCompatActivity {
                                     //TODO: take array of JSON objects and return this
                                     //JSONObject js = new JSONObject(String.valueOf(jArray));
                                     final JSONArray jarray = json.getJSONArray("array");
-                                    final Event[] events = new Event[jarray.length()];
+                                    events = new Event[jarray.length()];
                                     if(jarray.length()!=0){
                                         for (int n = 0; n < jarray.length(); n++)
                                             events[n] = Event.parseJson(jarray.getJSONObject(n));
-                                        String eventName = events[0].getEvent_name();
+                                        //String eventName = events[0].getEvent_name();
                                     }
                                     else
                                         Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
