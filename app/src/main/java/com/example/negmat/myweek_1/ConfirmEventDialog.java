@@ -1,20 +1,18 @@
 package com.example.negmat.myweek_1;
 
 import android.app.Activity;
-import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.JsonObject;
@@ -22,10 +20,12 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
 import net.gotev.speech.Logger;
-import net.gotev.speech.Speech;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.security.SecureRandom;
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -36,6 +36,9 @@ import butterknife.OnClick;
  */
 
 public class ConfirmEventDialog extends DialogFragment {
+
+    final String[] select_day = {
+            "Select the day(s)", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
     public String event_name;
     public String event_note;
@@ -61,6 +64,7 @@ public class ConfirmEventDialog extends DialogFragment {
         txtEventName.setText(event_name);
         txtEventTime.setText(event_time);
         txtEventNote.setText(event_note);
+
         return view;
     }
 
@@ -72,6 +76,7 @@ public class ConfirmEventDialog extends DialogFragment {
     public void delete(){
 
     }
+
 
     public Activity a;
 

@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">My week</string>
     <string name="sign_up_label"><u>Sign up</u></string>
+    <string-array name="repeat_mode_selection">
+        <item>Mon</item>
+        <item>Tue</item>
+        <item>Wed</item>
+        <item>Thu</item>
+        <item>Fri</item>
+        <item>Sat</item>
+        <item>Sun</item>
+    </string-array>
 </resources>

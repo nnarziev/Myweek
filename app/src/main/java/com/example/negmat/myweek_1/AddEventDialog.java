@@ -9,11 +9,13 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -266,6 +268,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                                     FragmentManager manager = getFragmentManager();
                                     ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), event_name, String.valueOf(suggested_time), "some note");
                                     conf.show(manager, "ConfirmDialog");
+                                    dismiss();
                                     //createEvent(category_id, suggested_time, 120, (short) 60, true, event_name, "");
 
 
