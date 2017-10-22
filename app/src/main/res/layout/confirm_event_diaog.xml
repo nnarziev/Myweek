@@ -92,40 +92,40 @@
             android:rowCount="2">
             <ToggleButton
                 android:id="@+id/check_monday"
-                android:layout_width="65dp"
-                android:layout_height="30dp"
+                android:layout_width="55dp"
+                android:layout_height="40dp"
                 android:textSize="10dp"
                 android:textOn="Mon"
                 android:textOff="Mon"/>
 
             <ToggleButton
                 android:id="@+id/check_tuesday"
-                android:layout_width="65dp"
-                android:layout_height="30dp"
+                android:layout_width="55dp"
+                android:layout_height="40dp"
                 android:textSize="10dp"
                 android:textOn="Tue"
                 android:textOff="Tue"/>
 
             <ToggleButton
                 android:id="@+id/check_wednesday"
-                android:layout_width="65dp"
-                android:layout_height="30dp"
+                android:layout_width="55dp"
+                android:layout_height="40dp"
                 android:textSize="10dp"
                 android:textOn="Wed"
                 android:textOff="Wed"/>
 
             <ToggleButton
                 android:id="@+id/check_thursday"
-                android:layout_width="65dp"
-                android:layout_height="30dp"
+                android:layout_width="55dp"
+                android:layout_height="40dp"
                 android:textSize="10dp"
                 android:textOn="Thu"
                 android:textOff="Thu"/>
 
             <ToggleButton
                 android:id="@+id/check_friday"
-                android:layout_width="65dp"
-                android:layout_height="30dp"
+                android:layout_width="55dp"
+                android:layout_height="40dp"
                 android:textSize="10dp"
                 android:textOn="Fri"
                 android:textOff="Fri"/>
@@ -133,16 +133,16 @@
 
             <ToggleButton
                 android:id="@+id/check_saturday"
-                android:layout_width="65dp"
-                android:layout_height="30dp"
+                android:layout_width="55dp"
+                android:layout_height="40dp"
                 android:textSize="10dp"
                 android:textOn="Sat"
                 android:textOff="Sat"/>
 
             <ToggleButton
                 android:id="@+id/check_sunday"
-                android:layout_width="65dp"
-                android:layout_height="30dp"
+                android:layout_width="55dp"
+                android:layout_height="40dp"
                 android:textSize="10dp"
                 android:textOn="Sun"
                 android:textOff="Sun"/>

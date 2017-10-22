@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.app.FragmentManager;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         weekDays = new String[]{"", "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
         for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
             TextView weekNames = new TextView(getApplicationContext());
+            weekNames.setTextColor(Color.BLACK);
             weekNames.setBackgroundResource(R.drawable.cell_shape);
             weekNames.setTypeface(null, Typeface.BOLD);
             weekNames.setText(weekDays[i]);
@@ -209,6 +212,7 @@ public class MainActivity extends AppCompatActivity {
                     // TODO: case where no data exists
                     //TextView space = new TextView(getApplicationContext());
                     tv[n][m] = new TextView(getApplicationContext());
+                    tv[n][m].setTextColor(Color.BLACK);
                     tv[n][m].setBackgroundResource(R.drawable.cell_shape);
                     if (m == 0 && n < 8) {
                         tv[n][m].setTypeface(null, Typeface.BOLD);
