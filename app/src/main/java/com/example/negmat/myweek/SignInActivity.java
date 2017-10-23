@@ -1,4 +1,4 @@
-package com.example.negmat.myweek_1;
+package com.example.negmat.myweek;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,7 +9,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.JsonObject;
@@ -21,32 +20,14 @@ import org.json.JSONObject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
 
-public class SignIn extends AppCompatActivity {
-
-    public static final String PREFS_NAME = "UserLogin";
-    private final short RES_OK = 0,
-            RES_SRV_ERR = -1,
-            RES_FAIL = 1;
-
-
-    @BindView(R.id.txt_login)
-    EditText userLogin;
-    @BindView(R.id.txt_password)
-    EditText userPassword;
-    @BindView(R.id.btn_signin)
-    Button btnSignIn;
-    @BindView(R.id.btn_signup)
-    TextView btnSignUp;
-
-
+public class SignInActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sign_in);
+        setContentView(R.layout.activity_signin);
         ButterKnife.bind(this);
         ActionBar bar = getSupportActionBar();
         if (bar != null)
@@ -57,9 +38,9 @@ public class SignIn extends AppCompatActivity {
         usrLogin[0] = userLogin.getText().toString();
         usrPass[0] = userPassword.getText().toString();
 
-        SharedPreferences shPref = getSharedPreferences(PREFS_NAME, 0);
-        if (shPref.contains("Login") && shPref.contains("Password")) {
-            Sign_In(shPref.getString("Login", null), shPref.getString("Password", null));
+        loginPrefs = getSharedPreferences("UserLogin", 0);
+        if (loginPrefs.contains("Login") && loginPrefs.contains("Password")) {
+            signInClick(loginPrefs.getString("Login", null), loginPrefs.getString("Password", null));
         } else
             Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
 
@@ -69,15 +50,26 @@ public class SignIn extends AppCompatActivity {
             public void onClick(View view) {
                 usrLogin[0] = userLogin.getText().toString();
                 usrPass[0] = userPassword.getText().toString();
-                Sign_In(usrLogin[0], usrPass[0]);
+                signInClick(usrLogin[0], usrPass[0]);
             }
         });
     }
 
-    // region Sign In Function
-    @SuppressWarnings("unused")
-    public void Sign_In(String usrLogin, String usrPass) {
-        if (validationCheck(usrLogin, usrPass)) {
+    // region Variables
+    static SharedPreferences loginPrefs = null;
+
+
+    @BindView(R.id.txt_login)
+    EditText userLogin;
+    @BindView(R.id.txt_password)
+    EditText userPassword;
+    @BindView(R.id.btn_signin)
+    Button btnSignIn;
+    // @BindView(R.id.btn_signup)  TextView btnSignUp;
+    // endregion
+
+    public void signInClick(String usrLogin, String usrPass) {
+        if (userIsValid(usrLogin, usrPass)) {
             JsonObject jsonSend = new JsonObject();
             jsonSend.addProperty("username", usrLogin);
             jsonSend.addProperty("password", usrPass);
@@ -99,22 +91,21 @@ public class SignIn extends AppCompatActivity {
                                 JSONObject json = new JSONObject(String.valueOf(result));
                                 int resultNumber = json.getInt("result");
                                 switch (resultNumber) {
-                                    case RES_OK:
-                                        SharedPreferences login = getSharedPreferences(PREFS_NAME, 0);
-                                        SharedPreferences.Editor editor = login.edit();
+                                    case Constants.RES_OK:
+                                        SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
                                         editor.putString("Login", finalUsrLogin);
                                         editor.putString("Password", finalUsrPass);
                                         editor.apply();
-                                        Intent intent = new Intent(SignIn.this, MainActivity.class);
+                                        Intent intent = new Intent(SignInActivity.this, MainActivity.class);
                                         startActivity(intent);
                                         finish();
                                         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
                                         break;
-                                    case RES_SRV_ERR:
-                                        Toast.makeText(SignIn.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    case Constants.RES_SRV_ERR:
+                                        Toast.makeText(SignInActivity.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
                                         break;
-                                    case RES_FAIL:
-                                        Toast.makeText(SignIn.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
+                                    case Constants.RES_FAIL:
+                                        Toast.makeText(SignInActivity.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
                                         break;
                                     default:
                                         break;
@@ -128,22 +119,15 @@ public class SignIn extends AppCompatActivity {
 
 
     }
-    // endregion
 
-    // region Validation Function
-    public boolean validationCheck(String login, String password) {
-        //TODO: validate the input data
-        return true;
-    }
-    // endregion
-
-    //region Sign up button handler
-    @OnClick(R.id.btn_signup)
-    public void SignUp() {
-        Intent i2 = new Intent(this, SignUp.class);
-        startActivity(i2);
+    public void signUpClick(View view) {
+        Intent intent = new Intent(this, SignUp.class);
+        startActivity(intent);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
     }
-    //endregion
 
+    public boolean userIsValid(String login, String password) {
+        //TODO: validate the input data
+        return login != null && password != null;
+    }
 }

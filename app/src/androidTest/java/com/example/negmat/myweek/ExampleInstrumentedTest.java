@@ -1,4 +1,4 @@
-package com.example.negmat.myweek_1;
+package com.example.negmat.myweek;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

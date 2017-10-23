@@ -1,6 +1,9 @@
 <resources>
+    <!--Init Screen elements-->
     <string name="app_name">My week</string>
     <string name="sign_up_label"><u>Sign up</u></string>
+
+    <!--API elements-->
     <string-array name="repeat_mode_selection">
         <item>Mon</item>
         <item>Tue</item>
@@ -10,4 +13,41 @@
         <item>Sat</item>
         <item>Sun</item>
     </string-array>
+
+    <!--Main Activity elements-->
+    <string name="arrow_left">Arrow left</string>
+    <string name="arrow_right">Arrow right</string>
+
+    <!--Sign In Activity elements-->
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="not_a_member">Not a member yet?</string>
+    <string name="now">now</string>
+
+    <!--Sign Up Activity elements-->
+    <string name="email">Email</string>
+    <string name="confirm_password">Confirm password</string>
+    <string name="sign_up">Sign Up Now</string>
+
+    <!--New Memo Dialog elements-->
+    <string name="mic_hint">Press the mic and say some event</string>
+    <string name="cancel">Cancel</string>
+
+    <!--View Event Dialog elements-->
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+
+    <!--Confirm Event Dialog elements-->
+    <string name="event_name">Event name:</string>
+    <string name="event_time">Event time:</string>
+    <string name="event_note">Event note:</string>
+    <string name="repeat">Repeat:</string>
+    <string name="mon">Mon</string>
+    <string name="tue">Tue</string>
+    <string name="wed">Wed</string>
+    <string name="thu">Thu</string>
+    <string name="fri">Fri</string>
+    <string name="sat">Sat</string>
+    <string name="sun">Sun</string>
+    <string name="save">Save</string>
 </resources>

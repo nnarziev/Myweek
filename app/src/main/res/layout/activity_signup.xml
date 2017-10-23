@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorGreen"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context="com.example.negmat.myweek_1.SignUp">
+    tools:context="com.example.negmat.myweek.SignUp">
 
     <EditText
         android:id="@+id/txt_email"
@@ -16,9 +15,10 @@
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
         android:background="#fff"
-        android:hint="Email"
-        android:padding="13dp"
-        android:singleLine="true" />
+        android:hint="@string/email"
+        android:inputType="textEmailAddress"
+        android:maxLines="1"
+        android:padding="13dp" />
 
     <EditText
         android:id="@+id/txt_login"
@@ -28,7 +28,7 @@
         android:layout_marginRight="50dp"
         android:layout_marginTop="10dp"
         android:background="#fff"
-        android:hint="Login"
+        android:hint="@string/login"
         android:padding="13dp" />
 
     <EditText
@@ -39,7 +39,7 @@
         android:layout_marginRight="50dp"
         android:layout_marginTop="10dp"
         android:background="#fff"
-        android:hint="Password"
+        android:hint="@string/password"
         android:inputType="textPassword"
         android:padding="13dp" />
 
@@ -51,7 +51,7 @@
         android:layout_marginRight="50dp"
         android:layout_marginTop="10dp"
         android:background="#fff"
-        android:hint="Confirm password"
+        android:hint="@string/confirm_password"
         android:inputType="textPassword"
         android:padding="13dp" />
 
@@ -63,7 +63,8 @@
         android:layout_marginRight="50dp"
         android:layout_marginTop="30dp"
         android:background="@color/colorGrey"
+        android:onClick="registerClick"
         android:padding="18dp"
-        android:text="Register"
+        android:text="@string/sign_up"
         android:textColor="@color/colorGreen" />
 </LinearLayout>

@@ -1,76 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
     android:background="@color/colorGreen"
-    tools:context="com.example.negmat.myweek_1.SignIn">
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context="com.example.negmat.myweek.SignInActivity">
 
     <EditText
         android:id="@+id/txt_login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Login"
-        android:padding="13dp"
-        android:background="#fff"
+        android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
-        android:singleLine="true"
-        android:layout_marginLeft="50dp"/>
+        android:background="#fff"
+        android:hint="@string/login"
+        android:lines="1"
+        android:maxLines="1"
+        android:minLines="1"
+        android:padding="13dp" />
 
     <EditText
         android:id="@+id/txt_password"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:padding="13dp"
-        android:background="#fff"
-        android:inputType="textPassword"
-        android:hint="Password"
+        android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
-        android:layout_marginLeft="50dp"/>
+        android:layout_marginTop="10dp"
+        android:background="#fff"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:padding="13dp" />
+
     <Button
         android:id="@+id/btn_signin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="Login"
-        android:background="@color/colorGrey"
-        android:textColor="@color/colorGreen"
-        android:padding="18dp"
+        android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
-        android:layout_marginLeft="50dp"/>
+        android:layout_marginTop="30dp"
+        android:background="@color/colorGrey"
+        android:padding="18dp"
+        android:text="@string/login"
+        android:textColor="@color/colorGreen" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
         android:gravity="center">
+
         <TextView
-            android:textSize="17dp"
-            android:textColor="#fff"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Not a member? "/>
+            android:text="@string/not_a_member"
+            android:textColor="#fff"
+            android:textSize="17sp" />
+
         <TextView
             android:id="@+id/btn_signup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:gravity="center"
-            android:textSize="17dp"
-            android:textColor="#fff"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/sign_up_label"/>
+            android:onClick="signUpClick"
+            android:paddingEnd="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingStart="5dp"
+            android:text="@string/sign_up_label"
+            android:textColor="#ff0"
+            android:textSize="17sp"
+            android:textStyle="italic" />
+
         <TextView
-            android:textSize="17dp"
-            android:textColor="#fff"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=" now"/>
+            android:text="@string/now"
+            android:textColor="#fff"
+            android:textSize="17sp" />
     </LinearLayout>
-
-
 
 
 </LinearLayout>

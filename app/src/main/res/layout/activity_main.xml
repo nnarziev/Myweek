@@ -4,47 +4,52 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.example.negmat.myweek_1.MainActivity">
+    tools:context="com.example.negmat.myweek.MainActivity">
 
     <LinearLayout
         android:id="@+id/weekChoice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
         <TextView
             android:id="@+id/txt_current_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="25sp"
-            android:text="Nov 5, 2017 "
-            android:textAlignment="center"/>
+            android:text="@string/app_name"
+            android:textAlignment="center"
+            android:textSize="25sp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
+
             <ImageButton
                 android:id="@+id/btn_arrow_left"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_keyboard_arrow_left_black_24dp"/>
+                android:background="@drawable/arrow_left"
+                android:contentDescription="@string/arrow_left" />
+
             <TextView
                 android:id="@+id/txt_selected_week"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:textSize="25sp"
-                android:text="week 1, November, 2017"
-                android:layout_weight="5"
-                android:textAlignment="center"/>
+                android:layout_weight="1"
+                android:text="@string/app_name"
+                android:textAlignment="center"
+                android:textSize="25sp" />
+
             <ImageButton
                 android:id="@+id/btn_arrow_right"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/ic_keyboard_arrow_right_black_24dp"/>
+                android:background="@drawable/arrow_right"
+                android:contentDescription="@string/arrow_right" />
         </LinearLayout>
 
 
     </LinearLayout>
-
-
 
     <ScrollView
         android:layout_width="match_parent"
@@ -57,8 +62,7 @@
             android:layout_height="wrap_content"
             android:columnCount="8"
             android:orientation="vertical"
-            android:rowCount="25">
-        </GridLayout>
+            android:rowCount="25" />
 
 
     </ScrollView>
@@ -68,9 +72,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/weekChoice"
-        android:columnCount="8">
-    </GridLayout>
-
+        android:columnCount="8" />
 
     <ImageButton
         android:id="@+id/btn_add_event"
@@ -82,6 +84,6 @@
         android:layout_marginEnd="20dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/img_add" />
+        android:src="@drawable/new_event" />
 
 </RelativeLayout>

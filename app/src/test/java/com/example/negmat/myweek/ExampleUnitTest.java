@@ -1,4 +1,4 @@
-package com.example.negmat.myweek_1;
+package com.example.negmat.myweek;
 
 import org.junit.Test;
 

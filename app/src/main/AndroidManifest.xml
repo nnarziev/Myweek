@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.negmat.myweek_1">
+    package="com.example.negmat.myweek">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -12,16 +12,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".SignIn">
+        <activity android:name="com.example.negmat.myweek.SignInActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" />
-        <activity android:name=".SignUp" />
-        <activity android:name=".ViewEventDialog"></activity>
+        <activity android:name="com.example.negmat.myweek.MainActivity" />
+        <activity android:name="com.example.negmat.myweek.SignUp" />
+        <activity android:name="com.example.negmat.myweek.ViewEventDialog"></activity>
     </application>
 
 </manifest>
