@@ -96,9 +96,25 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         exec.execute(new Runnable() {
             @Override
             public void run() {
-                int category_id = stringMatchingWithCategories(result);
-                String usrName = SignInActivity.loginPrefs.getString("Login", null);
-                String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+                try {
+                    int category_id = stringMatchingWithCategories(result);
+                    String usrName = SignInActivity.loginPrefs.getString("Login", null);
+                    String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+
+                    JSONObject body = new JSONObject();
+                    body.put("username", usrName);
+                    body.put("password", usrPassword);
+                    body.put("category_id", category_id);
+                    JSONObject raw = new JSONObject(Tools.post("https://qobiljon.pythonanywhere.com/events/suggest", body));
+
+                    if (raw.getInt("result") != Tools.RES_OK)
+                        throw new Exception();
+
+                    int suggested_time = raw.getInt("suggested_time");
+                    createEvent(category_id, suggested_time, 120, (short) 60, true, "Created Event", "");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -287,13 +303,14 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 //                });
 //    }
 
-    public int stringMatchingWithCategories(String event_text) {
+    public Object[] stringMatchingWithCategories(String event_text) {
         String raw_json = Tools.post("http://qobiljon.pythonanywhere.com/events/categories", null);
         if (raw_json == null)
-            return -1;
+            return null;
 
         HashMap<String, Integer> map = new HashMap<>();
 
+        // region Load map
         try {
             JSONObject cat_json = new JSONObject(raw_json);
             short resultNumber = (short) cat_json.getInt("result");
@@ -322,7 +339,23 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
             e.printStackTrace();
             return -1;
         }
+        // endregion
 
-        return 0;
+        int cat = -1;
+        String key = null;
+        for (String _key : map.keySet())
+            if (event_text.contains(_key)) {
+                key = _key;
+                cat = map.get(_key);
+                break;
+            }
+        if (cat == -1) {
+            Toast.makeText(getActivity().getApplicationContext(), "Matching lacks data, random category selection is on!", Toast.LENGTH_SHORT).show();
+            key = map.keySet().toArray(new String[map.keySet().size()])[0];
+            cat = map.get(key);
+            return new Object[]{cat, key};
+        }
+
+        return new Object[]{cat, key};
     }
 }
