@@ -18,6 +18,9 @@ import com.koushikdutta.ion.Ion;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -51,6 +54,24 @@ public class SignInActivity extends AppCompatActivity {
                 usrLogin[0] = userLogin.getText().toString();
                 usrPass[0] = userPassword.getText().toString();
                 signInClick(usrLogin[0], usrPass[0]);
+            }
+        });
+
+        Executor exec = Executors.newCachedThreadPool();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JSONObject json_body = new JSONObject();
+                    json_body.put("username", "negmatjon");
+                    json_body.put("password", "12345678");
+
+                    String raw_json = Tools.post("https://qobiljon.pythonanywhere.com/users/login", json_body);
+
+                    Log.e("RAW_JSON", raw_json + "");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -91,7 +112,7 @@ public class SignInActivity extends AppCompatActivity {
                                 JSONObject json = new JSONObject(String.valueOf(result));
                                 int resultNumber = json.getInt("result");
                                 switch (resultNumber) {
-                                    case Constants.RES_OK:
+                                    case Tools.RES_OK:
                                         SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
                                         editor.putString("Login", finalUsrLogin);
                                         editor.putString("Password", finalUsrPass);
@@ -101,10 +122,10 @@ public class SignInActivity extends AppCompatActivity {
                                         finish();
                                         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
                                         break;
-                                    case Constants.RES_SRV_ERR:
+                                    case Tools.RES_SRV_ERR:
                                         Toast.makeText(SignInActivity.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
                                         break;
-                                    case Constants.RES_FAIL:
+                                    case Tools.RES_FAIL:
                                         Toast.makeText(SignInActivity.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
                                         break;
                                     default:
@@ -121,7 +142,7 @@ public class SignInActivity extends AppCompatActivity {
     }
 
     public void signUpClick(View view) {
-        Intent intent = new Intent(this, SignUp.class);
+        Intent intent = new Intent(this, SignUpActivity.class);
         startActivity(intent);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
     }

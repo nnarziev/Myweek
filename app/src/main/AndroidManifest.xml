@@ -20,8 +20,8 @@
             </intent-filter>
         </activity>
         <activity android:name="com.example.negmat.myweek.MainActivity" />
-        <activity android:name="com.example.negmat.myweek.SignUp" />
-        <activity android:name="com.example.negmat.myweek.ViewEventDialog"></activity>
+        <activity android:name="com.example.negmat.myweek.SignUpActivity" />
+        <activity android:name="com.example.negmat.myweek.ViewEventDialog" />
     </application>
 
 </manifest>

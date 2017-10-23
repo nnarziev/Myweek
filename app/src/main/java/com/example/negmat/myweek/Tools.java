@@ -3,6 +3,57 @@ package com.example.negmat.myweek;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.DataOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+//Initialization of Tools
+class Tools {
+    static final String PREFS_NAME = "UserLogin";
+    static final short RES_OK = 0,
+            RES_SRV_ERR = -1,
+            RES_FAIL = 1;
+
+    static String post(String _url, JSONObject json_body) {
+        try {
+            URL url = new URL(_url);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setDoOutput(json_body != null);
+            con.setDoInput(true);
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "application/json");
+            con.connect();
+
+            if (json_body != null) {
+                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+                wr.writeBytes(json_body.toString());
+                wr.flush();
+                wr.close();
+            }
+
+            int status = con.getResponseCode();
+            if (status != HttpURLConnection.HTTP_OK) {
+                con.disconnect();
+                return null;
+            } else {
+                byte[] buf = new byte[1024];
+                int rd;
+                String res = "";
+                BufferedInputStream is = new BufferedInputStream(con.getInputStream());
+                while ((rd = is.read(buf)) > 0)
+                    res += new String(buf, 0, rd, "utf-8");
+                is.close();
+                con.disconnect();
+                return res;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}
+
 class Event {
 
     public Event(String username, int start_time, int repeat_mode, short length, Boolean is_active, String event_name, String event_note, long event_id, String reason) {

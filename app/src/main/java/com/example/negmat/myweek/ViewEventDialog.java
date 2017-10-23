@@ -82,12 +82,12 @@ class ViewEventDialog extends Dialog implements OnClickListener {
                                     JSONObject json = new JSONObject(String.valueOf(result));
                                     int resultNumber = json.getInt("result");
                                     switch (resultNumber) {
-                                        case Constants.RES_OK:
+                                        case Tools.RES_OK:
                                             break;
-                                        case Constants.RES_SRV_ERR:
+                                        case Tools.RES_SRV_ERR:
                                             Toast.makeText(activity.getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
                                             break;
-                                        case Constants.RES_FAIL:
+                                        case Tools.RES_FAIL:
                                             Toast.makeText(activity.getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
                                             break;
                                         default:

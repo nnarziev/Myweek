@@ -19,7 +19,7 @@ import org.json.JSONObject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class SignUp extends AppCompatActivity {
+public class SignUpActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,16 +64,16 @@ public class SignUp extends AppCompatActivity {
                             JSONObject json = new JSONObject(String.valueOf(result));
                             int resultNumber = json.getInt("result");
                             switch (resultNumber) {
-                                case Constants.RES_OK:
+                                case Tools.RES_OK:
                                     Toast.makeText(getApplicationContext(), "Registration is successfull", Toast.LENGTH_SHORT).show();
-                                    Intent i2 = new Intent(SignUp.this, SignInActivity.class);
+                                    Intent i2 = new Intent(SignUpActivity.this, SignInActivity.class);
                                     startActivity(i2);
                                     overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
                                     break;
-                                case Constants.RES_SRV_ERR:
+                                case Tools.RES_SRV_ERR:
                                     Toast.makeText(getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
                                     break;
-                                case Constants.RES_FAIL:
+                                case Tools.RES_FAIL:
                                     Toast.makeText(getApplicationContext(), "Registration failed", Toast.LENGTH_SHORT).show();
                                     break;
                                 default:

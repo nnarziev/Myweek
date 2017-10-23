@@ -33,18 +33,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -80,42 +72,8 @@ public class MainActivity extends AppCompatActivity {
         //endregion
 
         initialize();
-
-        Executor exec = Executors.newCachedThreadPool();
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                String raw_json = loadRawData("qobiljon.pythonanywhere.com/users/login", "{\"username\": \"negmatjon\", \"password\": \"12345678\"}");
-                Log.e("RAW_JSON", raw_json);
-            }
-        });
     }
 
-    private String loadRawData(String _url, String json_body) {
-        try {
-            URL url = new URL(_url);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setDoOutput(true);
-            con.setDoInput(true);
-
-            OutputStream os = new BufferedOutputStream(con.getOutputStream());
-            os.write(json_body.getBytes("utf-8"));
-            os.flush();
-            os.close();
-
-            InputStream is = new BufferedInputStream(con.getInputStream());
-            byte[] buf = new byte[1024];
-            StringBuilder sb = new StringBuilder();
-            while (is.read(buf) > 0)
-                sb.append(new String(buf));
-            return sb.toString();
-        } catch (Exception ex) {
-            Log.e("RAW_JSON_LOAD_ERR", ex.getMessage());
-            return null;
-        }
-    }
 
     // region Variables
     @BindView(R.id.btn_add_event)
@@ -171,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
     }
     //endregion
 
-    // region Constants
+    // region Tools
     private final short GRID_ADDITEM = 2;
     private final short GRID_DELETEITEM = 3;
     // endregion
@@ -543,7 +501,7 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject json = new JSONObject(String.valueOf(result));
                             int resultNumber = json.getInt("result");
                             switch (resultNumber) {
-                                case Constants.RES_OK:
+                                case Tools.RES_OK:
                                     //TODO: take array of JSON objects and return this
                                     //JSONObject js = new JSONObject(String.valueOf(jArray));
                                     final JSONArray jarray = json.getJSONArray("array");
@@ -561,10 +519,10 @@ public class MainActivity extends AppCompatActivity {
                                         }
                                     });
                                     break;
-                                case Constants.RES_SRV_ERR:
+                                case Tools.RES_SRV_ERR:
                                     Toast.makeText(getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
                                     break;
-                                case Constants.RES_FAIL:
+                                case Tools.RES_FAIL:
                                     Toast.makeText(getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
                                     break;
                                 default:

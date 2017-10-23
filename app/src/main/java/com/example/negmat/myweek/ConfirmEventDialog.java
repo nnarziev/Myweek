@@ -82,7 +82,7 @@ public class ConfirmEventDialog extends DialogFragment {
     }
 
     public void createEvent(int category_id, int suggested_time, int repeat_mode, short length, boolean is_active, String event_name, String event_note) {
-        SharedPreferences pref = getActivity().getSharedPreferences(Constants.PREFS_NAME, 0);
+        SharedPreferences pref = getActivity().getSharedPreferences(Tools.PREFS_NAME, 0);
         String usrName = pref.getString("Login", null);
         String usrPassword = pref.getString("Password", null);
 
@@ -110,13 +110,13 @@ public class ConfirmEventDialog extends DialogFragment {
                             JSONObject json = new JSONObject(String.valueOf(result));
                             short resultNumber = (short) json.getInt("result");
                             switch (resultNumber) {
-                                case Constants.RES_OK:
+                                case Tools.RES_OK:
                                     Toast.makeText(getActivity(), "Event was created", Toast.LENGTH_SHORT).show();
                                     break;
-                                case Constants.RES_SRV_ERR:
+                                case Tools.RES_SRV_ERR:
                                     Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
                                     break;
-                                case Constants.RES_FAIL:
+                                case Tools.RES_FAIL:
                                     Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
                                     break;
                                 default:

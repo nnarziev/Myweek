@@ -6,7 +6,7 @@
     android:background="@color/colorGreen"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context="com.example.negmat.myweek.SignUp">
+    tools:context="com.example.negmat.myweek.SignUpActivity">
 
     <EditText
         android:id="@+id/txt_email"
