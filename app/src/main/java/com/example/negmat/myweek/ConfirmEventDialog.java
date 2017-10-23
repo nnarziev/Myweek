@@ -63,11 +63,12 @@ public class ConfirmEventDialog extends DialogFragment {
     }
 
     @OnClick(R.id.btn_save)
-    public void save(){
-       // createEvent();
+    public void save() {
+        // createEvent();
     }
+
     @OnClick(R.id.btn_delete)
-    public void delete(){
+    public void delete() {
 
     }
 
@@ -81,51 +82,26 @@ public class ConfirmEventDialog extends DialogFragment {
         this.event_time = ev_time;
     }
 
-    public void createEvent(int category_id, int suggested_time, int repeat_mode, short length, boolean is_active, String event_name, String event_note) {
-        SharedPreferences pref = getActivity().getSharedPreferences(Tools.PREFS_NAME, 0);
-        String usrName = pref.getString("Login", null);
-        String usrPassword = pref.getString("Password", null);
+    public static void createEvent(int category_id, int suggested_time, int repeat_mode, short length, boolean is_active, String event_name, String event_note) {
+        String usrName = SignInActivity.loginPrefs.getString("Login", null);
+        String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
 
-        JsonObject jsonSend = new JsonObject();
-        jsonSend.addProperty("username", usrName);
-        jsonSend.addProperty("password", usrPassword);
-        jsonSend.addProperty("category_id", category_id);
-        jsonSend.addProperty("start_time", suggested_time);
-        jsonSend.addProperty("repeat_mode", repeat_mode);
-        jsonSend.addProperty("length", length);
-        jsonSend.addProperty("is_active", is_active);
-        jsonSend.addProperty("event_name", event_name);
-        jsonSend.addProperty("event_note", event_note);
-        String url = "http://qobiljon.pythonanywhere.com/events/create";
-        Ion.with(getActivity().getApplicationContext())
-                .load("POST", url)
-                .addHeader("Content-Type", "application/json")
-                .setJsonObjectBody(jsonSend)
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
-                    @Override
-                    public void onCompleted(Exception e, JsonObject result) {
-                        //process data or error
-                        try {
-                            JSONObject json = new JSONObject(String.valueOf(result));
-                            short resultNumber = (short) json.getInt("result");
-                            switch (resultNumber) {
-                                case Tools.RES_OK:
-                                    Toast.makeText(getActivity(), "Event was created", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case Tools.RES_SRV_ERR:
-                                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case Tools.RES_FAIL:
-                                    Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        } catch (JSONException e1) {
-                            Log.v("json", String.valueOf(e1));
-                        }
-                    }
-                });
+        JSONObject jsonSend = new JSONObject();
+        try {
+            jsonSend.put("username", usrName);
+            jsonSend.put("password", usrPassword);
+            jsonSend.put("category_id", category_id);
+            jsonSend.put("start_time", suggested_time);
+            jsonSend.put("repeat_mode", repeat_mode);
+            jsonSend.put("length", length);
+            jsonSend.put("is_active", is_active);
+            jsonSend.put("event_name", event_name);
+            jsonSend.put("event_note", event_note);
+            String url = "http://qobiljon.pythonanywhere.com/events/create";
+
+            Tools.post(url, jsonSend);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

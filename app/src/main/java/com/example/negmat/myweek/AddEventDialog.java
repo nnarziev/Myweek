@@ -97,7 +97,14 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
             @Override
             public void run() {
                 try {
-                    int category_id = stringMatchingWithCategories(result);
+                    Object[] match = stringMatchingWithCategories(result);
+                    if (match == null)
+                        throw new Exception();
+
+                    int category_id = (int) match[0];
+                    String key = (String) match[1];
+                    key = Character.toUpperCase(key.charAt(0)) + key.substring(1);
+
                     String usrName = SignInActivity.loginPrefs.getString("Login", null);
                     String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
 
@@ -111,7 +118,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                         throw new Exception();
 
                     int suggested_time = raw.getInt("suggested_time");
-                    createEvent(category_id, suggested_time, 120, (short) 60, true, "Created Event", "");
+                    ConfirmEventDialog.createEvent(category_id, suggested_time, 120, (short) 60, true, key, "");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -331,13 +338,13 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     break;
                 case Tools.RES_SRV_ERR:
                     Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                    return -1;
+                    return null;
                 default:
-                    return -1;
+                    return null;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return -1;
+            return null;
         }
         // endregion
 
