@@ -99,7 +99,9 @@ public class ConfirmEventDialog extends DialogFragment {
             jsonSend.put("event_note", event_note);
             String url = "http://qobiljon.pythonanywhere.com/events/create";
 
-            Tools.post(url, jsonSend);
+            String res = Tools.post(url, jsonSend);
+
+            Log.e("DATAAAA", res + "");
         } catch (Exception e) {
             e.printStackTrace();
         }

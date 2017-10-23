@@ -112,6 +112,8 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     body.put("username", usrName);
                     body.put("password", usrPassword);
                     body.put("category_id", category_id);
+                    body.put("today", 20171023);
+                    body.put("weekend", 20171029);
                     JSONObject raw = new JSONObject(Tools.post("https://qobiljon.pythonanywhere.com/events/suggest", body));
 
                     if (raw.getInt("result") != Tools.RES_OK)
