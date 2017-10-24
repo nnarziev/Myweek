@@ -25,9 +25,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-/**
- * Created by Nematjon on 10/17/2017.
- */
 
 public class ConfirmEventDialog extends DialogFragment {
 
@@ -36,7 +33,8 @@ public class ConfirmEventDialog extends DialogFragment {
 
     public String event_name;
     public String event_note;
-    public String event_time;
+    public int cat_id;
+    public int event_time;
 
     @BindView(R.id.btn_save)
     Button btnSave;
@@ -64,7 +62,7 @@ public class ConfirmEventDialog extends DialogFragment {
 
     @OnClick(R.id.btn_save)
     public void save() {
-        // createEvent();
+        createEvent(cat_id, event_time, 120, (short) 60, true, event_name, event_note);
     }
 
     @OnClick(R.id.btn_delete)
@@ -75,8 +73,9 @@ public class ConfirmEventDialog extends DialogFragment {
 
     public Activity a;
 
-    public ConfirmEventDialog(Activity activity, String ev_name, String ev_time, String ev_note) {
+    public ConfirmEventDialog(Activity activity, int cat_id, String ev_name, int ev_time, String ev_note) {
         this.a = activity;
+        this.cat_id = cat_id;
         this.event_name = ev_name;
         this.event_note = ev_note;
         this.event_time = ev_time;

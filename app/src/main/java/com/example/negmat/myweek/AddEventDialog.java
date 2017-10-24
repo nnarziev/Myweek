@@ -1,6 +1,7 @@
 package com.example.negmat.myweek;
 
 import android.Manifest;
+import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -37,6 +38,7 @@ import butterknife.OnClick;
 
 public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
+    // region Variables
     //    private String event_name = "";
     private static final int REQUEST_MICROPHONE = 2;
     @BindView(R.id.text)
@@ -44,6 +46,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     @BindView(R.id.btn_speech)
     ImageButton btnSpeech;
     // @BindView(R.id.btn_cancel) Button btnCancel;
+    // endregion
 
 
     @Override
@@ -112,18 +115,25 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     body.put("username", usrName);
                     body.put("password", usrPassword);
                     body.put("category_id", category_id);
-                    body.put("today", 20171023);
-                    body.put("weekend", 20171029);
+                    body.put("today", 171024);
+                    body.put("weekend", 171028);
                     JSONObject raw = new JSONObject(Tools.post("https://qobiljon.pythonanywhere.com/events/suggest", body));
 
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
                     int suggested_time = raw.getInt("suggested_time");
+
+                    FragmentManager fragmentManager = getActivity().getFragmentManager();
+                    // ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, suggested_time, result);
+                    // conf.show(fragmentManager, "confirmdialog");
                     ConfirmEventDialog.createEvent(category_id, suggested_time, 120, (short) 60, true, key, "");
+                    Toast.makeText(getActivity().getApplicationContext(), '"' + key + "\" Created!", Toast.LENGTH_SHORT).show();
+                    dismiss();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+                dismiss();
             }
         });
     }
