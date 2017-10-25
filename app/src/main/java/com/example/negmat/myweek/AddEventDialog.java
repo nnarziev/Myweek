@@ -90,10 +90,11 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 //            //Speech.getInstance().say(result);
 //        }
         //event_name = result;
-        //        //TODO: take a result and make string matchig and find the category id and send to suggest API
+        //        //TODO: take activity result and make string matchig and find the category id and send to suggest API
         //        int category_id = stringMatchingWithCategories(result);
         //        suggestTime(category_id);
         //        //TODO: after time was suggested, use create event API
+
 
         Executor exec = Executors.newCachedThreadPool();
         exec.execute(new Runnable() {
@@ -122,14 +123,13 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
-                    int suggested_time = raw.getInt("suggested_time");
+                    int suggested_time = 1710270500;//raw.getInt("suggested_time");
 
-                    FragmentManager fragmentManager = getActivity().getFragmentManager();
-                    // ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, suggested_time, result);
-                    // conf.show(fragmentManager, "confirmdialog");
-                    ConfirmEventDialog.createEvent(category_id, suggested_time, 120, (short) 60, true, key, "");
+                    ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, suggested_time);
+                    conf.show(getActivity().getFragmentManager(), "confirmdialog");
+
                     Toast.makeText(getActivity().getApplicationContext(), '"' + key + "\" Created!", Toast.LENGTH_SHORT).show();
-                    dismiss();
+                    //dismiss();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
