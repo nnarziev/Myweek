@@ -37,6 +37,8 @@ import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -140,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
     private String[] weekDays;
     private int hour = 1;
     private int count = 0;//counter for change day half
-    Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
+    static Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
     // endregion
 
     // region Initialization Functions
@@ -158,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 
     TextView[][] tv = new TextView[8][25];
 
-    Event[] events;//global array of events to use in several functions
+    static Event[] events;//global array of events to use in several functions
 
     private void initGrid() {
         // TODO: download and save the events of the user to a variable
@@ -359,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
                 reason = "no reason";
 
             @SuppressLint("DefaultLocale") String eventInfo = String.format("%s\n%s\nDate: %s. %d, %d\nFrom: %d:00\nDuration: %d min\nRepeat: %d times\nReason: %s", event_name, note,
-                    new DateFormatSymbols().getMonths()[month].substring(0, 3), day, year + 2000, time, duration, repeat, reason);
+                    new DateFormatSymbols().getMonths()[month-1].substring(0, 3), day, year + 2000, time, duration, repeat, reason);
 
             Toast.makeText(MainActivity.this, String.valueOf(index), Toast.LENGTH_SHORT).show();
             //make event global and show all info on it
@@ -398,6 +400,7 @@ public class MainActivity extends AppCompatActivity {
         FragmentManager manager = getFragmentManager();
         AddEventDialog dialog = new AddEventDialog();
         dialog.show(manager, "Dialog");
+
     }
     // endregion
 
@@ -466,73 +469,51 @@ public class MainActivity extends AppCompatActivity {
         Calendar c = Calendar.getInstance();
         c.setTime(selCalDate.getTime());
         c.add(Calendar.DATE, -move);
-        //String start_date = String.format("%02d%02d%02d%02d%02d", activity.get(activity.YEAR)-2000, activity.get(activity.MONTH)+1, activity.get(activity.DAY_OF_MONTH), week_start_hour, minute);
         final int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
         c.add(Calendar.DATE, 6);
         final int end_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_end_hour * 100 + minute;
-        //String end_date = String.format("%02d%02d%02d%02d%02d", activity.get(activity.YEAR) - 2000, activity.get(activity.MONTH) + 1, activity.get(activity.DAY_OF_MONTH), week_end_hour, minute);
 
-        /*selCalDate = Calendar.getInstance();
-        activity = selCalDate;*/
-        /*Log.v("Start date: ", start_date + "");
-        Log.v("End date: ", end_date + "");*/
-        /*Toast.makeText(this, "Start date: "+start_date, Toast.LENGTH_LONG).show();
-        Toast.makeText(this, "End date: "+end_date, Toast.LENGTH_LONG).show();*/
 
-        String usrName = SignInActivity.loginPrefs.getString("Login", null);
-        String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+        final String usrName = SignInActivity.loginPrefs.getString("Login", null);
+        final String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
 
-        JsonObject jsonSend = new JsonObject();
-        jsonSend.addProperty("username", usrName);
-        jsonSend.addProperty("password", usrPassword);
-        jsonSend.addProperty("period_from", start_date);
-        jsonSend.addProperty("period_till", end_date);
-        String url = "http://qobiljon.pythonanywhere.com/events/fetch";
-        Ion.with(getApplicationContext())
-                .load("POST", url)
-                .addHeader("Content-Type", "application/json")
-                .setJsonObjectBody(jsonSend)
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
-                    @Override
-                    public void onCompleted(Exception e, JsonObject result) {
-                        //process data or error
-                        try {
-                            JSONObject json = new JSONObject(String.valueOf(result));
-                            int resultNumber = json.getInt("result");
-                            switch (resultNumber) {
-                                case Tools.RES_OK:
-                                    //TODO: take array of JSON objects and return this
-                                    //JSONObject js = new JSONObject(String.valueOf(jArray));
-                                    final JSONArray jarray = json.getJSONArray("array");
-                                    events = new Event[jarray.length()];
-                                    if (jarray.length() != 0) {
-                                        for (int n = 0; n < jarray.length(); n++)
-                                            events[n] = Event.parseJson(jarray.getJSONObject(n));
-                                        //String eventName = events[0].getEvent_name();
-                                    } else
-                                        Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            populateGrid(events, start_date, end_date, (short) jarray.length());
-                                        }
-                                    });
-                                    break;
-                                case Tools.RES_SRV_ERR:
-                                    Toast.makeText(getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case Tools.RES_FAIL:
-                                    Toast.makeText(getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        } catch (JSONException e1) {
-                            Log.wtf("json", e1);
+        Executor exec = Executors.newCachedThreadPool();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JSONObject jsonSend = new JSONObject();
+                    jsonSend.put("username", usrName);
+                    jsonSend.put("password", usrPassword);
+                    jsonSend.put("period_from", start_date);
+                    jsonSend.put("period_till", end_date);
+                    String url = "http://qobiljon.pythonanywhere.com/events/fetch";
+
+                    JSONObject raw = new JSONObject(Tools.post(url, jsonSend));
+                    if (raw.getInt("result") != Tools.RES_OK)
+                        throw new Exception();
+
+                    final JSONArray jarray = raw.getJSONArray("array");
+                    events = new Event[jarray.length()];
+                    if (jarray.length() != 0) {
+                        for (int n = 0; n < jarray.length(); n++)
+                            events[n] = Event.parseJson(jarray.getJSONObject(n));
+                        //String eventName = events[0].getEvent_name();
+                    } else
+                        Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            populateGrid(events, start_date, end_date, (short) jarray.length());
                         }
-                    }
-                });
+                    });
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }});
+
     }
     //endregion
 }

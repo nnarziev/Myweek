@@ -24,6 +24,8 @@ import org.json.JSONObject;
 
 import java.text.DateFormatSymbols;
 import java.util.Calendar;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -36,7 +38,7 @@ public class ConfirmEventDialog extends DialogFragment {
     final String[] select_day = {"Select the day(s)", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
 
     public String event_name;
-    public String event_note = "";
+    public String event_note;
     public int cat_id;
     public int event_time;
 
@@ -100,11 +102,12 @@ public class ConfirmEventDialog extends DialogFragment {
     @OnClick(R.id.btn_save)
     public void save() {
         createEvent(120, (short) 60, true);
+        dismiss();
     }
 
     @OnClick(R.id.btn_delete)
     public void delete() {
-
+        dismiss();
     }
 
     @OnClick(R.id.txt_event_time)
@@ -136,28 +139,37 @@ public class ConfirmEventDialog extends DialogFragment {
         Toast.makeText(activity, "Here", Toast.LENGTH_SHORT).show();
     }
 
-    public void createEvent(int repeat_mode, short length, boolean is_active) {
-        String usrName = SignInActivity.loginPrefs.getString("Login", null);
-        String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+    public void createEvent(final int repeat_mode, final short length, final boolean is_active) {
+        final String usrName = SignInActivity.loginPrefs.getString("Login", null);
+        final String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
 
-        JSONObject jsonSend = new JSONObject();
-        try {
-            jsonSend.put("username", usrName);
-            jsonSend.put("password", usrPassword);
-            jsonSend.put("category_id", getCat_id());
-            jsonSend.put("start_time", getEvent_time());
-            jsonSend.put("repeat_mode", repeat_mode);
-            jsonSend.put("length", length);
-            jsonSend.put("is_active", is_active);
-            jsonSend.put("event_name", getEvent_name());
-            jsonSend.put("event_note", getEvent_note());
-            String url = "http://qobiljon.pythonanywhere.com/events/create";
+        Executor exec = Executors.newCachedThreadPool();
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    JSONObject jsonSend = new JSONObject();
+                    jsonSend.put("username", usrName);
+                    jsonSend.put("password", usrPassword);
+                    jsonSend.put("category_id", getCat_id());
+                    jsonSend.put("start_time", getEvent_time());
+                    jsonSend.put("repeat_mode", repeat_mode);
+                    jsonSend.put("length", length);
+                    jsonSend.put("is_active", is_active);
+                    jsonSend.put("event_name", getEvent_name());
+                    jsonSend.put("event_note", txtEventNote.getText().toString());
+                    String url = "http://qobiljon.pythonanywhere.com/events/create";
 
-            String res = Tools.post(url, jsonSend);
+                    JSONObject raw = new JSONObject(Tools.post(url, jsonSend));
+                    if (raw.getInt("result") != Tools.RES_OK)
+                        throw new Exception();
 
-            Log.e("DATAAAA", res + "");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+                }
+                catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

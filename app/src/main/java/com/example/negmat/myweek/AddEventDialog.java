@@ -1,10 +1,13 @@
 package com.example.negmat.myweek;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
@@ -105,7 +108,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     if (match == null)
                         throw new Exception();
 
-                    int category_id = (int) match[0];
+                    final int category_id = (int) match[0];
                     String key = (String) match[1];
                     key = Character.toUpperCase(key.charAt(0)) + key.substring(1);
 
@@ -123,15 +126,21 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
-                    int suggested_time = 1710270500;//raw.getInt("suggested_time");
+                    final int suggested_time = raw.getInt("suggested_time");
 
-                    ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, suggested_time);
-                    conf.show(getActivity().getFragmentManager(), "confirmdialog");
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, result, suggested_time);
+                            conf.show(getActivity().getFragmentManager(), "confirmdialog");
+                        }
+                    });
 
-                    Toast.makeText(getActivity().getApplicationContext(), '"' + key + "\" Created!", Toast.LENGTH_SHORT).show();
-                    //dismiss();
+                    /*Toast.makeText(getActivity().getApplicationContext(), '"' + key + "\" Created!", Toast.LENGTH_SHORT).show();
+                    //dismiss();*/
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Log.v("EXEPTION: ", e.toString());
                 }
                 dismiss();
             }
@@ -369,7 +378,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                 break;
             }
         if (cat == -1) {
-            Toast.makeText(getActivity().getApplicationContext(), "Matching lacks data, random category selection is on!", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getActivity().getApplicationContext(), "Matching lacks data, random category selection is on!", Toast.LENGTH_SHORT).show();
             key = map.keySet().toArray(new String[map.keySet().size()])[0];
             cat = map.get(key);
             return new Object[]{cat, key};
@@ -377,4 +386,5 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
         return new Object[]{cat, key};
     }
+
 }

@@ -74,8 +74,8 @@
             android:id="@id/txt_event_note"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="3"
-            android:inputType="text"/>
+            android:inputType="text"
+            android:maxLines="3" />
     </LinearLayout>
 
     <LinearLayout
