@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Calendar calendar = Calendar.getInstance();
                 calendar.set(Calendar.DAY_OF_MONTH, day);
-                calendar.set(Calendar.MONTH, month - 1);
+                calendar.set(Calendar.MONTH, month-1);
                 calendar.set(Calendar.YEAR, year + 2000);
                 short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
 
@@ -501,6 +501,7 @@ public class MainActivity extends AppCompatActivity {
                         //String eventName = events[0].getEvent_name();
                     } else
                         Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
+
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
