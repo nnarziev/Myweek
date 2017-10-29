@@ -1,13 +1,9 @@
 package com.example.negmat.myweek;
 
 import android.Manifest;
-import android.app.Activity;
-import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
@@ -42,15 +38,12 @@ import butterknife.OnClick;
 public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
     // region Variables
-    //    private String event_name = "";
     private static final int REQUEST_MICROPHONE = 2;
     @BindView(R.id.text)
     TextView text;
-    @BindView(R.id.btn_speech)
-    ImageButton btnSpeech;
-    // @BindView(R.id.btn_cancel) Button btnCancel;
+    /*@BindView(R.id.btn_speech)
+    ImageButton btnSpeech;*/
     // endregion
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -59,7 +52,15 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
         Speech.init(getActivity(), getActivity().getPackageName());
         Logger.setLogLevel(Logger.LogLevel.DEBUG);
-        //getCategoties();
+
+        //granting permission to user
+        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_MICROPHONE);
+        }
+        onRecordAudioPermissionGranted();
+
         return view;
     }
 
@@ -83,7 +84,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
     @Override
     public void onSpeechResult(final String result) {
-        btnSpeech.setVisibility(View.VISIBLE);
+        //btnSpeech.setVisibility(View.VISIBLE);
         text.setText(result);
 
         if (result.isEmpty()) {
@@ -109,8 +110,8 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                         throw new Exception();
 
                     final int category_id = (int) match[0];
-                    String key = (String) match[1];
-                    key = Character.toUpperCase(key.charAt(0)) + key.substring(1);
+                    /*String key = (String) match[1];
+                    key = Character.toUpperCase(key.charAt(0)) + key.substring(1);*/
 
                     String usrName = SignInActivity.loginPrefs.getString("Login", null);
                     String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
@@ -135,9 +136,6 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                             conf.show(getActivity().getFragmentManager(), "confirmdialog");
                         }
                     });
-
-                    /*Toast.makeText(getActivity().getApplicationContext(), '"' + key + "\" Created!", Toast.LENGTH_SHORT).show();
-                    //dismiss();*/
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.v("EXEPTION: ", e.toString());
@@ -155,7 +153,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     }
 
     private void onRecordAudioPermissionGranted() {
-        btnSpeech.setVisibility(View.GONE);
+       // btnSpeech.setVisibility(View.GONE);
 
         try {
             Speech.getInstance().stopTextToSpeech();
@@ -205,16 +203,10 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                 .show();
     }
 
-    @OnClick(R.id.btn_speech)
+    /*@OnClick(R.id.btn_speech)
     public void Speech() {
-        //granting permission to user
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_MICROPHONE);
-        }
-        onRecordAudioPermissionGranted();
-    }
+
+    }*/
 
     @OnClick(R.id.btn_cancel)
     public void AddEventCancel() {

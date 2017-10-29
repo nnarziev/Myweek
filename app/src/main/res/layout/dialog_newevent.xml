@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_centerInParent="true"
     android:layout_margin="20dp"
+    android:minWidth="200dp"
     android:orientation="vertical">
 
     <TextView
@@ -12,12 +13,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="top|center_horizontal"
-        android:maxLines="3"
-        android:text="@string/mic_hint"
-        android:textColor="@android:color/black"
+        android:layout_margin="10dp"
+        android:minLines="2"
+        android:text="@string/speak_hint"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textStyle="italic"
         android:textSize="20sp" />
 
-    <ImageButton
+   <!-- <ImageButton
         android:id="@+id/btn_speech"
         android:layout_width="64dp"
         android:layout_height="64dp"
@@ -25,13 +28,14 @@
         android:layout_margin="15dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/app_name"
-        android:src="@drawable/microphone" />
+        android:src="@drawable/microphone" />-->
 
     <Button
         android:id="@+id/btn_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_margin="15dp"
         android:background="#f060"
         android:text="@string/cancel"
         android:textColor="#fff"

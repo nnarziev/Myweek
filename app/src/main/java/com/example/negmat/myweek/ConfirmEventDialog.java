@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,11 +16,15 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+
 import net.gotev.speech.Logger;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -55,27 +60,38 @@ public class ConfirmEventDialog extends DialogFragment {
         txtEventName.setText(getEvent_name());
         txtEventDate.setText(showEv_date_string(getEvent_time()));
         txtEventTime.setText(showEv_time_string(getEvent_time()));
-        txtEventNote.setText(event_note);
+        txtEventNote.setText(getEvent_note());
         return view;
     }
 
     // region Class environment
 
+    public long event_id;
     public String event_name;
     public String event_note;
     public int cat_id;
     public int event_time;
+    public boolean isEdit = false;
     public Activity activity;
+
+
+    public ConfirmEventDialog(Activity activity, long event_id, int cat_id, String ev_name, int ev_time, boolean isEdit) {
+        this.activity = activity;
+        this.event_id = event_id;
+        setCat_id(cat_id);
+        setEvent_name(ev_name);
+        setEvent_time(ev_time);
+        this.isEdit = isEdit;
+    }
 
     public ConfirmEventDialog(Activity activity, int cat_id, String ev_name, int ev_time) {
         this.activity = activity;
         setCat_id(cat_id);
         setEvent_name(ev_name);
         setEvent_time(ev_time);
-        Toast.makeText(activity, "Here", Toast.LENGTH_SHORT).show();
     }
 
-    public String showEv_time_string(int event_time){
+    public String showEv_time_string(int event_time) {
         short time = (short) (event_time % 10000 / 100);
         short day = (short) (event_time % 1000000 / 10000);
         short month = (short) (event_time % 100000000 / 1000000);
@@ -84,10 +100,10 @@ public class ConfirmEventDialog extends DialogFragment {
         Calendar cal = Calendar.getInstance();
         cal.set(year + 2000, month, day);
 
-        return String.format(Locale.US, "%d:00",time);
+        return String.format(Locale.US, "%d:00", time);
     }
 
-    public String showEv_date_string(int event_time){
+    public String showEv_date_string(int event_time) {
         short day = (short) (event_time % 1000000 / 10000);
         short month = (short) (event_time % 100000000 / 1000000);
         short year = (short) (event_time / 100000000);
@@ -96,7 +112,7 @@ public class ConfirmEventDialog extends DialogFragment {
         cal.set(year + 2000, month, day);
 
         return String.format(Locale.US, "%s. %d, %d",
-                new DateFormatSymbols().getMonths()[month-1].substring(0, 3), day, year + 2000);
+                cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()), day, year + 2000);
     }
 
     public String getEvent_name() {
@@ -135,7 +151,11 @@ public class ConfirmEventDialog extends DialogFragment {
     //region Buttons handler; Date and Time pick handler
     @OnClick(R.id.btn_save)
     public void save() {
-        createEvent(120, (short) 60, true);
+        if (isEdit) {
+            createEvent(0, (short) 060, true);
+            deleteAfterEdit();
+        } else
+            createEvent(0, (short) 60, true);
         dismiss();
     }
 
@@ -146,17 +166,17 @@ public class ConfirmEventDialog extends DialogFragment {
 
     //region Selecting date and time
     @OnClick(R.id.txt_event_date)
-    public void selectDate(){
+    public void selectDate() {
         short day = (short) (getEvent_time() % 1000000 / 10000);
         short month = (short) (getEvent_time() % 100000000 / 1000000);
         short year = (short) (getEvent_time() / 100000000 + 2000);
-        DatePickerDialog datePicker = new DatePickerDialog(getActivity(), 0, new DatePickerDialog.OnDateSetListener(){
+        DatePickerDialog datePicker = new DatePickerDialog(getActivity(), 0, new DatePickerDialog.OnDateSetListener() {
 
             @Override
             public void onDateSet(DatePicker datePicker, int y, int m, int d) {
                 short time = (short) (getEvent_time() % 10000);
-                int o = ((y-2000)*100 + m)*100+d;
-                int date = o*10000 + time;
+                int o = ((y - 2000) * 100 + m) * 100 + d;
+                int date = o * 10000 + time;
                 setEvent_time(date);
                 txtEventDate.setText(showEv_date_string(getEvent_time()));
             }
@@ -166,14 +186,14 @@ public class ConfirmEventDialog extends DialogFragment {
     }
 
     @OnClick(R.id.txt_event_time)
-    public void selectTime(){
+    public void selectTime() {
         Calendar mcurrentTime = Calendar.getInstance();
         int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
         int minute = mcurrentTime.get(Calendar.MINUTE);
         TimePickerDialog mTimePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
-                int time = ((getEvent_time()/10000)*100 + selectedHour) * 100;
+                int time = ((getEvent_time() / 10000) * 100 + selectedHour) * 100;
                 setEvent_time(time);
                 txtEventTime.setText(showEv_time_string(getEvent_time()));
             }
@@ -195,7 +215,7 @@ public class ConfirmEventDialog extends DialogFragment {
         exec.execute(new Runnable() {
             @Override
             public void run() {
-                try{
+                try {
                     JSONObject jsonSend = new JSONObject();
                     jsonSend.put("username", usrName);
                     jsonSend.put("password", usrPassword);
@@ -213,12 +233,51 @@ public class ConfirmEventDialog extends DialogFragment {
                         throw new Exception();
 
 
-                }
-                catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
     }
     //endregion
+
+    public void deleteAfterEdit() {
+        String usrName = SignInActivity.loginPrefs.getString("Login", null);
+        String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+        JsonObject jsonDelete = new JsonObject();
+        jsonDelete.addProperty("username", usrName);
+        jsonDelete.addProperty("password", usrPassword);
+        jsonDelete.addProperty("event_id", event_id);
+        String url = "http://qobiljon.pythonanywhere.com/events/disable";
+        Ion.with(activity.getApplicationContext())
+                .load("POST", url)
+                .addHeader("Content-Type", "application/json")
+                .setJsonObjectBody(jsonDelete)
+                .asJsonObject()
+                .setCallback(new FutureCallback<JsonObject>() {
+                    @Override
+                    public void onCompleted(Exception e, JsonObject result) {
+                        //process data or error
+                        try {
+                            JSONObject json = new JSONObject(String.valueOf(result));
+                            int resultNumber = json.getInt("result");
+                            switch (resultNumber) {
+                                case Tools.RES_OK:
+                                    Toast.makeText(activity, "Deleted", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case Tools.RES_SRV_ERR:
+                                    Toast.makeText(activity.getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case Tools.RES_FAIL:
+                                    Toast.makeText(activity.getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } catch (JSONException e1) {
+                            Log.wtf("json", e1);
+                        }
+                    }
+                });
+    }
 }

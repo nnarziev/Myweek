@@ -30,7 +30,7 @@
     <string name="sign_up">Sign Up Now</string>
 
     <!--New Memo Dialog elements-->
-    <string name="mic_hint">Press the mic and say some event</string>
+    <string name="speak_hint">Speak now please...</string>
     <string name="cancel">Cancel</string>
 
     <!--View Event Dialog elements-->
@@ -40,6 +40,7 @@
     <!--Confirm Event Dialog elements-->
     <string name="event_name">Event name:</string>
     <string name="event_time">Event time:</string>
+    <string name="event_date">Event date:</string>
     <string name="event_note">Event note:</string>
     <string name="repeat">Repeat:</string>
     <string name="mon">Mon</string>

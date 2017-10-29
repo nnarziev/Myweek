@@ -10,7 +10,6 @@ import java.net.URL;
 
 //Initialization of Tools
 class Tools {
-    static final String PREFS_NAME = "UserLogin";
     static final short RES_OK = 0,
             RES_SRV_ERR = -1,
             RES_FAIL = 1;
@@ -56,26 +55,28 @@ class Tools {
 
 class Event {
 
-    public Event(String username, int start_time, int repeat_mode, short length, Boolean is_active, String event_name, String event_note, long event_id, String reason) {
-        this.username = username;
-        this.start_time = start_time;
-        this.repeat_mode = repeat_mode;
-        this.length = length;
-        this.is_active = is_active;
-        this.event_name = event_name;
-        this.event_note = event_note;
-        this.event_id = event_id;
-        this.reason = reason;
+    public Event(String username, int start_time, int repeat_mode, short length, Boolean is_active, String event_name, String event_note, long event_id, int event_cat_id, String reason) {
+        setUsername(username);
+        setStart_time(start_time);
+        setRepeat_mode(repeat_mode);
+        setLength(length);
+        setIs_active(is_active);
+        setEvent_name(event_name);
+        setEvent_note(event_note);
+        setEvent_id(event_id);
+        setReason(reason);
+        setEvent_cat_id(event_cat_id);
     }
 
-    public Event(String username, int start_time, int repeat_mode, short length, String event_name, String event_note, long event_id) {
-        this.username = username;
-        this.start_time = start_time;
-        this.repeat_mode = repeat_mode;
-        this.length = length;
-        this.event_name = event_name;
-        this.event_note = event_note;
-        this.event_id = event_id;
+    public Event(String username, int start_time, int repeat_mode, short length, String event_name, String event_note, long event_id, int event_cat_id) {
+        setUsername(username);
+        setStart_time(start_time);
+        setRepeat_mode(repeat_mode);
+        setLength(length);
+        setEvent_name(event_name);
+        setEvent_note(event_note);
+        setEvent_id(event_id);
+        setEvent_cat_id(event_cat_id);
     }
 
     //region Variables
@@ -92,6 +93,7 @@ class Event {
     private Boolean is_active;
     private String event_name = "";
     private String event_note = "";
+    private int event_cat_id;
     private long event_id;
     private String reason;
     //endregion
@@ -110,6 +112,11 @@ class Event {
     }
 
     public void setStart_time(int start_time) {
+        short time = (short) (start_time % 10000 / 100);
+        short day = (short) (start_time % 1000000 / 10000);
+        short month = (short) ((start_time % 100000000 / 1000000));month-=1;
+        short year = (short) (start_time / 100000000);
+        start_time = (((year*100+month)*100+day)*100+time)*100;
         this.start_time = start_time;
     }
 
@@ -161,6 +168,14 @@ class Event {
         this.event_id = event_id;
     }
 
+    public int getEvent_cat_id() {
+        return event_cat_id;
+    }
+
+    public void setEvent_cat_id(int event_cat_id) {
+        this.event_cat_id = event_cat_id;
+    }
+
     public String getReason() {
         return reason;
     }
@@ -177,6 +192,7 @@ class Event {
         int repeat_mode;
         String event_name;
         String event_note;
+        int ev_cat_id;
         long event_id;
         short length;
         try {
@@ -186,8 +202,9 @@ class Event {
             event_name = data.getString("event_name");
             event_note = data.getString("event_note");
             event_id = data.getLong("event_id");
+            ev_cat_id = data.getInt("category_id");
             length = (short) data.getInt("length");
-            Event obj = new Event(username, start_time, repeat_mode, length, event_name, event_note, event_id);
+            Event obj = new Event(username, start_time, repeat_mode, length, event_name, event_note, event_id, ev_cat_id);
             return obj;
         } catch (JSONException e) {
             e.printStackTrace();

@@ -2,12 +2,10 @@ package com.example.negmat.myweek;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -32,30 +30,13 @@ public class SignInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signin);
         ButterKnife.bind(this);
-        ActionBar bar = getSupportActionBar();
-        if (bar != null)
-            setTitle("Sign in");
 
-        final String[] usrLogin = new String[1];
-        final String[] usrPass = new String[1];
-        usrLogin[0] = userLogin.getText().toString();
-        usrPass[0] = userPassword.getText().toString();
-
-        loginPrefs = getSharedPreferences("UserLogin", 0);
+        if (loginPrefs == null)
+            loginPrefs = getSharedPreferences("UserLogin", 0);
         if (loginPrefs.contains("Login") && loginPrefs.contains("Password")) {
-            signInClick(loginPrefs.getString("Login", null), loginPrefs.getString("Password", null));
+            signIn(loginPrefs.getString("Login", null), loginPrefs.getString("Password", null));
         } else
             Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
-
-
-        btnSignIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                usrLogin[0] = userLogin.getText().toString();
-                usrPass[0] = userPassword.getText().toString();
-                signInClick(usrLogin[0], usrPass[0]);
-            }
-        });
 
         Executor exec = Executors.newCachedThreadPool();
         exec.execute(new Runnable() {
@@ -78,18 +59,21 @@ public class SignInActivity extends AppCompatActivity {
 
     // region Variables
     static SharedPreferences loginPrefs = null;
-
+    static Executor executor;
+    static Runnable runnable;
 
     @BindView(R.id.txt_login)
     EditText userLogin;
     @BindView(R.id.txt_password)
     EditText userPassword;
-    @BindView(R.id.btn_signin)
-    Button btnSignIn;
     // @BindView(R.id.btn_signup)  TextView btnSignUp;
     // endregion
 
-    public void signInClick(String usrLogin, String usrPass) {
+    public void signInClick(View view) {
+        signIn(userLogin.getText().toString(), userPassword.getText().toString());
+    }
+
+    public void signIn(String usrLogin, String usrPass) {
         if (userIsValid(usrLogin, usrPass)) {
             JsonObject jsonSend = new JsonObject();
             jsonSend.addProperty("username", usrLogin);
