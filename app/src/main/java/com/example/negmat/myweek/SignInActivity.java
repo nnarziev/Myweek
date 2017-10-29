@@ -2,21 +2,16 @@ package com.example.negmat.myweek;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.google.gson.JsonObject;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.ion.Ion;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import butterknife.BindView;
@@ -33,39 +28,23 @@ public class SignInActivity extends AppCompatActivity {
 
         if (loginPrefs == null)
             loginPrefs = getSharedPreferences("UserLogin", 0);
-        if (loginPrefs.contains("Login") && loginPrefs.contains("Password")) {
-            signIn(loginPrefs.getString("Login", null), loginPrefs.getString("Password", null));
+        if (loginPrefs.contains("login") && loginPrefs.contains("password")) {
+            loadingPanel.setVisibility(View.VISIBLE);
+            signIn(loginPrefs.getString("login", null), loginPrefs.getString("password", null));
         } else
             Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
-
-        Executor exec = Executors.newCachedThreadPool();
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    JSONObject json_body = new JSONObject();
-                    json_body.put("username", "negmatjon");
-                    json_body.put("password", "12345678");
-
-                    String raw_json = Tools.post("https://qobiljon.pythonanywhere.com/users/login", json_body);
-
-                    Log.e("RAW_JSON", raw_json + "");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
     }
 
     // region Variables
     static SharedPreferences loginPrefs = null;
-    static Executor executor;
-    static Runnable runnable;
+    static ExecutorService exec;
 
     @BindView(R.id.txt_login)
     EditText userLogin;
     @BindView(R.id.txt_password)
     EditText userPassword;
+    @BindView(R.id.loadingPanel)
+    RelativeLayout loadingPanel;
     // @BindView(R.id.btn_signup)  TextView btnSignUp;
     // endregion
 
@@ -73,66 +52,64 @@ public class SignInActivity extends AppCompatActivity {
         signIn(userLogin.getText().toString(), userPassword.getText().toString());
     }
 
-    public void signIn(String usrLogin, String usrPass) {
-        if (userIsValid(usrLogin, usrPass)) {
-            JsonObject jsonSend = new JsonObject();
-            jsonSend.addProperty("username", usrLogin);
-            jsonSend.addProperty("password", usrPass);
+    public void signIn(final String usrLogin, final String usrPass) {
+        if (exec != null && !exec.isTerminated() && !exec.isShutdown())
+            exec.shutdownNow();
+        else
+            exec = Executors.newCachedThreadPool();
 
-            String url = "https://qobiljon.pythonanywhere.com/users/login";
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JSONObject json_body = new JSONObject();
+                    json_body.put("username", usrLogin);
+                    json_body.put("password", usrPass);
 
-            final String finalUsrLogin = usrLogin;
-            final String finalUsrPass = usrPass;
-            Ion.with(getApplicationContext())
-                    .load("POST", url)
-                    .addHeader("Content-Type", "application/json")
-                    .setJsonObjectBody(jsonSend)
-                    .asJsonObject()
-                    .setCallback(new FutureCallback<JsonObject>() {
-                        @Override
-                        public void onCompleted(Exception e, JsonObject result) {
-                            //process data or error
-                            try {
-                                JSONObject json = new JSONObject(String.valueOf(result));
-                                int resultNumber = json.getInt("result");
-                                switch (resultNumber) {
-                                    case Tools.RES_OK:
-                                        SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
-                                        editor.putString("Login", finalUsrLogin);
-                                        editor.putString("Password", finalUsrPass);
-                                        editor.apply();
-                                        Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                                        startActivity(intent);
-                                        finish();
-                                        overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
-                                        break;
-                                    case Tools.RES_SRV_ERR:
-                                        Toast.makeText(SignInActivity.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                                        break;
-                                    case Tools.RES_FAIL:
-                                        Toast.makeText(SignInActivity.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
-                                        break;
-                                    default:
-                                        break;
-                                }
-                            } catch (JSONException e1) {
-                                Log.wtf("json", e1);
-                            }
-                        }
-                    });
-        } else Toast.makeText(this, "Wrong input...", Toast.LENGTH_SHORT).show();
+                    String raw_json = Tools.post("https://qobiljon.pythonanywhere.com/users/login", json_body);
+                    if (raw_json == null)
+                        throw new Exception();
 
+                    JSONObject json = new JSONObject(raw_json);
+                    int resultNumber = json.getInt("result");
 
+                    switch (resultNumber) {
+                        case Tools.RES_OK:
+                            SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
+                            editor.putString("login", usrLogin);
+                            editor.putString("password", usrPass);
+                            editor.apply();
+                            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            finish();
+                            overridePendingTransition(0, 0);
+                            break;
+                        case Tools.RES_SRV_ERR:
+                            Toast.makeText(SignInActivity.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                            break;
+                        case Tools.RES_FAIL:
+                            Toast.makeText(SignInActivity.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
+                            break;
+                        default:
+                            break;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        loadingPanel.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
     }
 
     public void signUpClick(View view) {
         Intent intent = new Intent(this, SignUpActivity.class);
         startActivity(intent);
         overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
-    }
-
-    public boolean userIsValid(String login, String password) {
-        //TODO: validate the input data
-        return login != null && password != null;
     }
 }

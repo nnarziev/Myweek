@@ -1,9 +1,9 @@
 package com.example.negmat.myweek;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -21,16 +21,6 @@ import butterknife.ButterKnife;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_signup);
-        ButterKnife.bind(this);
-        ActionBar bar = getSupportActionBar();
-        if (bar != null)
-            bar.setTitle("Sign up");
-    }
-
     // region Variables
     @BindView(R.id.txt_email)
     EditText email;
@@ -40,6 +30,16 @@ public class SignUpActivity extends AppCompatActivity {
     EditText password;
     @BindView(R.id.txt_conf_password)
     EditText confPassword;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_signup);
+        ButterKnife.bind(this);
+        ActionBar bar = getSupportActionBar();
+        if (bar != null)
+            bar.setTitle("Sign up");
+    }
     // @BindView(R.id.btn_register) TextView btnRegister;
     // endregion
 

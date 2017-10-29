@@ -3,10 +3,10 @@ package com.example.negmat.myweek;
 import android.annotation.SuppressLint;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.app.FragmentManager;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
@@ -73,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
         initialize();
     }
 
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
 
     // region UI Variables
     @BindView(R.id.btn_add_event)
@@ -392,9 +396,9 @@ public class MainActivity extends AppCompatActivity {
         Calendar c = Calendar.getInstance();
         c.setTime(selCalDate.getTime());
         c.add(Calendar.DATE, -move);
-        final int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH)+1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
+        final int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
         c.add(Calendar.DATE, 6);
-        final int end_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH)+1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_end_hour * 100 + minute;
+        final int end_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_end_hour * 100 + minute;
 
         final String usrName = SignInActivity.loginPrefs.getString("Login", null);
         final String usrPassword = SignInActivity.loginPrefs.getString("Password", null);

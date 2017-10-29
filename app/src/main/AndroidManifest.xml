@@ -12,7 +12,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name="com.example.negmat.myweek.SignInActivity">
+        <activity
+            android:name="com.example.negmat.myweek.SignInActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -21,7 +23,6 @@
         </activity>
         <activity android:name="com.example.negmat.myweek.MainActivity" />
         <activity android:name="com.example.negmat.myweek.SignUpActivity" />
-        <activity android:name="com.example.negmat.myweek.ViewEventDialog" />
     </application>
 
 </manifest>
