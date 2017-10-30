@@ -12,15 +12,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.GridLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-
-import net.gotev.speech.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -50,45 +50,56 @@ public class ConfirmEventDialog extends DialogFragment {
     TextView txtEventTime;
     @BindView(R.id.txt_event_note)
     EditText txtEventNote;
+    @BindView(R.id.repeatToggleGroup)
+    GridLayout toggleBtnParent;
     //endregion
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.diaog_confirmevent, container, false);
         ButterKnife.bind(this, view);
-        Logger.setLogLevel(Logger.LogLevel.DEBUG);
+
         txtEventName.setText(getEvent_name());
         txtEventDate.setText(showEv_date_string(getEvent_time()));
         txtEventTime.setText(showEv_time_string(getEvent_time()));
         txtEventNote.setText(getEvent_note());
+
+        repButtons = new ToggleButton[toggleBtnParent.getChildCount()];
+        for (int n = 0; n < repButtons.length; n++)
+            repButtons[n] = (ToggleButton) toggleBtnParent.getChildAt(n);
+
         return view;
     }
 
-    // region Class environment
-
+    // region Variables
     public long event_id;
     public String event_name;
     public String event_note;
     public int cat_id;
     public int event_time;
-    public boolean isEdit = false;
+    public boolean isEditing = false;
     public Activity activity;
 
+    private ToggleButton[] repButtons;
+    // endregion
 
-    public ConfirmEventDialog(Activity activity, long event_id, int cat_id, String ev_name, int ev_time, boolean isEdit) {
+    public ConfirmEventDialog(Activity activity, long event_id, int cat_id, String ev_name, int ev_time, boolean isEditing) {
         this.activity = activity;
         this.event_id = event_id;
+        this.isEditing = isEditing;
+
         setCat_id(cat_id);
         setEvent_name(ev_name);
         setEvent_time(ev_time);
-        this.isEdit = isEdit;
     }
 
-    public ConfirmEventDialog(Activity activity, int cat_id, String ev_name, int ev_time) {
+    public ConfirmEventDialog(Activity activity, int cat_id, String ev_name, String ev_note, int ev_time) {
         this.activity = activity;
+
         setCat_id(cat_id);
         setEvent_name(ev_name);
         setEvent_time(ev_time);
+        setEvent_note(ev_note);
     }
 
     public String showEv_time_string(int event_time) {
@@ -109,7 +120,7 @@ public class ConfirmEventDialog extends DialogFragment {
         short year = (short) (event_time / 100000000);
 
         Calendar cal = Calendar.getInstance();
-        cal.set(year + 2000, month, day);
+        cal.set(year + 2000, month - 1, day);
 
         return String.format(Locale.US, "%s. %d, %d",
                 cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()), day, year + 2000);
@@ -146,16 +157,20 @@ public class ConfirmEventDialog extends DialogFragment {
     public void setEvent_time(int event_time) {
         this.event_time = event_time;
     }
-    // endregion
 
     //region Buttons handler; Date and Time pick handler
     @OnClick(R.id.btn_save)
-    public void save() {
-        if (isEdit) {
-            createEvent(0, (short) 060, true);
+    public void saveClick() {
+        int repeatMode = 0;
+        for (int n = repButtons.length - 1; n > -1; n--)
+            if (repButtons[repButtons.length - n - 1].isChecked())
+                repeatMode += 1 << n;
+
+        if (isEditing) {
+            createEvent(repeatMode, (short) 60, true);
             deleteAfterEdit();
         } else
-            createEvent(0, (short) 60, true);
+            createEvent(repeatMode, (short) 60, true);
         dismiss();
     }
 
@@ -207,8 +222,8 @@ public class ConfirmEventDialog extends DialogFragment {
 
     //region Create event function
     public void createEvent(final int repeat_mode, final short length, final boolean is_active) {
-        final String usrName = SignInActivity.loginPrefs.getString("Login", null);
-        final String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+        final String usrName = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
+        final String usrPassword = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
         setEvent_note(txtEventNote.getText().toString());
 
         Executor exec = Executors.newCachedThreadPool();
@@ -242,8 +257,8 @@ public class ConfirmEventDialog extends DialogFragment {
     //endregion
 
     public void deleteAfterEdit() {
-        String usrName = SignInActivity.loginPrefs.getString("Login", null);
-        String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+        String usrName = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
+        String usrPassword = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
         JsonObject jsonDelete = new JsonObject();
         jsonDelete.addProperty("username", usrName);
         jsonDelete.addProperty("password", usrPassword);

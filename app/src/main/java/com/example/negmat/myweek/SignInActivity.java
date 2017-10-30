@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -28,15 +29,16 @@ public class SignInActivity extends AppCompatActivity {
 
         if (loginPrefs == null)
             loginPrefs = getSharedPreferences("UserLogin", 0);
-        if (loginPrefs.contains("login") && loginPrefs.contains("password")) {
+        if (loginPrefs.contains(SignInActivity.username) && loginPrefs.contains(SignInActivity.password)) {
             loadingPanel.setVisibility(View.VISIBLE);
-            signIn(loginPrefs.getString("login", null), loginPrefs.getString("password", null));
+            signIn(loginPrefs.getString(SignInActivity.username, null), loginPrefs.getString(SignInActivity.password, null));
         } else
             Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
     }
 
     // region Variables
     static SharedPreferences loginPrefs = null;
+    static final String username = "username", password = SignInActivity.password;
     static ExecutorService exec;
 
     @BindView(R.id.txt_login)
@@ -61,8 +63,8 @@ public class SignInActivity extends AppCompatActivity {
     public void signIn(final String usrLogin, final String usrPass) {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
             exec.shutdownNow();
-        else
-            exec = Executors.newCachedThreadPool();
+
+        exec = Executors.newCachedThreadPool();
 
         loadingPanel.setVisibility(View.VISIBLE);
 
@@ -70,43 +72,31 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    JSONObject json_body = new JSONObject();
-                    json_body.put("username", usrLogin);
-                    json_body.put("password", usrPass);
-
-                    String raw_json = Tools.post("https://qobiljon.pythonanywhere.com/users/login", json_body);
+                    String raw_json = Tools.post("https://qobiljon.pythonanywhere.com/users/login", new JSONObject()
+                            .put("username", usrLogin)
+                            .put("password", usrPass));
                     if (raw_json == null)
                         throw new Exception();
 
                     JSONObject json = new JSONObject(raw_json);
-                    final int resultNumber = json.getInt("result");
+                    int resultNumber = json.getInt("result");
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            switch (resultNumber) {
-                                case Tools.RES_OK:
-                                    SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
-                                    editor.putString("login", usrLogin);
-                                    editor.putString("password", usrPass);
-                                    editor.apply();
-                                    Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                                    startActivity(intent);
-                                    finish();
-                                    overridePendingTransition(0, 0);
-                                    break;
-                                case Tools.RES_SRV_ERR:
-                                    Toast.makeText(SignInActivity.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case Tools.RES_FAIL:
-                                    Toast.makeText(SignInActivity.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
-                                    break;
-                                default:
-                                    break;
+                    if (resultNumber == Tools.RES_OK)
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
+                                editor.putString(SignInActivity.username, usrLogin);
+                                editor.putString(SignInActivity.password, usrPass);
+                                editor.apply();
+                                Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                                startActivity(intent);
+                                finish();
+                                overridePendingTransition(0, 0);
                             }
-                        }
-                    });
+                        });
+                    else
+                        Log.e("ERROR", "Code: " + resultNumber);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

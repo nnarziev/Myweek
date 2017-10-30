@@ -5,6 +5,8 @@
     <color name="colorAccent">#FF4081</color>
     <color name="colorGreen">#26AE90</color>
     <color name="colorGrey">#ECEEF1</color>
-    <color name="color_repeat_mode">#61BEFC</color>
-    <color name="color_single_mode">#D0FF00</color>
+
+    <color name="color_repeat_mode">#BBDEFB</color>
+    <color name="color_single_mode">#C5CAE9</color>
+    <color name="event_text_color">#1A237E</color>
 </resources>

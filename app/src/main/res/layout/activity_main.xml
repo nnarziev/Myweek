@@ -84,6 +84,7 @@
         android:layout_marginEnd="20dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/app_name"
+        android:onClick="addEventClick"
         android:src="@drawable/new_event" />
 
 </RelativeLayout>

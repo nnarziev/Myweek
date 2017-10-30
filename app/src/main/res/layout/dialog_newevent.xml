@@ -11,23 +11,13 @@
         android:id="@+id/text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="top|center_horizontal"
         android:layout_margin="10dp"
+        android:gravity="top|center_horizontal"
         android:minLines="2"
         android:text="@string/speak_hint"
         android:textColor="@android:color/holo_blue_dark"
-        android:textStyle="italic"
-        android:textSize="20sp" />
-
-   <!-- <ImageButton
-        android:id="@+id/btn_speech"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_gravity="center"
-        android:layout_margin="15dp"
-        android:background="@android:color/transparent"
-        android:contentDescription="@string/app_name"
-        android:src="@drawable/microphone" />-->
+        android:textSize="20sp"
+        android:textStyle="italic" />
 
     <Button
         android:id="@+id/btn_cancel"

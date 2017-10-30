@@ -1,18 +1,17 @@
 package com.example.negmat.myweek;
 
 import android.Manifest;
+import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
-import android.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,8 +40,6 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     private static final int REQUEST_MICROPHONE = 2;
     @BindView(R.id.text)
     TextView text;
-    /*@BindView(R.id.btn_speech)
-    ImageButton btnSpeech;*/
     // endregion
 
     @Override
@@ -58,8 +55,8 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.RECORD_AUDIO},
                     REQUEST_MICROPHONE);
-        }
-        onRecordAudioPermissionGranted();
+        } else
+            onRecordAudioPermissionGranted();
 
         return view;
     }
@@ -77,28 +74,20 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     @Override
     public void onSpeechPartialResults(List<String> results) {
         text.setText("");
-        for (String partial : results) {
+        for (String partial : results)
             text.append(partial + " ");
-        }
     }
 
     @Override
-    public void onSpeechResult(final String result) {
-        //btnSpeech.setVisibility(View.VISIBLE);
-        text.setText(result);
+    public void onSpeechResult(String _result) {
+        final String result = _result.toLowerCase();
 
-        if (result.isEmpty()) {
+        text.setText(_result);
+
+        if (_result.isEmpty()) {
             Speech.getInstance().say("Repeat please");
+            return;
         }
-        //        else {
-//            //Speech.getInstance().say(result);
-//        }
-        //event_name = result;
-        //        //TODO: take activity result and make string matchig and find the category id and send to suggest API
-        //        int category_id = stringMatchingWithCategories(result);
-        //        suggestTime(category_id);
-        //        //TODO: after time was suggested, use create event API
-
 
         Executor exec = Executors.newCachedThreadPool();
         exec.execute(new Runnable() {
@@ -110,17 +99,23 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                         throw new Exception();
 
                     final int category_id = (int) match[0];
-                    /*String key = (String) match[1];
-                    key = Character.toUpperCase(key.charAt(0)) + key.substring(1);*/
+                    // TODO: Temporary, for presentation use only
+                    final String key = Character.toUpperCase(((String) match[1]).charAt(0)) + ((String) match[1]).substring(1);
 
-                    String usrName = SignInActivity.loginPrefs.getString("Login", null);
-                    String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+                    String usrName = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
+                    String usrPassword = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
 
                     JSONObject body = new JSONObject();
                     body.put("username", usrName);
                     body.put("password", usrPassword);
                     body.put("category_id", category_id);
-                    body.put("today", 171024);
+
+                    // Calendar c = Calendar.getInstance();
+                    // int today = (c.get(Calendar.YEAR) % 100) * 10000 + (c.get(Calendar.MONTH) + 1) * 100 + c.get(Calendar.DAY_OF_MONTH);
+                    // c.add(Calendar.DATE, 6 - c.get(Calendar.DAY_OF_WEEK));
+                    // int weekend = (c.get(Calendar.YEAR) % 100) * 10000 + (c.get(Calendar.MONTH) + 1) * 100 + c.get(Calendar.DAY_OF_MONTH);
+
+                    body.put("today", 171022);
                     body.put("weekend", 171028);
                     JSONObject raw = new JSONObject(Tools.post("https://qobiljon.pythonanywhere.com/events/suggest", body));
 
@@ -129,10 +124,12 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
                     final int suggested_time = raw.getInt("suggested_time");
 
+                    Log.e("DATA", suggested_time + "");
+
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, result, suggested_time);
+                            ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, result, suggested_time);
                             conf.show(getActivity().getFragmentManager(), "confirmdialog");
                         }
                     });
@@ -153,7 +150,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     }
 
     private void onRecordAudioPermissionGranted() {
-       // btnSpeech.setVisibility(View.GONE);
+        // btnSpeech.setVisibility(View.GONE);
 
         try {
             Speech.getInstance().stopTextToSpeech();
@@ -203,125 +200,10 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                 .show();
     }
 
-    /*@OnClick(R.id.btn_speech)
-    public void Speech() {
-
-    }*/
-
     @OnClick(R.id.btn_cancel)
     public void AddEventCancel() {
         dismiss();
     }
-
-    //private HashMap<String, Integer> category_ids = new HashMap<>();
-
-//    public void getCategoties() {
-//        SharedPreferences pref = getActivity().getSharedPreferences(Tools.PREFS_NAME, 0);
-//        String usrName = pref.getString("Login", null);
-//        String usrPassword = pref.getString("Password", null);
-//
-//        JsonObject jsonSend = new JsonObject();
-//        jsonSend.addProperty("username", usrName);
-//        jsonSend.addProperty("password", usrPassword);
-//        String url = "http://qobiljon.pythonanywhere.com/events/categories";
-//        Ion.with(getActivity().getApplicationContext())
-//                .load("POST", url)
-//                .addHeader("Content-Type", "application/json")
-//                .setJsonObjectBody(jsonSend)
-//                .asJsonObject()
-//                .setCallback(new FutureCallback<JsonObject>() {
-//                    @Override
-//                    public void onCompleted(Exception e, JsonObject result) {
-//                        //process data or error
-//                        try {
-//                            JSONObject json = new JSONObject(String.valueOf(result));
-//                            short resultNumber = (short) json.getInt("result");
-//                            switch (resultNumber) {
-//                                case Tools.RES_OK:
-//                                    //TODO: take array of JSON objects and return this
-//                                    //JSONObject js = new JSONObject(String.valueOf(jArray));
-//                                    final int length = json.getInt("length");
-//                                    final JSONArray jarray = json.getJSONArray("categories");
-//                                    category_ids.clear();
-//
-//                                    for (int i = 0; i < length; i++) {
-//                                        String cat_name = jarray.getJSONObject(i).names().getString(0);
-//                                        category_ids.put(cat_name, jarray.getJSONObject(i).getInt(cat_name));
-//                                    }
-//
-//                                    for (String name : category_ids.keySet()) {
-//                                        String value = category_ids.get(name).toString();
-//                                        Log.v(name, ": " + value);
-//                                    }
-//                                    break;
-//                                case Tools.RES_SRV_ERR:
-//                                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-//                                    break;
-//                                case Tools.RES_FAIL:
-//                                    Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
-//                                    break;
-//                                default:
-//                                    break;
-//                            }
-//                        } catch (JSONException e1) {
-//                            Log.wtf("json", e1);
-//                        }
-//                    }
-//                });
-//    }
-//
-//    public void suggestTime(final int category_id) {
-//        String usrName = SignInActivity.loginPrefs.getString("Login", null);
-//        String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
-//
-//        JsonObject jsonSend = new JsonObject();
-//        jsonSend.addProperty("username", usrName);
-//        jsonSend.addProperty("password", usrPassword);
-//        jsonSend.addProperty("category_id", category_id);
-//        String url = "http://qobiljon.pythonanywhere.com/events/suggest";
-//        Ion.with(getActivity().getApplicationContext())
-//                .load("POST", url)
-//                .addHeader("Content-Type", "application/json")
-//                .setJsonObjectBody(jsonSend)
-//                .asJsonObject()
-//                .setCallback(new FutureCallback<JsonObject>() {
-//                    @Override
-//                    public void onCompleted(Exception e, JsonObject result) {
-//                        //process data or error
-//                        try {
-//                            final JSONObject json = new JSONObject(String.valueOf(result));
-//                            short resultNumber = (short) json.getInt("result");
-//                            switch (resultNumber) {
-//                                case Tools.RES_OK:
-//
-//                                    final int suggested_time = json.getInt("suggested_time");
-//                                    Toast.makeText(getActivity(), category_id + "\n" + event_name + "\n" + suggested_time, Toast.LENGTH_SHORT).show();
-//                                    /*ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), event_name, String.valueOf(suggested_time), "some note");
-//                                    conf.show();*/
-//                                    FragmentManager manager = getFragmentManager();
-//                                    ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), event_name, String.valueOf(suggested_time), "some note");
-//                                    conf.show(manager, "ConfirmDialog");
-//                                    dismiss();
-//                                    //createEvent(category_id, suggested_time, 120, (short) 60, true, event_name, "");
-//
-//
-//                                    //Toast.makeText(getActivity(), String.valueOf(json.getInt("suggested_time")), Toast.LENGTH_SHORT).show();
-//                                    break;
-//                                case Tools.RES_SRV_ERR:
-//                                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-//                                    break;
-//                                case Tools.RES_FAIL:
-//                                    Toast.makeText(getActivity().getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
-//                                    break;
-//                                default:
-//                                    break;
-//                            }
-//                        } catch (JSONException e1) {
-//                            Log.wtf("json", e1);
-//                        }
-//                    }
-//                });
-//    }
 
     public Object[] stringMatchingWithCategories(String event_text) {
         String raw_json = Tools.post("http://qobiljon.pythonanywhere.com/events/categories", null);
@@ -361,6 +243,17 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         }
         // endregion
 
+        if (event_text.contains("hiking") || event_text.contains("jumping"))
+            return new Object[]{map.get("adrenaline"), "adrenaline"};
+        else if (event_text.contains("museum"))
+            return new Object[]{map.get("silent"), "silent"};
+        else if (event_text.contains("romantic"))
+            return new Object[]{map.get("couple"), "couple"};
+        else if (event_text.contains("walk") || event_text.contains("wander"))
+            return new Object[]{map.get("alone"), "alone"};
+        else if (event_text.contains("club") || event_text.contains("party"))
+            return new Object[]{map.get("loud"), "loud"};
+
         int cat = -1;
         String key = null;
         for (String _key : map.keySet())
@@ -378,5 +271,4 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
         return new Object[]{cat, key};
     }
-
 }

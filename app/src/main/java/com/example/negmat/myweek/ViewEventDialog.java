@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
@@ -16,8 +17,6 @@ import com.koushikdutta.ion.Ion;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import android.view.View.OnClickListener;
 
 import java.util.Calendar;
 import java.util.Locale;
@@ -97,10 +96,15 @@ class ViewEventDialog extends Dialog implements OnClickListener {
         txtEventName.setText(txtEventName.getText().toString() + " " + event_name);
         txtEventDate.setText(txtEventDate.getText().toString() + " " + event_date);
         txtEventTime.setText(txtEventTime.getText().toString() + " " + event_time);
+
         txtEventRepeat.setText(txtEventRepeat.getText().toString() + " " + event_repeat);
+
         txtEventNote.setText(txtEventNote.getText().toString() + " " + event_note);
 
     }
+
+    // TODO: Temporary
+    static String[] days = new String[]{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
 
     @Override
@@ -126,8 +130,8 @@ class ViewEventDialog extends Dialog implements OnClickListener {
     }
 
     private void deleteEvent() {
-        String usrName = SignInActivity.loginPrefs.getString("Login", null);
-        String usrPassword = SignInActivity.loginPrefs.getString("Password", null);
+        String usrName = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
+        String usrPassword = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
         JsonObject jsonDelete = new JsonObject();
         jsonDelete.addProperty("username", usrName);
         jsonDelete.addProperty("password", usrPassword);

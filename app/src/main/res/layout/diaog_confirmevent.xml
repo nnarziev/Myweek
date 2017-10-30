@@ -25,8 +25,8 @@
             android:id="@id/txt_event_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:inputType="text" />
+            android:inputType="text"
+            android:maxLines="1" />
     </LinearLayout>
 
     <LinearLayout
@@ -55,9 +55,9 @@
 
         <TextView
             android:id="@id/txt_event_time"
-            android:layout_weight="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:gravity="right|center"
             android:inputType="text" />
     </LinearLayout>
@@ -83,8 +83,9 @@
             android:id="@id/txt_event_note"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
-            android:maxLines="3" />
+            android:ellipsize="end"
+            android:inputType="text|textMultiLine"
+            android:maxLines="2" />
     </LinearLayout>
 
     <LinearLayout
@@ -106,6 +107,7 @@
             android:textStyle="bold" />
 
         <GridLayout
+            android:id="@+id/repeatToggleGroup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:columnCount="4"
@@ -168,15 +170,6 @@
                 android:textOn="@string/sun"
                 android:textSize="12sp" />
         </GridLayout>
-
-
-        <!--<TextView
-            android:id="@+id/txt_btn_repeat_mode"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="choose the day"
-            android:textSize="15dp"/>-->
     </LinearLayout>
 
     <LinearLayout
