@@ -97,7 +97,14 @@ class ViewEventDialog extends Dialog implements OnClickListener {
         txtEventDate.setText(txtEventDate.getText().toString() + " " + event_date);
         txtEventTime.setText(txtEventTime.getText().toString() + " " + event_time);
 
-        txtEventRepeat.setText(txtEventRepeat.getText().toString() + " " + event_repeat);
+        String rep = "";
+        for (int n = 0; n < days.length; n++)
+            if ((event_repeat & (1 << (days.length - 1 - n))) != 0) {
+                if (rep.length() > 0)
+                    rep += ", ";
+                rep += days[n];
+            }
+        txtEventRepeat.setText(txtEventRepeat.getText().toString() + " " + (rep.length() == 0 ? "No Repeat" : rep));
 
         txtEventNote.setText(txtEventNote.getText().toString() + " " + event_note);
 
@@ -167,5 +174,4 @@ class ViewEventDialog extends Dialog implements OnClickListener {
                     }
                 });
     }
-
 }
