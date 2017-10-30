@@ -103,5 +103,11 @@ public class SignUpActivity extends AppCompatActivity {
         return (email != null && login != null && password != null && confirmPass != null) && (email.contains("@")) &&
                 (login.length() >= 4 && login.length() <= 12) && (password.length() >= 6 && password.length() <= 16) && (password.equals(confirmPass));
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        overridePendingTransition(0, 0);
+    }
 }
 

@@ -8,17 +8,13 @@
     android:orientation="vertical"
     tools:context="com.example.negmat.myweek.SignUpActivity">
 
-    <EditText
-        android:id="@+id/txt_email"
-        android:layout_width="match_parent"
+
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="50dp"
-        android:layout_marginRight="50dp"
-        android:background="#fff"
-        android:hint="@string/email"
-        android:inputType="textEmailAddress"
-        android:maxLines="1"
-        android:padding="13dp" />
+        android:text="@string/sign_up"
+        android:textColor="@android:color/white"
+        android:textSize="30sp" />
 
     <EditText
         android:id="@+id/txt_login"
@@ -28,8 +24,25 @@
         android:layout_marginRight="50dp"
         android:layout_marginTop="10dp"
         android:background="#fff"
-        android:hint="@string/login"
-        android:padding="13dp" />
+        android:hint="@string/username"
+        android:padding="13dp"
+        android:textColor="@color/colorGreen"
+        android:textColorHint="@android:color/darker_gray" />
+
+    <EditText
+        android:id="@+id/txt_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:layout_marginTop="10dp"
+        android:background="#fff"
+        android:hint="@string/email"
+        android:inputType="textEmailAddress"
+        android:maxLines="1"
+        android:padding="13dp"
+        android:textColor="@color/colorGreen"
+        android:textColorHint="@android:color/darker_gray" />
 
     <EditText
         android:id="@+id/txt_password"
@@ -41,7 +54,9 @@
         android:background="#fff"
         android:hint="@string/password"
         android:inputType="textPassword"
-        android:padding="13dp" />
+        android:padding="13dp"
+        android:textColor="@color/colorGreen"
+        android:textColorHint="@android:color/darker_gray" />
 
     <EditText
         android:id="@+id/txt_conf_password"
@@ -53,7 +68,9 @@
         android:background="#fff"
         android:hint="@string/confirm_password"
         android:inputType="textPassword"
-        android:padding="13dp" />
+        android:padding="13dp"
+        android:textColor="@color/colorGreen"
+        android:textColorHint="@android:color/darker_gray" />
 
     <Button
         android:id="@+id/btn_register"
@@ -65,6 +82,6 @@
         android:background="@color/colorGrey"
         android:onClick="registerClick"
         android:padding="18dp"
-        android:text="@string/sign_up"
+        android:text="@string/sign_up_now"
         android:textColor="@color/colorGreen" />
 </LinearLayout>

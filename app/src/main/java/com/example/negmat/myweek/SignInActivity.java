@@ -52,11 +52,19 @@ public class SignInActivity extends AppCompatActivity {
         signIn(userLogin.getText().toString(), userPassword.getText().toString());
     }
 
+    public void signUpClick(View view) {
+        Intent intent = new Intent(this, SignUpActivity.class);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
+    }
+
     public void signIn(final String usrLogin, final String usrPass) {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
             exec.shutdownNow();
         else
             exec = Executors.newCachedThreadPool();
+
+        loadingPanel.setVisibility(View.VISIBLE);
 
         exec.execute(new Runnable() {
             @Override
@@ -71,45 +79,46 @@ public class SignInActivity extends AppCompatActivity {
                         throw new Exception();
 
                     JSONObject json = new JSONObject(raw_json);
-                    int resultNumber = json.getInt("result");
+                    final int resultNumber = json.getInt("result");
 
-                    switch (resultNumber) {
-                        case Tools.RES_OK:
-                            SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
-                            editor.putString("login", usrLogin);
-                            editor.putString("password", usrPass);
-                            editor.apply();
-                            Intent intent = new Intent(SignInActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            finish();
-                            overridePendingTransition(0, 0);
-                            break;
-                        case Tools.RES_SRV_ERR:
-                            Toast.makeText(SignInActivity.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                            break;
-                        case Tools.RES_FAIL:
-                            Toast.makeText(SignInActivity.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
-                            break;
-                        default:
-                            break;
-                    }
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            switch (resultNumber) {
+                                case Tools.RES_OK:
+                                    SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
+                                    editor.putString("login", usrLogin);
+                                    editor.putString("password", usrPass);
+                                    editor.apply();
+                                    Intent intent = new Intent(SignInActivity.this, MainActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                    overridePendingTransition(0, 0);
+                                    break;
+                                case Tools.RES_SRV_ERR:
+                                    Toast.makeText(SignInActivity.this, "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case Tools.RES_FAIL:
+                                    Toast.makeText(SignInActivity.this, "Incorrect credentials", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        loadingPanel.setVisibility(View.GONE);
-                    }
-                });
             }
         });
     }
 
-    public void signUpClick(View view) {
-        Intent intent = new Intent(this, SignUpActivity.class);
-        startActivity(intent);
-        overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        loadingPanel.setVisibility(View.GONE);
+        if (exec != null && !exec.isShutdown() && !exec.isTerminated())
+            exec.shutdownNow();
     }
 }
