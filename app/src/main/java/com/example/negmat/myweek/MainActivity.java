@@ -15,10 +15,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.GridLayout;
@@ -41,7 +43,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -232,26 +234,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            /*int event_start_time = events[index].getStart_time();
-            short time = (short) (event_start_time % 10000 / 100);
-            short day = (short) (event_start_time % 1000000 / 10000);
-            short month = (short) ((event_start_time % 100000000 / 1000000));
-            short year = (short) (event_start_time / 100000000);
-            Calendar cal = Calendar.getInstance();
-            cal.set(year + 2000, month, day);
-
-            String event_name = events[index].getEvent_name();
-            String note = events[index].getEvent_note();
-            int duration = events[index].getLength();
-            int repeat = events[index].getRepeat_mode();
-            String reason = events[index].getReason();
-
-            if (reason == null)
-                reason = "no reason";
-
-            @SuppressLint("DefaultLocale") String eventInfo = String.format("%s\n%s\nDate: %s. %d, %d\nFrom: %d:00\nDuration: %d min\nRepeat: %d times\nReason: %s", event_name, note,
-                    cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()), cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.YEAR), time, duration, repeat, reason);
-
             //make event global and show all info on it*/
             ViewEventDialog ved = new ViewEventDialog(MainActivity.this, events[index]);
             ved.show();
@@ -370,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                final String result = Tools.post("https://qobiljon.pythonanywhere.com/events/fetch", body);
+                final String result = Tools.post("http://165.246.165.130:2222/events/fetch", body);
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -399,4 +381,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 }

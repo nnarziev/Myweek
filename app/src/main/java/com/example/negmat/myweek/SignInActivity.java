@@ -72,7 +72,7 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    String raw_json = Tools.post("https://qobiljon.pythonanywhere.com/users/login", new JSONObject()
+                    String raw_json = Tools.post("http://165.246.165.130:2222/users/login", new JSONObject()
                             .put("username", usrLogin)
                             .put("password", usrPass));
                     if (raw_json == null)

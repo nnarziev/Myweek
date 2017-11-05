@@ -35,6 +35,7 @@ class ViewEventDialog extends Dialog implements OnClickListener {
     private short event_duration;
     private int event_repeat;
     private int event_cat_id;
+    public Event event;
 
     private String EventTxt;
 
@@ -51,6 +52,7 @@ class ViewEventDialog extends Dialog implements OnClickListener {
     ViewEventDialog(Activity a, Event e/*String event, long event_id*/) {
         super(a);
         activity = a;
+        event = e;
         // TODO Auto-generated constructor stub
         event_date_time = e.getStart_time();
         short time = (short) (event_date_time % 10000 / 100);
@@ -119,7 +121,7 @@ class ViewEventDialog extends Dialog implements OnClickListener {
 
         switch (v.getId()) {
             case R.id.btn_edit:
-                ConfirmEventDialog conf = new ConfirmEventDialog(activity, event_id, event_cat_id, event_name, event_date_time, true);
+                ConfirmEventDialog conf = new ConfirmEventDialog(activity, event, true);
                 conf.show(activity.getFragmentManager(), "confirmdialog");
 
 
@@ -143,7 +145,7 @@ class ViewEventDialog extends Dialog implements OnClickListener {
         jsonDelete.addProperty("username", usrName);
         jsonDelete.addProperty("password", usrPassword);
         jsonDelete.addProperty("event_id", event_id);
-        String url = "http://qobiljon.pythonanywhere.com/events/disable";
+        String url = "http://165.246.165.130:2222/events/disable";
         Ion.with(activity.getApplicationContext())
                 .load("POST", url)
                 .addHeader("Content-Type", "application/json")

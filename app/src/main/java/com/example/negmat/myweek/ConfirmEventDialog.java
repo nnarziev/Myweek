@@ -65,8 +65,11 @@ public class ConfirmEventDialog extends DialogFragment {
         txtEventNote.setText(getEvent_note());
 
         repButtons = new ToggleButton[toggleBtnParent.getChildCount()];
-        for (int n = 0; n < repButtons.length; n++)
+        for (int n = 0; n < repButtons.length; n++){
             repButtons[n] = (ToggleButton) toggleBtnParent.getChildAt(n);
+        }
+
+
 
         return view;
     }
@@ -77,20 +80,25 @@ public class ConfirmEventDialog extends DialogFragment {
     public String event_note;
     public int cat_id;
     public int event_time;
+    public int event_repeat_mode;
     public boolean isEditing = false;
     public Activity activity;
+    public Event event;
 
     private ToggleButton[] repButtons;
     // endregion
 
-    public ConfirmEventDialog(Activity activity, long event_id, int cat_id, String ev_name, int ev_time, boolean isEditing) {
+    public ConfirmEventDialog(Activity activity, Event e, boolean isEditing) {
         this.activity = activity;
-        this.event_id = event_id;
+        this.event = e;
         this.isEditing = isEditing;
 
-        setCat_id(cat_id);
-        setEvent_name(ev_name);
-        setEvent_time(ev_time);
+        this.event_id = e.getEvent_id();
+        setCat_id(e.getEvent_cat_id());
+        setEvent_name(e.getEvent_name());
+        setEvent_time(e.getStart_time());
+        setEvent_note(e.getEvent_note());
+        setEvent_repeat_mode(e.getRepeat_mode());
     }
 
     public ConfirmEventDialog(Activity activity, int cat_id, String ev_name, String ev_note, int ev_time) {
@@ -104,13 +112,6 @@ public class ConfirmEventDialog extends DialogFragment {
 
     public String showEv_time_string(int event_time) {
         short time = (short) (event_time % 10000 / 100);
-        short day = (short) (event_time % 1000000 / 10000);
-        short month = (short) (event_time % 100000000 / 1000000);
-        short year = (short) (event_time / 100000000);
-
-        Calendar cal = Calendar.getInstance();
-        cal.set(year + 2000, month, day);
-
         return String.format(Locale.US, "%d:00", time);
     }
 
@@ -120,7 +121,7 @@ public class ConfirmEventDialog extends DialogFragment {
         short year = (short) (event_time / 100000000);
 
         Calendar cal = Calendar.getInstance();
-        cal.set(year + 2000, month - 1, day);
+        cal.set(year + 2000, month, day);
 
         return String.format(Locale.US, "%s. %d, %d",
                 cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()), day, year + 2000);
@@ -158,6 +159,14 @@ public class ConfirmEventDialog extends DialogFragment {
         this.event_time = event_time;
     }
 
+    public int getEvent_repeat_mode() {
+        return event_repeat_mode;
+    }
+
+    public void setEvent_repeat_mode(int event_repeat_mode) {
+        this.event_repeat_mode = event_repeat_mode;
+    }
+
     //region Buttons handler; Date and Time pick handler
     @OnClick(R.id.btn_save)
     public void saveClick() {
@@ -166,6 +175,9 @@ public class ConfirmEventDialog extends DialogFragment {
             if (repButtons[repButtons.length - n - 1].isChecked())
                 repeatMode += 1 << n;
 
+        int remainder = getEvent_time()%1000000;
+        int time = (getEvent_time()/1000000 + 1) * 1000000 + remainder;
+        setEvent_time(time);
         if (isEditing) {
             createEvent(repeatMode, (short) 60, true);
             deleteAfterEdit();
@@ -241,7 +253,7 @@ public class ConfirmEventDialog extends DialogFragment {
                     jsonSend.put("is_active", is_active);
                     jsonSend.put("event_name", getEvent_name());
                     jsonSend.put("event_note", getEvent_note());
-                    String url = "http://qobiljon.pythonanywhere.com/events/create";
+                    String url = "http://165.246.165.130:2222/events/create";
 
                     JSONObject raw = new JSONObject(Tools.post(url, jsonSend));
                     if (raw.getInt("result") != Tools.RES_OK)
@@ -263,7 +275,7 @@ public class ConfirmEventDialog extends DialogFragment {
         jsonDelete.addProperty("username", usrName);
         jsonDelete.addProperty("password", usrPassword);
         jsonDelete.addProperty("event_id", event_id);
-        String url = "http://qobiljon.pythonanywhere.com/events/disable";
+        String url = "http://165.246.165.130:2222/events/disable";
         Ion.with(activity.getApplicationContext())
                 .load("POST", url)
                 .addHeader("Content-Type", "application/json")
