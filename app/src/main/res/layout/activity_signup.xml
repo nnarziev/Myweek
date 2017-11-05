@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorGreen"
+    android:background="@drawable/sign_background"
     android:gravity="center"
     android:orientation="vertical"
     tools:context="com.example.negmat.myweek.SignUpActivity">
@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:text="@string/sign_up"
         android:textColor="@android:color/white"
-        android:textSize="30sp" />
+        android:textSize="40sp" />
 
     <EditText
         android:id="@+id/txt_login"
@@ -28,7 +28,7 @@
         android:inputType="textShortMessage"
         android:padding="13dp"
         android:scrollHorizontally="true"
-        android:textColor="@color/colorGreen"
+        android:textColor="@color/event_text_color"
         android:textColorHint="@android:color/darker_gray" />
 
     <EditText
@@ -43,7 +43,7 @@
         android:inputType="textEmailAddress"
         android:padding="13dp"
         android:scrollHorizontally="true"
-        android:textColor="@color/colorGreen"
+        android:textColor="@color/event_text_color"
         android:textColorHint="@android:color/darker_gray" />
 
     <EditText
@@ -57,7 +57,7 @@
         android:hint="@string/password"
         android:inputType="textPassword"
         android:padding="13dp"
-        android:textColor="@color/colorGreen"
+        android:textColor="@color/event_text_color"
         android:textColorHint="@android:color/darker_gray" />
 
     <EditText
@@ -72,7 +72,7 @@
         android:inputType="textPassword"
         android:padding="13dp"
         android:scrollHorizontally="true"
-        android:textColor="@color/colorGreen"
+        android:textColor="@color/event_text_color"
         android:textColorHint="@android:color/darker_gray" />
 
     <Button
@@ -86,5 +86,5 @@
         android:onClick="registerClick"
         android:padding="18dp"
         android:text="@string/sign_up_now"
-        android:textColor="@color/colorGreen" />
+        android:textColor="@color/event_text_color" />
 </LinearLayout>
