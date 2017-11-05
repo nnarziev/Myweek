@@ -24,7 +24,6 @@ import java.util.Locale;
 
 class ViewEventDialog extends Dialog implements OnClickListener {
 
-
     // region Variables
     private Activity activity;
     private String event_name;
