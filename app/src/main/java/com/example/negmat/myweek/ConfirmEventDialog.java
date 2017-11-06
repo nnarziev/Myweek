@@ -4,15 +4,16 @@ import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
-import android.widget.GridLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
@@ -26,6 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -50,8 +52,8 @@ public class ConfirmEventDialog extends DialogFragment {
     TextView txtEventTime;
     @BindView(R.id.txt_event_note)
     EditText txtEventNote;
-    @BindView(R.id.repeatToggleGroup)
-    GridLayout toggleBtnParent;
+    @BindView(R.id.weekdaysGroup)
+    ViewGroup toggleBtnParent;
     //endregion
 
     @Override
@@ -64,12 +66,30 @@ public class ConfirmEventDialog extends DialogFragment {
         txtEventTime.setText(showEv_time_string(getEvent_time()));
         txtEventNote.setText(getEvent_note());
 
-        repButtons = new ToggleButton[toggleBtnParent.getChildCount()];
-        for (int n = 0; n < repButtons.length; n++){
-            repButtons[n] = (ToggleButton) toggleBtnParent.getChildAt(n);
-        }
+        weekDayMap.clear();
+        weekDayMap.put(getResources().getString(R.string.mon), Tools.MON);
+        weekDayMap.put(getResources().getString(R.string.tue), Tools.TUE);
+        weekDayMap.put(getResources().getString(R.string.wed), Tools.WED);
+        weekDayMap.put(getResources().getString(R.string.thu), Tools.THU);
+        weekDayMap.put(getResources().getString(R.string.fri), Tools.FRI);
+        weekDayMap.put(getResources().getString(R.string.sat), Tools.SAT);
+        weekDayMap.put(getResources().getString(R.string.sun), Tools.SUN);
 
+        CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (isChecked) {
+                    repeat_mode |= weekDayMap.get(String.valueOf(compoundButton.getTag()));
+                    compoundButton.setTextColor(Color.WHITE);
+                } else {
+                    repeat_mode &= ~weekDayMap.get(String.valueOf(compoundButton.getTag()));
+                    compoundButton.setTextColor(Color.BLACK);
+                }
+            }
+        };
 
+        for (int n = 0; n < toggleBtnParent.getChildCount(); n++)
+            ((ToggleButton) toggleBtnParent.getChildAt(n)).setOnCheckedChangeListener(listener);
 
         return view;
     }
@@ -85,7 +105,8 @@ public class ConfirmEventDialog extends DialogFragment {
     public Activity activity;
     public Event event;
 
-    private ToggleButton[] repButtons;
+    private short repeat_mode = 0;
+    private HashMap<String, Short> weekDayMap = new HashMap<>();
     // endregion
 
     public ConfirmEventDialog(Activity activity, Event e, boolean isEditing) {
@@ -169,20 +190,15 @@ public class ConfirmEventDialog extends DialogFragment {
 
     //region Buttons handler; Date and Time pick handler
     @OnClick(R.id.btn_save)
-    public void saveClick() {
-        int repeatMode = 0;
-        for (int n = repButtons.length - 1; n > -1; n--)
-            if (repButtons[repButtons.length - n - 1].isChecked())
-                repeatMode += 1 << n;
-
-        int remainder = getEvent_time()%1000000;
-        int time = (getEvent_time()/1000000 + 1) * 1000000 + remainder;
+    public void saveClick(View view) {
+        int remainder = getEvent_time() % 1000000;
+        int time = (getEvent_time() / 1000000 + 1) * 1000000 + remainder;
         setEvent_time(time);
         if (isEditing) {
-            createEvent(repeatMode, (short) 60, true);
+            createEvent(repeat_mode, (short) 60, true);
             deleteAfterEdit();
         } else
-            createEvent(repeatMode, (short) 60, true);
+            createEvent(repeat_mode, (short) 60, true);
         dismiss();
     }
 
@@ -214,9 +230,8 @@ public class ConfirmEventDialog extends DialogFragment {
 
     @OnClick(R.id.txt_event_time)
     public void selectTime() {
-        Calendar mcurrentTime = Calendar.getInstance();
-        int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
-        int minute = mcurrentTime.get(Calendar.MINUTE);
+        short hour = (short) (event_time % 10000 / 100);
+
         TimePickerDialog mTimePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
@@ -224,7 +239,8 @@ public class ConfirmEventDialog extends DialogFragment {
                 setEvent_time(time);
                 txtEventTime.setText(showEv_time_string(getEvent_time()));
             }
-        }, hour, minute, false);//Yes 24 hour time
+        }, hour, 00, true);
+
         mTimePicker.setTitle("Select Time");
         mTimePicker.show();
     }
@@ -253,7 +269,7 @@ public class ConfirmEventDialog extends DialogFragment {
                     jsonSend.put("is_active", is_active);
                     jsonSend.put("event_name", getEvent_name());
                     jsonSend.put("event_note", getEvent_note());
-                    String url = "http://qobiljon.pythonanywhere.com/events/create";
+                    String url = "http://165.246.165.130:2222/events/create";
 
                     JSONObject raw = new JSONObject(Tools.post(url, jsonSend));
                     if (raw.getInt("result") != Tools.RES_OK)
@@ -275,7 +291,7 @@ public class ConfirmEventDialog extends DialogFragment {
         jsonDelete.addProperty("username", usrName);
         jsonDelete.addProperty("password", usrPassword);
         jsonDelete.addProperty("event_id", event_id);
-        String url = "http://qobiljon.pythonanywhere.com/events/disable";
+        String url = "http://165.246.165.130:2222/events/disable";
         Ion.with(activity.getApplicationContext())
                 .load("POST", url)
                 .addHeader("Content-Type", "application/json")

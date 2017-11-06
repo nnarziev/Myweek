@@ -10,9 +10,19 @@ import java.net.URL;
 
 //Initialization of Tools
 class Tools {
-    static final short RES_OK = 0,
+    static final short
+            RES_OK = 0,
             RES_SRV_ERR = -1,
             RES_FAIL = 1;
+
+    static final short
+            MON = 0b0100000,
+            TUE = 0b0010000,
+            WED = 0b0001000,
+            THU = 0b0000100,
+            FRI = 0b0000010,
+            SAT = 0b0000001,
+            SUN = 0b1000000;
 
     static String post(String _url, JSONObject json_body) {
         try {
@@ -114,9 +124,10 @@ class Event {
     public void setStart_time(int start_time) {
         short time = (short) (start_time % 10000 / 100);
         short day = (short) (start_time % 1000000 / 10000);
-        short month = (short) ((start_time % 100000000 / 1000000));month-=1;
+        short month = (short) ((start_time % 100000000 / 1000000));
+        month -= 1;
         short year = (short) (start_time / 100000000);
-        start_time = (((year*100+month)*100+day)*100+time)*100;
+        start_time = (((year * 100 + month) * 100 + day) * 100 + time) * 100;
         this.start_time = start_time;
     }
 

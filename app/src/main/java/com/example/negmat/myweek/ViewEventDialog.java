@@ -144,7 +144,7 @@ class ViewEventDialog extends Dialog implements OnClickListener {
         jsonDelete.addProperty("username", usrName);
         jsonDelete.addProperty("password", usrPassword);
         jsonDelete.addProperty("event_id", event_id);
-        String url = "http://qobiljon.pythonanywhere.com/events/disable";
+        String url = "http://165.246.165.130:2222/events/disable";
         Ion.with(activity.getApplicationContext())
                 .load("POST", url)
                 .addHeader("Content-Type", "application/json")

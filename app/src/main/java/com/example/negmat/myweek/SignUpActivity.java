@@ -56,7 +56,7 @@ public class SignUpActivity extends AppCompatActivity {
         jsonSend.addProperty("username", usrLogin);
         jsonSend.addProperty("password", usrPassword);
 
-        String url = "http://qobiljon.pythonanywhere.com/users/register";
+        String url = "http://165.246.165.130:2222/users/register";
 
         Ion.with(getApplicationContext())
                 .load("POST", url)

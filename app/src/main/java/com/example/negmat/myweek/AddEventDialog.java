@@ -117,7 +117,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
                     body.put("today", 171022);
                     body.put("weekend", 171028);
-                    JSONObject raw = new JSONObject(Tools.post("http://qobiljon.pythonanywhere.com/events/suggest", body));
+                    JSONObject raw = new JSONObject(Tools.post("http://165.246.165.130:2222/events/suggest", body));
 
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
@@ -129,8 +129,8 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            int remainder = suggested_time%1000000;
-                            int time = (suggested_time/1000000 - 1) * 1000000 + remainder;
+                            int remainder = suggested_time % 1000000;
+                            int time = (suggested_time / 1000000 - 1) * 1000000 + remainder;
                             ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, result, time);
                             conf.show(getActivity().getFragmentManager(), "confirmdialog");
                         }
@@ -208,7 +208,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     }
 
     public Object[] stringMatchingWithCategories(String event_text) {
-        String raw_json = Tools.post("http://qobiljon.pythonanywhere.com/events/categories", null);
+        String raw_json = Tools.post("http://165.246.165.130:2222/events/categories", null);
         if (raw_json == null)
             return null;
 

@@ -282,7 +282,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                final String result = Tools.post("http://qobiljon.pythonanywhere.com/events/fetch", body);
+                final String result = Tools.post("http://165.246.165.130:2222/events/fetch", body);
 
                 runOnUiThread(new Runnable() {
                     @Override

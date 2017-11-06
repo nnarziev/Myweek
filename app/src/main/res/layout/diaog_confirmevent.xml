@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"
+    android:layout_margin="2dp"
     android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="10dp">
+        android:layout_marginTop="5dp"
+        android:gravity="center">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
             android:layout_marginEnd="5dp"
             android:labelFor="@+id/txt_event_name"
             android:text="@string/event_name"
             android:textColor="#000"
             android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:typeface="monospace" />
 
         <EditText
             android:id="@id/txt_event_name"
@@ -33,52 +33,59 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="10dp">
+        android:layout_marginTop="5dp"
+        android:gravity="center">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
             android:layout_marginEnd="5dp"
             android:labelFor="@+id/txt_event_time"
             android:text="@string/event_time"
             android:textColor="#000"
             android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:typeface="monospace" />
 
         <TextView
             android:id="@+id/txt_event_date"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="2dp"
             android:layout_weight="1"
-            android:inputType="text" />
+            android:background="@drawable/datetime_bg"
+            android:gravity="center"
+            android:padding="5dp"
+            android:textColor="#fff" />
 
         <TextView
             android:id="@id/txt_event_time"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="2dp"
             android:layout_weight="1"
-            android:gravity="right|center"
-            android:inputType="text" />
+            android:background="@drawable/datetime_bg"
+            android:gravity="center"
+            android:padding="5dp"
+            android:textColor="#fff" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:padding="10dp">
+        android:layout_marginTop="5dp"
+        android:gravity="center">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
             android:layout_marginEnd="5dp"
             android:labelFor="@+id/txt_event_note"
             android:text="@string/event_note"
             android:textColor="#000"
             android:textSize="15sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:typeface="monospace" />
 
         <EditText
             android:id="@id/txt_event_note"
@@ -90,92 +97,95 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/weekdaysGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="10dp">
+        android:layout_marginTop="5dp"
+        android:gravity="center_horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="10dp"
-            android:layout_marginEnd="5dp"
-            android:text="@string/repeat"
-            android:textColor="#000"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+        <ToggleButton
+            android:id="@+id/check_monday"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:tag="@string/mon"
+            android:textOff="@string/mon"
+            android:textOn="@string/mon"
+            android:textSize="12sp" />
 
-        <GridLayout
-            android:id="@+id/repeatToggleGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="2">
+        <ToggleButton
+            android:id="@+id/check_tuesday"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:tag="@string/tue"
+            android:textOff="@string/tue"
+            android:textOn="@string/tue"
+            android:textSize="12sp" />
 
-            <ToggleButton
-                android:id="@+id/check_monday"
-                android:layout_width="55dp"
-                android:layout_height="40dp"
-                android:textOff="@string/mon"
-                android:textOn="@string/mon"
-                android:textSize="12sp" />
+        <ToggleButton
+            android:id="@+id/check_wednesday"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:tag="@string/wed"
+            android:textOff="@string/wed"
+            android:textOn="@string/wed"
+            android:textSize="12sp" />
 
-            <ToggleButton
-                android:id="@+id/check_tuesday"
-                android:layout_width="55dp"
-                android:layout_height="40dp"
-                android:textOff="@string/tue"
-                android:textOn="@string/tue"
-                android:textSize="12sp" />
+        <ToggleButton
+            android:id="@+id/check_thursday"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:tag="@string/thu"
+            android:textOff="@string/thu"
+            android:textOn="@string/thu"
+            android:textSize="12sp" />
 
-            <ToggleButton
-                android:id="@+id/check_wednesday"
-                android:layout_width="55dp"
-                android:layout_height="40dp"
-                android:textOff="@string/wed"
-                android:textOn="@string/wed"
-                android:textSize="12sp" />
+        <ToggleButton
+            android:id="@+id/check_friday"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:tag="@string/fri"
+            android:textOff="@string/fri"
+            android:textOn="@string/fri"
+            android:textSize="12sp" />
 
-            <ToggleButton
-                android:id="@+id/check_thursday"
-                android:layout_width="55dp"
-                android:layout_height="40dp"
-                android:textOff="@string/thu"
-                android:textOn="@string/thu"
-                android:textSize="12sp" />
+        <ToggleButton
+            android:id="@+id/check_saturday"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:tag="@string/sat"
+            android:textOff="@string/sat"
+            android:textOn="@string/sat"
+            android:textSize="12sp" />
 
-            <ToggleButton
-                android:id="@+id/check_friday"
-                android:layout_width="55dp"
-                android:layout_height="40dp"
-                android:textOff="@string/fri"
-                android:textOn="@string/fri"
-                android:textSize="12sp" />
-
-
-            <ToggleButton
-                android:id="@+id/check_saturday"
-                android:layout_width="55dp"
-                android:layout_height="40dp"
-                android:textOff="@string/sat"
-                android:textOn="@string/sat"
-                android:textSize="12sp" />
-
-            <ToggleButton
-                android:id="@+id/check_sunday"
-                android:layout_width="55dp"
-                android:layout_height="40dp"
-                android:textOff="@string/sun"
-                android:textOn="@string/sun"
-                android:textSize="12sp" />
-        </GridLayout>
+        <ToggleButton
+            android:id="@+id/check_sunday"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginEnd="3dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:tag="@string/sun"
+            android:textOff="@string/sun"
+            android:textOn="@string/sun"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
         android:gravity="end"
         android:orientation="horizontal">
 
