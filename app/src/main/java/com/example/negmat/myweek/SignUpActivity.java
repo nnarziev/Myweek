@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.google.gson.JsonObject;
@@ -15,6 +16,8 @@ import com.koushikdutta.ion.Ion;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -30,6 +33,8 @@ public class SignUpActivity extends AppCompatActivity {
     EditText password;
     @BindView(R.id.txt_conf_password)
     EditText confPassword;
+    @BindView(R.id.loadingPanel)
+    RelativeLayout loadingPanel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,12 +49,14 @@ public class SignUpActivity extends AppCompatActivity {
     // endregion
 
     public void userRegister(String usrEmail, String usrLogin, String usrPassword) {
+        loadingPanel.setVisibility(View.VISIBLE);
+
         JsonObject jsonSend = new JsonObject();
         jsonSend.addProperty("email", usrEmail);
         jsonSend.addProperty("username", usrLogin);
         jsonSend.addProperty("password", usrPassword);
 
-        String url = "http://165.246.165.130:2222/users/register";
+        String url = "http://qobiljon.pythonanywhere.com/users/register";
 
         Ion.with(getApplicationContext())
                 .load("POST", url)
@@ -71,7 +78,7 @@ public class SignUpActivity extends AppCompatActivity {
                                     overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
                                     break;
                                 case Tools.RES_SRV_ERR:
-                                    Toast.makeText(getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                                    Log.e("SERVER ERROR", String.format(Locale.US, "Failure code %d", resultNumber));
                                     break;
                                 case Tools.RES_FAIL:
                                     Toast.makeText(getApplicationContext(), "Registration failed", Toast.LENGTH_SHORT).show();
@@ -80,8 +87,15 @@ public class SignUpActivity extends AppCompatActivity {
                                     break;
                             }
                         } catch (JSONException e1) {
-                            Log.wtf("json", e1);
+                            Log.e("ERROR", e1.getMessage());
                         }
+
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                loadingPanel.setVisibility(View.GONE);
+                            }
+                        });
                     }
                 });
     }

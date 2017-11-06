@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="10dp"
     android:orientation="vertical">
 
     <LinearLayout
@@ -175,18 +176,15 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:padding="10dp">
+        android:gravity="end"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btn_delete"
             style="?android:attr/borderlessButtonStyle"
-            android:layout_width="100dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="5dp"
-            android:background="#f060"
-            android:clickable="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
             android:text="@string/delete"
             android:textColor="#fff"
             android:textStyle="bold" />
@@ -194,11 +192,10 @@
         <Button
             android:id="@+id/btn_save"
             style="?android:attr/borderlessButtonStyle"
-            android:layout_width="100dp"
-            android:layout_height="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
-            android:background="#f060"
-            android:clickable="true"
+            android:background="@color/colorPrimary"
             android:text="@string/save"
             android:textColor="#fff"
             android:textStyle="bold" />

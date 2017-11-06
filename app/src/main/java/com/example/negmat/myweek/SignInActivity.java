@@ -72,7 +72,7 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    String raw_json = Tools.post("http://165.246.165.130:2222/users/login", new JSONObject()
+                    String raw_json = Tools.post("http://qobiljon.pythonanywhere.com/users/login", new JSONObject()
                             .put("username", usrLogin)
                             .put("password", usrPass));
                     if (raw_json == null)
@@ -95,10 +95,27 @@ public class SignInActivity extends AppCompatActivity {
                                 overridePendingTransition(0, 0);
                             }
                         });
-                    else
+                    else {
                         Log.e("ERROR", "Code: " + resultNumber);
+                        Thread.sleep(2000);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(SignInActivity.this, "Failed to sign in.", Toast.LENGTH_SHORT).show();
+                                loadingPanel.setVisibility(View.GONE);
+                            }
+                        });
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(SignInActivity.this, "Failed to sign in.", Toast.LENGTH_SHORT).show();
+                            loadingPanel.setVisibility(View.GONE);
+                        }
+                    });
                 }
             }
         });

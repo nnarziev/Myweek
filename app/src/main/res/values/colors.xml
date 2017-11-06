@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#26ae90</color>
+    <color name="colorPrimaryDark">#1b443b</color>
+    <color name="colorAccent">#b71c1c</color>
 
-    <color name="colorGreen0">#26AE90</color>
-    <color name="colorGreen1">#1b443b</color>
+    <color name="grey">#eceef1</color>
+    <color name="yellow">#ff0</color>
 
-    <color name="colorGrey">#ECEEF1</color>
-
-    <color name="color_repeat_mode">#BBDEFB</color>
-    <color name="color_single_mode">#C5CAE9</color>
-    <color name="event_text_color">#1A237E</color>
+    <color name="color_repeat_mode">#bbdefb</color>
+    <color name="color_single_mode">#c5cae9</color>
+    <color name="event_text_color">#1a237e</color>
 </resources>

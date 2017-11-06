@@ -8,6 +8,30 @@
     android:orientation="vertical"
     tools:context="com.example.negmat.myweek.SignUpActivity">
 
+    <RelativeLayout
+        android:id="@+id/loadingPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/progressBar"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:text="@string/logging_in"
+            android:textColor="@android:color/white"
+            android:textSize="30sp" />
+
+        <ProgressBar
+            android:id="@id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:indeterminate="true"
+            android:theme="@style/AppBaseTheme" />
+    </RelativeLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -28,7 +52,7 @@
         android:inputType="textShortMessage"
         android:padding="13dp"
         android:scrollHorizontally="true"
-        android:textColor="@color/event_text_color"
+        android:textColor="@color/colorPrimaryDark"
         android:textColorHint="@android:color/darker_gray" />
 
     <EditText
@@ -43,7 +67,7 @@
         android:inputType="textEmailAddress"
         android:padding="13dp"
         android:scrollHorizontally="true"
-        android:textColor="@color/event_text_color"
+        android:textColor="@color/colorPrimaryDark"
         android:textColorHint="@android:color/darker_gray" />
 
     <EditText
@@ -57,7 +81,7 @@
         android:hint="@string/password"
         android:inputType="textPassword"
         android:padding="13dp"
-        android:textColor="@color/event_text_color"
+        android:textColor="@color/colorPrimaryDark"
         android:textColorHint="@android:color/darker_gray" />
 
     <EditText
@@ -72,7 +96,7 @@
         android:inputType="textPassword"
         android:padding="13dp"
         android:scrollHorizontally="true"
-        android:textColor="@color/event_text_color"
+        android:textColor="@color/colorPrimaryDark"
         android:textColorHint="@android:color/darker_gray" />
 
     <Button
@@ -82,9 +106,9 @@
         android:layout_marginLeft="50dp"
         android:layout_marginRight="50dp"
         android:layout_marginTop="30dp"
-        android:background="@color/colorGrey"
+        android:background="@color/grey"
         android:onClick="registerClick"
         android:padding="18dp"
         android:text="@string/sign_up_now"
-        android:textColor="@color/event_text_color" />
+        android:textColor="@color/colorPrimaryDark" />
 </LinearLayout>

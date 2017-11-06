@@ -1,9 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="AppBaseTheme" parent="AppTheme">
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+
+        <!--item name="actionBarStyle">@style/ActionBarStyle</item-->
+    </style>
+
+    <!--style name="ActionBarStyle" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:background">@drawable/actionbar_bg</item>
+        <item name="background">@drawable/actionbar_bg</item>
+    </style-->
+
+    <style name="SignTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
     <style name="SignBaseTheme" parent="SignTheme">
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:statusBarColor">@color/colorGreen0</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
     </style>
 
 </resources>

@@ -15,7 +15,7 @@
         android:gravity="top|center_horizontal"
         android:minLines="2"
         android:text="@string/speak_hint"
-        android:textColor="@android:color/holo_blue_dark"
+        android:textColor="@color/colorPrimaryDark"
         android:textSize="20sp"
         android:textStyle="italic" />
 
@@ -23,9 +23,9 @@
         android:id="@+id/btn_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="end"
         android:layout_margin="15dp"
-        android:background="#f060"
+        android:background="@color/colorPrimary"
         android:text="@string/cancel"
         android:textColor="#fff"
         android:textStyle="bold" />

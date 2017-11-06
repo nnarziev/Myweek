@@ -253,7 +253,7 @@ public class ConfirmEventDialog extends DialogFragment {
                     jsonSend.put("is_active", is_active);
                     jsonSend.put("event_name", getEvent_name());
                     jsonSend.put("event_note", getEvent_note());
-                    String url = "http://165.246.165.130:2222/events/create";
+                    String url = "http://qobiljon.pythonanywhere.com/events/create";
 
                     JSONObject raw = new JSONObject(Tools.post(url, jsonSend));
                     if (raw.getInt("result") != Tools.RES_OK)
@@ -275,7 +275,7 @@ public class ConfirmEventDialog extends DialogFragment {
         jsonDelete.addProperty("username", usrName);
         jsonDelete.addProperty("password", usrPassword);
         jsonDelete.addProperty("event_id", event_id);
-        String url = "http://165.246.165.130:2222/events/disable";
+        String url = "http://qobiljon.pythonanywhere.com/events/disable";
         Ion.with(activity.getApplicationContext())
                 .load("POST", url)
                 .addHeader("Content-Type", "application/json")

@@ -117,7 +117,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
 
                     body.put("today", 171022);
                     body.put("weekend", 171028);
-                    JSONObject raw = new JSONObject(Tools.post("http://165.246.165.130:2222/events/suggest", body));
+                    JSONObject raw = new JSONObject(Tools.post("http://qobiljon.pythonanywhere.com/events/suggest", body));
 
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
@@ -208,7 +208,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
     }
 
     public Object[] stringMatchingWithCategories(String event_text) {
-        String raw_json = Tools.post("http://165.246.165.130:2222/events/categories", null);
+        String raw_json = Tools.post("http://qobiljon.pythonanywhere.com/events/categories", null);
         if (raw_json == null)
             return null;
 
