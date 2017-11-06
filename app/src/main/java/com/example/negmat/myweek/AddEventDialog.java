@@ -5,6 +5,7 @@ import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -131,8 +132,10 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                         public void run() {
                             int remainder = suggested_time%1000000;
                             int time = (suggested_time/1000000 - 1) * 1000000 + remainder;
-                            ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, result, time);
-                            conf.show(getActivity().getFragmentManager(), "confirmdialog");
+                            final ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, result, time);//TODO: dialog for ai with time
+                            Toast.makeText(getActivity(), String.valueOf(time), Toast.LENGTH_SHORT).show();
+                            SuggestedTimeDialog sug=new SuggestedTimeDialog(getActivity(),conf.showEv_date_string(conf.getEvent_time())+" "+conf.showEv_time_string(conf.getEvent_time()));
+                            sug.show();
                         }
                     });
                 } catch (Exception e) {

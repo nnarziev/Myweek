@@ -206,6 +206,7 @@ public class ConfirmEventDialog extends DialogFragment {
                 int date = o * 10000 + time;
                 setEvent_time(date);
                 txtEventDate.setText(showEv_date_string(getEvent_time()));
+                
             }
         }, year, month, day);
         datePicker.setTitle("Select date");
