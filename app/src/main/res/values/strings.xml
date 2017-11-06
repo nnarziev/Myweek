@@ -60,4 +60,5 @@
     <string name="previous_week">Previous week</string>
     <string name="next_week">Next week</string>
     <string name="select_week">Select week</string>
+    <string name="suggest_time">Suggested time:</string>
 </resources>
