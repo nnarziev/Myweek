@@ -21,13 +21,15 @@ import net.gotev.speech.Speech;
 import net.gotev.speech.SpeechDelegate;
 import net.gotev.speech.SpeechRecognitionNotAvailable;
 import net.gotev.speech.SpeechUtil;
+import net.gotev.speech.TextToSpeechCallback;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executor;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import butterknife.BindView;
@@ -35,12 +37,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class AddEventDialog extends DialogFragment implements SpeechDelegate {
-
-    // region Variables
-    private static final int REQUEST_MICROPHONE = 2;
-    @BindView(R.id.text)
-    TextView text;
-    // endregion
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -51,16 +47,22 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         Logger.setLogLevel(Logger.LogLevel.DEBUG);
 
         //granting permission to user
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_MICROPHONE);
-        } else
-            onRecordAudioPermissionGranted();
+        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_MICROPHONE);
+        else onRecordAudioPermissionGranted();
 
         return view;
     }
 
+    // region Variables
+    static ExecutorService exec;
+
+    private static final int REQUEST_MICROPHONE = 2;
+    @BindView(R.id.text)
+    TextView text;
+    // endregion
+
+    // region Speech handlers
     @Override
     public void onStartOfSpeech() {
 
@@ -85,11 +87,30 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         text.setText(_result);
 
         if (_result.isEmpty()) {
-            Speech.getInstance().say("Repeat please");
+            Speech.getInstance().say("Repeat please", new TextToSpeechCallback() {
+                @Override
+                public void onStart() {
+
+                }
+
+                @Override
+                public void onCompleted() {
+                    onRecordAudioPermissionGranted();
+                }
+
+                @Override
+                public void onError() {
+
+                }
+            });
+
             return;
         }
 
-        Executor exec = Executors.newCachedThreadPool();
+        if (exec != null && !exec.isTerminated() && !exec.isShutdown())
+            exec.shutdownNow();
+        exec = Executors.newCachedThreadPool();
+
         exec.execute(new Runnable() {
             @Override
             public void run() {
@@ -98,27 +119,27 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     if (match == null)
                         throw new Exception();
 
-                    final int category_id = (int) match[0];
                     // TODO: Temporary, for presentation use only
-                    final String key = Character.toUpperCase(((String) match[1]).charAt(0)) + ((String) match[1]).substring(1);
+                    final String category = Character.toUpperCase(((String) match[1]).charAt(0)) + ((String) match[1]).substring(1);
+                    final int category_id = (int) match[0];
 
-                    String usrName = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
-                    String usrPassword = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
+                    String username = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
+                    String password = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
 
                     JSONObject body = new JSONObject();
-                    body.put("username", usrName);
-                    body.put("password", usrPassword);
+                    body.put("username", username);
+                    body.put("password", password);
                     body.put("category_id", category_id);
 
+                    // TODO: this must be chosen instead of following constant values (when server is fixed)
                     // Calendar c = Calendar.getInstance();
                     // int today = (c.get(Calendar.YEAR) % 100) * 10000 + (c.get(Calendar.MONTH) + 1) * 100 + c.get(Calendar.DAY_OF_MONTH);
                     // c.add(Calendar.DATE, 6 - c.get(Calendar.DAY_OF_WEEK));
                     // int weekend = (c.get(Calendar.YEAR) % 100) * 10000 + (c.get(Calendar.MONTH) + 1) * 100 + c.get(Calendar.DAY_OF_MONTH);
-
                     body.put("today", 171022);
                     body.put("weekend", 171028);
-                    JSONObject raw = new JSONObject(Tools.post("http://165.246.165.130:2222/events/suggest", body));
 
+                    JSONObject raw = new JSONObject(Tools.post(String.format(Locale.US, "%s/events/suggest", getResources().getString(R.string.server_ip)), body));
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
@@ -129,26 +150,30 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            int remainder = suggested_time % 1000000;
-                            int time = (suggested_time / 1000000 - 1) * 1000000 + remainder;
-                            ConfirmEventDialog conf = new ConfirmEventDialog(getActivity(), category_id, key, result, time);
+                            int sugested_time_recalc = (suggested_time / 1000000 - 1) * 1000000 + suggested_time % 1000000;
+
+                            Event event = new Event(
+                                    sugested_time_recalc,
+                                    0,
+                                    (short) 60,
+                                    category,
+                                    result,
+                                    0,
+                                    category_id
+                            );
+
+                            EventEditorDialog conf = new EventEditorDialog(getActivity(), event, false);
                             conf.show(getActivity().getFragmentManager(), "confirmdialog");
                         }
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.v("EXEPTION: ", e.toString());
+                    Log.v("ERROR: ", e.getMessage());
                 }
+
                 dismiss();
             }
         });
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        // prevent memory leaks when activity is destroyed
-        Speech.getInstance().shutdown();
     }
 
     private void onRecordAudioPermissionGranted() {
@@ -201,14 +226,21 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                 })
                 .show();
     }
+    // endregion
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Speech.getInstance().shutdown();
+    }
 
     @OnClick(R.id.btn_cancel)
-    public void AddEventCancel() {
+    public void cancelClick() {
         dismiss();
     }
 
     public Object[] stringMatchingWithCategories(String event_text) {
-        String raw_json = Tools.post("http://165.246.165.130:2222/events/categories", null);
+        String raw_json = Tools.post(String.format(Locale.US, "%s/events/categories", getResources().getString(R.string.server_ip)), null);
         if (raw_json == null)
             return null;
 
@@ -245,6 +277,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
         }
         // endregion
 
+        // TODO: Lying part
         if (event_text.contains("hiking") || event_text.contains("jumping"))
             return new Object[]{map.get("adrenaline"), "adrenaline"};
         else if (event_text.contains("museum"))

@@ -1,9 +1,7 @@
 package com.example.negmat.myweek;
 
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.app.FragmentManager;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -13,6 +11,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LongSparseArray;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.Menu;
@@ -37,6 +36,7 @@ import java.util.concurrent.Executors;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         initialize();
     }
 
+
     // region Variables
     @BindView(R.id.btn_add_event)
     ImageButton btnAddEvent;
@@ -58,7 +59,8 @@ public class MainActivity extends AppCompatActivity {
 
     static Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
     TextView[][] tv = new TextView[8][25];
-    Event[] events;//global array of events to use in several functions
+    Event[] events;
+    LongSparseArray<Integer> eventIdIndexMap = new LongSparseArray<>();
 
     static ExecutorService exec;
     // endregion
@@ -69,9 +71,11 @@ public class MainActivity extends AppCompatActivity {
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
+
+        String[] weekDays = new String[]{"", "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
         int width = size.x;
         int cellDimen = width / grid_fixed.getColumnCount();
-        String[] weekDays = new String[]{"", "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+
         for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
             TextView weekNames = new TextView(getApplicationContext());
             weekNames.setTextColor(Color.BLACK);
@@ -135,8 +139,8 @@ public class MainActivity extends AppCompatActivity {
         initGrid();
 
         for (Event event : events) {
-            //TODO: assign each event to its appropriate cell
-            int event_start_time = event.getStart_time();
+            int event_start_time = event.start_time;
+
             short time = (short) (event_start_time % 10000 / 100);
             short day = (short) (event_start_time % 1000000 / 10000);
             short month = (short) ((event_start_time % 100000000 / 1000000));
@@ -146,83 +150,36 @@ public class MainActivity extends AppCompatActivity {
             calendar.set(year + 2000, month, day);
             short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
 
-            tv[day_of_week][time].setBackgroundResource(R.color.color_single_mode);
-            tv[day_of_week][time].setText(event.getEvent_name());
-            tv[day_of_week][time].setTag(event.getEvent_id());
+            tv[day_of_week][time].setBackgroundResource(R.drawable.single_mode_bg);
+            tv[day_of_week][time].setText(event.event_name);
+            tv[day_of_week][time].setTag(event.event_id);
         }
-        for (int n = 0; n < event_grid.getColumnCount(); n++) {
-            for (int m = 0; m < event_grid.getRowCount(); m++) {
-                if (!tv[n][m].getText().toString().equals("")) {
+
+        for (int n = 0; n < event_grid.getColumnCount(); n++)
+            for (int m = 0; m < event_grid.getRowCount(); m++)
+                if (!tv[n][m].getText().toString().equals(""))
                     tv[n][m].setOnClickListener(onTextClick);
-                }
-            }
-        }
     }
 
     private View.OnClickListener onTextClick = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
-            TextView textView = ((TextView) view);
-            if (textView.getTag() == null)
+            if (view.getTag() == null)
                 return;
-            long event_id = ((long) textView.getTag());
 
-            int index = 0;//index of event in array
-            //take an index of event
-            //if current event_id==event[index].getEventId()
-            for (int i = 0; i < events.length; i++) {
-                if (event_id == events[i].getEvent_id()) {
-                    index = i;
-                    break;
-                }
-            }
+            long event_id = (long) view.getTag();
+            int index = eventIdIndexMap.get(event_id);
 
             //make event global and show all info on it*/
-            ViewEventDialog ved = new ViewEventDialog(MainActivity.this, events[index]);
-            ved.show();
-            ved.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                @Override
-                public void onDismiss(DialogInterface dialogInterface) {
-                    updateClick(null);
-                }
-            });
+            EventEditorDialog dialog = new EventEditorDialog(MainActivity.this, events[index], true);
+            FragmentManager manager = getFragmentManager();
+            dialog.show(manager, "Editdialog");
         }
     };
 
     // endregion
 
-    //region Date picker dialog
-    int DIALOG_DATE = 1;
-    int myYear = selCalDate.get(Calendar.YEAR);
-    int myMonth = selCalDate.get(Calendar.MONTH);
-    int myDay = selCalDate.get(Calendar.DAY_OF_MONTH);
-
-    protected Dialog onCreateDialog(int id) {
-        if (id == DIALOG_DATE) {
-            return new DatePickerDialog(this, myCallBack, myYear, myMonth, myDay);
-        }
-        return super.onCreateDialog(id);
-    }
-
-    DatePickerDialog.OnDateSetListener myCallBack = new DatePickerDialog.OnDateSetListener() {
-
-        public void onDateSet(DatePicker view, int year, int monthOfYear,
-                              int dayOfMonth) {
-            selCalDate.set(year, monthOfYear, dayOfMonth);
-            String selectedWeek = String.format(Locale.US, "Week %d, %s.", selCalDate.get(Calendar.WEEK_OF_MONTH),
-                    selCalDate.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()));
-            setTitle(selectedWeek);
-            updateClick(null);
-        }
-    };
-    //endregion
-
     //region Options-Menu Buttons' handlers
-
-    public void selectWeekClick(MenuItem item) {
-        showDialog(DIALOG_DATE);
-    }
-
     public void navNextWeekClick(MenuItem item) {
         selCalDate.add(Calendar.DATE, 7);
         String selectedWeek = String.format(Locale.US, "Week %d, %s.", selCalDate.get(Calendar.WEEK_OF_MONTH),
@@ -282,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                final String result = Tools.post("http://165.246.165.130:2222/events/fetch", body);
+                final String result = Tools.post(String.format(Locale.US, "%s/events/fetch", getResources().getString(R.string.server_ip)), body);
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -293,9 +250,12 @@ public class MainActivity extends AppCompatActivity {
                             if (resultNumber == Tools.RES_OK) {
                                 JSONArray jarray = json.getJSONArray("array");
                                 events = new Event[jarray.length()];
+
                                 if (jarray.length() != 0) {
-                                    for (int n = 0; n < jarray.length(); n++)
+                                    for (int n = 0; n < jarray.length(); n++) {
                                         events[n] = Event.parseJson(jarray.getJSONObject(n));
+                                        eventIdIndexMap.put(events[n].event_id, n);
+                                    }
                                     populateGrid(events);
                                 } else {
                                     initGrid();
@@ -318,11 +278,36 @@ public class MainActivity extends AppCompatActivity {
 
     //endregion
 
+
     public void addEventClick(View view) {
         FragmentManager manager = getFragmentManager();
         AddEventDialog dialog = new AddEventDialog();
         dialog.show(manager, "Dialog");
     }
+
+    public void selectWeekClick(MenuItem item) {
+        Calendar calendar = Calendar.getInstance();
+        DatePickerDialog.OnDateSetListener listener = new DatePickerDialog.OnDateSetListener() {
+            @Override
+            public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                selCalDate.set(year, month, day);
+                String selectedWeek = String.format(Locale.US, "Week %d, %s.",
+                        selCalDate.get(Calendar.WEEK_OF_MONTH),
+                        selCalDate.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()));
+
+                setTitle(selectedWeek);
+                updateClick(null);
+            }
+        };
+
+        DatePickerDialog dialog = new DatePickerDialog(this, listener,
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH));
+
+        dialog.show();
+    }
+
 
     @Override
     public void onBackPressed() {

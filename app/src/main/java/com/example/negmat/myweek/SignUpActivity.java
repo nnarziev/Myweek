@@ -56,7 +56,7 @@ public class SignUpActivity extends AppCompatActivity {
         jsonSend.addProperty("username", usrLogin);
         jsonSend.addProperty("password", usrPassword);
 
-        String url = "http://165.246.165.130:2222/users/register";
+        String url = String.format(Locale.US, "%s/users/register", getResources().getString(R.string.server_ip));
 
         Ion.with(getApplicationContext())
                 .load("POST", url)

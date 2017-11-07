@@ -2,13 +2,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="2dp"
+    android:gravity="center_horizontal"
+    android:minWidth="@dimen/dialogMinWidth"
     android:orientation="vertical">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:gravity="center_horizontal"
+        android:padding="10dp"
+        android:text="@string/event_details"
+        android:textAllCaps="true"
+        android:textColor="#fff"
+        android:textSize="25sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_margin="5dp"
         android:gravity="center">
 
         <TextView
@@ -33,7 +45,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_margin="5dp"
         android:gravity="center">
 
         <TextView
@@ -73,7 +85,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_margin="5dp"
         android:gravity="center">
 
         <TextView
@@ -100,13 +112,14 @@
         android:id="@+id/weekdaysGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
+        android:layout_margin="5dp"
         android:gravity="center_horizontal">
 
         <ToggleButton
             android:id="@+id/check_monday"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
             android:tag="@string/mon"
@@ -116,8 +129,9 @@
 
         <ToggleButton
             android:id="@+id/check_tuesday"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
             android:tag="@string/tue"
@@ -127,8 +141,9 @@
 
         <ToggleButton
             android:id="@+id/check_wednesday"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
             android:tag="@string/wed"
@@ -138,8 +153,9 @@
 
         <ToggleButton
             android:id="@+id/check_thursday"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
             android:tag="@string/thu"
@@ -149,8 +165,9 @@
 
         <ToggleButton
             android:id="@+id/check_friday"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
             android:tag="@string/fri"
@@ -160,8 +177,9 @@
 
         <ToggleButton
             android:id="@+id/check_saturday"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
             android:tag="@string/sat"
@@ -171,8 +189,9 @@
 
         <ToggleButton
             android:id="@+id/check_sunday"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
             android:layout_marginEnd="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
@@ -183,17 +202,31 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/eventActionButtonsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
+        android:layout_margin="5dp"
         android:gravity="end"
         android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_edit"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:background="@color/colorPrimary"
+            android:tag="true"
+            android:text="@string/edit"
+            android:textColor="#fff"
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/btn_delete"
             style="?android:attr/borderlessButtonStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
             android:background="@color/colorPrimary"
             android:text="@string/delete"
             android:textColor="#fff"
@@ -206,7 +239,20 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="5dp"
             android:background="@color/colorPrimary"
+            android:tag="false"
             android:text="@string/save"
+            android:textColor="#fff"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_cancel"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:background="@color/colorPrimary"
+            android:tag="true"
+            android:text="@string/cancel"
             android:textColor="#fff"
             android:textStyle="bold" />
     </LinearLayout>

@@ -1,5 +1,6 @@
 <resources>
     <!--Init Screen elements-->
+    <string name="server_ip">http://165.246.165.130:2222</string>
     <string name="app_name">MY WEEK</string>
     <string name="sign_up_label"><u>Sign up</u></string>
 
@@ -31,7 +32,7 @@
     <string name="sign_up">Sign up</string>
 
     <!--New Memo Dialog elements-->
-    <string name="speak_hint">Speak now please...</string>
+    <string name="speak_hint">Speak now please…</string>
     <string name="cancel">Cancel</string>
 
     <!--View Event Dialog elements-->
@@ -52,7 +53,7 @@
     <string name="sat">Sa</string>
     <string name="sun">Su</string>
     <string name="save">Save</string>
-    <string name="logging_in">Logging in...</string>
+    <string name="logging_in">Logging in…</string>
     <string name="sign_in">Sign in</string>
     <string name="log_out">Log out</string>
     <string name="settings">Settings</string>
@@ -61,4 +62,7 @@
     <string name="next_week">Next week</string>
     <string name="select_week">Select week</string>
     <string name="suggest_time">Suggested time:</string>
+
+    <string name="event_details">Event Details</string>
+    <string name="speak_event_details">Speak Event Details</string>
 </resources>

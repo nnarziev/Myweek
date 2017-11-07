@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -29,6 +30,7 @@ public class SignInActivity extends AppCompatActivity {
 
         if (loginPrefs == null)
             loginPrefs = getSharedPreferences("UserLogin", 0);
+
         if (loginPrefs.contains(SignInActivity.username) && loginPrefs.contains(SignInActivity.password)) {
             loadingPanel.setVisibility(View.VISIBLE);
             signIn(loginPrefs.getString(SignInActivity.username, null), loginPrefs.getString(SignInActivity.password, null));
@@ -38,7 +40,7 @@ public class SignInActivity extends AppCompatActivity {
 
     // region Variables
     static SharedPreferences loginPrefs = null;
-    static final String username = "username", password = SignInActivity.password;
+    static final String username = "username", password = "password";
     static ExecutorService exec;
 
     @BindView(R.id.txt_login)
@@ -72,7 +74,7 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    String raw_json = Tools.post("http://165.246.165.130:2222/users/login", new JSONObject()
+                    String raw_json = Tools.post(String.format(Locale.US, "%s/users/login", getResources().getString(R.string.server_ip)), new JSONObject()
                             .put("username", usrLogin)
                             .put("password", usrPass));
                     if (raw_json == null)
