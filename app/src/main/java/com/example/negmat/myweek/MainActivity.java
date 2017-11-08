@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
             int index = eventIdIndexMap.get(event_id);
 
             //make event global and show all info on it*/
-            EventEditorDialog dialog = new EventEditorDialog(MainActivity.this, events[index], true);
+            EditViewDialog dialog = new EditViewDialog(events[index], true);
             FragmentManager manager = getFragmentManager();
             dialog.show(manager, "Editdialog");
         }
@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void addEventClick(View view) {
         FragmentManager manager = getFragmentManager();
-        AddEventDialog dialog = new AddEventDialog();
+        SpeechDialog dialog = new SpeechDialog();
         dialog.show(manager, "Dialog");
     }
 

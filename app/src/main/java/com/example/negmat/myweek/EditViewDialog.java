@@ -1,6 +1,5 @@
 package com.example.negmat.myweek;
 
-import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
@@ -15,14 +14,12 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -31,18 +28,17 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
-public class EventEditorDialog extends DialogFragment {
+public class EditViewDialog extends DialogFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.diaog_eventeditor, container, false);
+        View view = inflater.inflate(R.layout.diaog_editview, container, false);
         ButterKnife.bind(this, view);
         initialize();
         return view;
     }
 
-    public EventEditorDialog(Activity activity, Event event, boolean readOnly) {
-        this.activity = activity;
+    public EditViewDialog(Event event, boolean readOnly) {
         this.event = event;
         this.readOnly = readOnly;
 
@@ -50,8 +46,6 @@ public class EventEditorDialog extends DialogFragment {
     }
 
     private void initialize() {
-        delete = false;
-
         String[] dateTime = Tools.eventDateTimeToString(event.start_time);
         txtEventDate.setText(dateTime[0]);
         txtEventTime.setText(dateTime[1]);
@@ -112,9 +106,7 @@ public class EventEditorDialog extends DialogFragment {
 
     static ExecutorService exec;
 
-    private boolean delete = false;
     private boolean readOnly = false;
-    private Activity activity;
     private Event event;
 
     private int calculated_repeat_mode = 0;
@@ -146,17 +138,19 @@ public class EventEditorDialog extends DialogFragment {
     }
 
     private void createEvent(final Event event) {
-        final String usrName = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
-        final String usrPassword = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
+        if (exec != null && !exec.isTerminated() && !exec.isShutdown())
+            exec.shutdownNow();
 
-        Executor exec = Executors.newCachedThreadPool();
+        exec = Executors.newCachedThreadPool();
+
         exec.execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     JSONObject data = new JSONObject();
-                    data.put("username", usrName);
-                    data.put("password", usrPassword);
+                    data.put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null));
+                    data.put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null));
+                    data.put("event_id", event.event_id);
                     data.put("category_id", event.category_id);
                     data.put("start_time", event.start_time);
                     data.put("repeat_mode", event.repeat_mode);
@@ -171,44 +165,6 @@ public class EventEditorDialog extends DialogFragment {
                         throw new Exception();
 
 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    private void deleteAfterEdit(final String username, final String password) {
-        if (exec != null && !exec.isTerminated() && !exec.isShutdown())
-            exec.shutdownNow();
-        exec = Executors.newCachedThreadPool();
-
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                String url = String.format(Locale.US, "%s/events/disable", getResources().getString(R.string.server_ip));
-                try {
-                    String result = Tools.post(url, new JSONObject()
-                            .put("username", username)
-                            .put("password", password)
-                            .put("event_id", event.event_id)
-                    );
-
-                    JSONObject json = new JSONObject(String.valueOf(result));
-                    int resultNumber = json.getInt("result");
-                    switch (resultNumber) {
-                        case Tools.RES_OK:
-                            Toast.makeText(activity, "Deleted", Toast.LENGTH_SHORT).show();
-                            break;
-                        case Tools.RES_SRV_ERR:
-                            Toast.makeText(activity.getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
-                            break;
-                        case Tools.RES_FAIL:
-                            Toast.makeText(activity.getApplicationContext(), "Failure", Toast.LENGTH_SHORT).show();
-                            break;
-                        default:
-                            break;
-                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -240,8 +196,6 @@ public class EventEditorDialog extends DialogFragment {
         event.event_note = txtEventNote.getText().toString();
 
         createEvent(event);
-        if (delete)
-            deleteAfterEdit(SignInActivity.loginPrefs.getString(SignInActivity.username, null), SignInActivity.loginPrefs.getString(SignInActivity.password, null));
         dismiss();
     }
 

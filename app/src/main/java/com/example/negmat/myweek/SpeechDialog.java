@@ -36,11 +36,11 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class AddEventDialog extends DialogFragment implements SpeechDelegate {
+public class SpeechDialog extends DialogFragment implements SpeechDelegate {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.dialog_newevent, container, false);
+        View view = inflater.inflate(R.layout.dialog_speech, container, false);
         ButterKnife.bind(this, view);
 
         Speech.init(getActivity(), getActivity().getPackageName());
@@ -162,7 +162,7 @@ public class AddEventDialog extends DialogFragment implements SpeechDelegate {
                                     category_id
                             );
 
-                            EventEditorDialog conf = new EventEditorDialog(getActivity(), event, false);
+                            EditViewDialog conf = new EditViewDialog(event, false);
                             conf.show(getActivity().getFragmentManager(), "confirmdialog");
                         }
                     });
