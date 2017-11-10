@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         initialize();
     }
-    
+
 
     // region Variables
     @BindView(R.id.btn_add_event)
