@@ -1,6 +1,5 @@
 package com.example.negmat.myweek;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +17,7 @@ import java.util.concurrent.Executors;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -47,43 +47,52 @@ public class SignUpActivity extends AppCompatActivity {
     // @BindView(R.id.btn_register) TextView btnRegister;
     // endregion
 
-    public void userRegister(final String email, final String username, final String password) {
+    public void userRegister(String email, String username, String password) {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
             exec.shutdownNow();
 
         exec = Executors.newCachedThreadPool();
         loadingPanel.setVisibility(View.VISIBLE);
 
-        exec.execute(new Runnable() {
+        exec.execute(new MyRunnable(email, username, password) {
             @Override
             public void run() {
                 try {
-                    String url = String.format(Locale.US, "%s/users/register", getResources().getString(R.string.server_ip));
+                    String result = Tools.post(
+                            String.format(Locale.US, "%s/users/register", getResources().getString(R.string.server_ip)),
 
-                    String result = Tools.post(url, new JSONObject()
-                            .put("email", email)
-                            .put("username", username)
-                            .put("password", password)
+                            new JSONObject()
+                                    .put("email", args[0])
+                                    .put("username", args[1])
+                                    .put("password", args[2])
                     );
 
-                    JSONObject json = new JSONObject(String.valueOf(result));
-                    int resultNumber = json.getInt("result");
-                    switch (resultNumber) {
-                        case Tools.RES_OK:
-                            Toast.makeText(getApplicationContext(), "Registration is successfull", Toast.LENGTH_SHORT).show();
-                            Intent i2 = new Intent(SignUpActivity.this, SignInActivity.class);
-                            startActivity(i2);
-                            overridePendingTransition(R.anim.slide_in_up, R.anim.slide_out_up);
-                            break;
-                        case Tools.RES_SRV_ERR:
-                            Log.e("SERVER ERROR", String.format(Locale.US, "Failure code %d", resultNumber));
-                            break;
-                        case Tools.RES_FAIL:
-                            Toast.makeText(getApplicationContext(), "Registration failed", Toast.LENGTH_SHORT).show();
-                            break;
-                        default:
-                            break;
-                    }
+                    runOnUiThread(new MyRunnable(
+                            new JSONObject(result).getInt("result")
+                    ) {
+                        @Override
+                        public void run() {
+                            switch ((int) args[0]) {
+                                case Tools.RES_OK:
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(getApplicationContext(), "Successfully signed up. You can sign in now!", Toast.LENGTH_SHORT).show();
+                                            onBackPressed();
+                                        }
+                                    });
+                                    break;
+                                case Tools.RES_SRV_ERR:
+                                    Log.e("SERVER ERROR", String.format(Locale.US, "Failure code %d", (int) args[0]));
+                                    break;
+                                case Tools.RES_FAIL:
+                                    Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
                 } catch (Exception e) {
                     e.printStackTrace();
                     Log.e("ERROR", e.getMessage());
@@ -104,11 +113,11 @@ public class SignUpActivity extends AppCompatActivity {
         String usrLogin = login.getText().toString();
         String usrPassword = password.getText().toString();
         String usrConfirmPass = confPassword.getText().toString();
-        if (isRegistrationValid(usrEmail, usrLogin, usrPassword, usrConfirmPass)) {
+
+        if (isRegistrationValid(usrEmail, usrLogin, usrPassword, usrConfirmPass))
             userRegister(usrEmail, usrLogin, usrPassword);
-        } else {
+        else
             Toast.makeText(this, "Wrong input", Toast.LENGTH_SHORT).show();
-        }
     }
 
     public boolean isRegistrationValid(String email, String login, String password, String confirmPass) {

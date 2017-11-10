@@ -1,5 +1,6 @@
 package com.example.negmat.myweek;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.DialogFragment;
 import android.app.TimePickerDialog;
@@ -12,12 +13,15 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.ToggleButton;
+import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +38,7 @@ public class EditViewDialog extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.diaog_editview, container, false);
         ButterKnife.bind(this, view);
+
         initialize();
         return view;
     }
@@ -42,13 +47,16 @@ public class EditViewDialog extends DialogFragment {
         this.event = event;
         this.readOnly = readOnly;
 
-        this.calculated_repeat_mode = event.repeat_mode;
+        this.selected_day = event.day;
+        this.calc_calendar = Tools.time2cal(event.start_time);
     }
 
     private void initialize() {
-        String[] dateTime = Tools.eventDateTimeToString(event.start_time);
+        String[] dateTime = Tools.decode_time(event.start_time);
+
         txtEventDate.setText(dateTime[0]);
         txtEventTime.setText(dateTime[1]);
+
         txtEventName.setText(event.event_name);
         txtEventNote.setText(event.event_note);
 
@@ -66,24 +74,25 @@ public class EditViewDialog extends DialogFragment {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked) {
-                    calculated_repeat_mode |= weekDayMap.get(String.valueOf(compoundButton.getTag()));
+                    selected_day = weekDayMap.get(String.valueOf(compoundButton.getTag()));
                     compoundButton.setTextColor(Color.WHITE);
-                } else {
-                    calculated_repeat_mode &= ~weekDayMap.get(String.valueOf(compoundButton.getTag()));
+                } else
                     compoundButton.setTextColor(Color.BLACK);
-                }
             }
         };
 
         for (int n = 0; n < toggleBtnParent.getChildCount(); n++)
-            ((ToggleButton) toggleBtnParent.getChildAt(n)).setOnCheckedChangeListener(listener);
+            ((RadioButton) toggleBtnParent.getChildAt(n)).setOnCheckedChangeListener(listener);
         // endregion
 
         refreshEditMode();
 
         for (int n = 0; n < toggleBtnParent.getChildCount(); n++) {
-            ToggleButton button = (ToggleButton) toggleBtnParent.getChildAt(n);
-            button.setChecked((event.repeat_mode & weekDayMap.get(button.getTag().toString())) != 0);
+            RadioButton button = (RadioButton) toggleBtnParent.getChildAt(n);
+            if (event.day == weekDayMap.get(button.getTag().toString())) {
+                toggleBtnParent.check(button.getId());
+                break;
+            }
         }
     }
 
@@ -99,7 +108,7 @@ public class EditViewDialog extends DialogFragment {
     @BindView(R.id.txt_event_note)
     EditText txtEventNote;
     @BindView(R.id.weekdaysGroup)
-    ViewGroup toggleBtnParent;
+    RadioGroup toggleBtnParent;
     @BindView(R.id.eventActionButtonsContainer)
     ViewGroup eventActionBtnsParent;
     //endregion
@@ -109,7 +118,9 @@ public class EditViewDialog extends DialogFragment {
     private boolean readOnly = false;
     private Event event;
 
-    private int calculated_repeat_mode = 0;
+    private int selected_day = 0;
+    private Calendar calc_calendar = Calendar.getInstance();
+
     private HashMap<String, Short> weekDayMap = new HashMap<>();
     // endregion
 
@@ -137,23 +148,26 @@ public class EditViewDialog extends DialogFragment {
             ((MainActivity) getActivity()).updateClick(null);
     }
 
-    private void createEvent(final Event event) {
+    private void createEvent(Event event) {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
             exec.shutdownNow();
 
         exec = Executors.newCachedThreadPool();
 
-        exec.execute(new Runnable() {
+        exec.execute(new MyRunnable(event, getActivity()) {
             @Override
             public void run() {
                 try {
+                    Event event = (Event) args[0];
+                    final Activity activity = (Activity) args[1];
+
                     JSONObject data = new JSONObject();
                     data.put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null));
                     data.put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null));
                     data.put("event_id", event.event_id);
                     data.put("category_id", event.category_id);
                     data.put("start_time", event.start_time);
-                    data.put("repeat_mode", event.repeat_mode);
+                    data.put("day", event.day);
                     data.put("length", event.length);
                     data.put("event_name", event.event_name);
                     data.put("event_note", event.event_note);
@@ -161,10 +175,23 @@ public class EditViewDialog extends DialogFragment {
                     String url = String.format(Locale.US, "%s/events/create", getResources().getString(R.string.server_ip));
 
                     JSONObject raw = new JSONObject(Tools.post(url, data));
-                    if (raw.getInt("result") != Tools.RES_OK)
+                    if (raw.getLong("result") != Tools.RES_OK)
                         throw new Exception();
 
-
+                    activity.runOnUiThread(new MyRunnable(Tools.time2cal(event.start_time), activity) {
+                        @Override
+                        public void run() {
+                            Calendar c = (Calendar) args[0];
+                            Toast.makeText((Activity) args[1], String.format(Locale.US, "Event has been created on %d/%d/%d at %02d:%02d",
+                                    c.get(Calendar.DAY_OF_MONTH),
+                                    c.get(Calendar.MONTH),
+                                    c.get(Calendar.YEAR),
+                                    c.get(Calendar.HOUR),
+                                    c.get(Calendar.MINUTE)),
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -188,11 +215,8 @@ public class EditViewDialog extends DialogFragment {
     @SuppressWarnings("unused")
     @OnClick(R.id.btn_save)
     public void saveClick() {
-        int calculated_time = event.start_time % 1000000;
-        calculated_time = (event.start_time / 1000000 + 1) * 1000000 + calculated_time;
-
-        event.start_time = calculated_time;
-        event.repeat_mode = calculated_repeat_mode;
+        event.start_time = Tools.cal2time(calc_calendar);
+        event.day = selected_day;
         event.event_note = txtEventNote.getText().toString();
 
         createEvent(event);
@@ -208,18 +232,16 @@ public class EditViewDialog extends DialogFragment {
     @SuppressWarnings("unused")
     @OnClick(R.id.txt_event_date)
     public void selectDate() {
-        short day = (short) (event.start_time % 1000000 / 10000);
-        short month = (short) (event.start_time % 100000000 / 1000000);
-        short year = (short) (event.start_time / 100000000 + 2000);
+        Calendar c = Tools.time2cal(event.start_time);
+
         DatePickerDialog datePicker = new DatePickerDialog(getActivity(), 0, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int y, int m, int d) {
-                short time_part = (short) (event.start_time % 10000);
-                int date_part = ((y - 2000) * 100 + m) * 100 + d;
-                event.start_time = date_part * 10000 + time_part;
-                txtEventDate.setText(Tools.eventDateTimeToString(event.start_time)[0]);
+                calc_calendar.set(y, m, d);
+                txtEventDate.setText(Tools.decode_time(calc_calendar)[0]);
             }
-        }, year, month, day);
+        }, c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
+
         datePicker.setTitle("Select date");
         datePicker.show();
     }
@@ -227,17 +249,20 @@ public class EditViewDialog extends DialogFragment {
     @SuppressWarnings("unused")
     @OnClick(R.id.txt_event_time)
     public void selectTime() {
-        short hour = (short) (event.start_time % 10000 / 100);
+        Calendar c = Tools.time2cal(event.start_time);
 
-        TimePickerDialog mTimePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
+        TimePickerDialog timePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
             @Override
-            public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
-                event.start_time = ((event.start_time / 10000) * 100 + selectedHour) * 100;
-                txtEventTime.setText(Tools.eventDateTimeToString(event.start_time)[1]);
-            }
-        }, hour, 0, true);
+            public void onTimeSet(TimePicker timePicker, int h, int m) {
+                calc_calendar.set(Calendar.HOUR, h);
+                calc_calendar.set(Calendar.MINUTE, 0);
+                calc_calendar.set(Calendar.SECOND, 0);
 
-        mTimePicker.setTitle("Select Time");
-        mTimePicker.show();
+                txtEventTime.setText(Tools.decode_time(calc_calendar)[1]);
+            }
+        }, c.get(Calendar.HOUR), 0, true);
+
+        timePicker.setTitle("Select Time");
+        timePicker.show();
     }
 }

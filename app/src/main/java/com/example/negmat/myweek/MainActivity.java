@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         initialize();
     }
-
+    
 
     // region Variables
     @BindView(R.id.btn_add_event)
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     protected GridLayout event_grid;
 
     static Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
-    TextView[][] tv = new TextView[8][25];
+    TextView[][] tv = new TextView[8][24];
     Event[] events;
     LongSparseArray<Integer> eventIdIndexMap = new LongSparseArray<>();
 
@@ -89,9 +89,7 @@ public class MainActivity extends AppCompatActivity {
         }
         //endregion
 
-        //Initialize current time and current week
-        Calendar c = Calendar.getInstance(); //always shows current date
-        //String currentDateString = DateFormat.getDateInstance().format(new Date());
+        Calendar c = Calendar.getInstance();
         String selectedWeek = String.format(Locale.US, "Week %d, %s.", c.get(Calendar.WEEK_OF_MONTH), c.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()).substring(0, 3));
         setTitle(selectedWeek);
 
@@ -124,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
                 if (col == 0) { // First column properties (for time)
                     tv[col][row].setTypeface(null, Typeface.BOLD);
                     tv[col][row].setGravity(Gravity.CENTER_HORIZONTAL);
-                    tv[col][row].setText(String.format(Locale.US, "%02d:00", row % 24));
+                    tv[col][row].setText(String.format(Locale.US, "%02d:00", row));
                 } else {
                     tv[col][row].setTextColor(Color.BLUE);
                 }
@@ -139,20 +137,14 @@ public class MainActivity extends AppCompatActivity {
         initGrid();
 
         for (Event event : events) {
-            int event_start_time = event.start_time;
+            Calendar calendar = Tools.time2cal(event.start_time);
 
-            short time = (short) (event_start_time % 10000 / 100);
-            short day = (short) (event_start_time % 1000000 / 10000);
-            short month = (short) ((event_start_time % 100000000 / 1000000));
-            short year = (short) (event_start_time / 100000000);
+            int row = calendar.get(Calendar.HOUR);
+            int col = calendar.get(Calendar.DAY_OF_WEEK);
 
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(year + 2000, month, day);
-            short day_of_week = (short) calendar.get(Calendar.DAY_OF_WEEK);
-
-            tv[day_of_week][time].setBackgroundResource(R.drawable.single_mode_bg);
-            tv[day_of_week][time].setText(event.event_name);
-            tv[day_of_week][time].setTag(event.event_id);
+            tv[col][row].setBackgroundResource(R.drawable.single_mode_bg);
+            tv[col][row].setText(event.event_name);
+            tv[col][row].setTag(event.event_id);
         }
 
         for (int n = 0; n < event_grid.getColumnCount(); n++)
@@ -214,38 +206,31 @@ public class MainActivity extends AppCompatActivity {
         exec.execute(new Runnable() {
             @Override
             public void run() {
-                int week_start_hour = 1;
-                int week_end_hour = 24;
-                int minute = 0;
-                int move = selCalDate.get(Calendar.DAY_OF_WEEK) - selCalDate.getFirstDayOfWeek();
-                Calendar c = Calendar.getInstance();
-                c.setTime(selCalDate.getTime());
-                c.add(Calendar.DATE, -move);
-                final int start_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_start_hour * 100 + minute;
-                c.add(Calendar.DATE, 6);
-                final int end_date = (c.get(Calendar.YEAR) - 2000) * 100000000 + (c.get(Calendar.MONTH) + 1) * 1000000 + c.get(Calendar.DAY_OF_MONTH) * 10000 + week_end_hour * 100 + minute;
+                Calendar c = (Calendar) selCalDate.clone();
 
-                String usrName = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
-                String usrPassword = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
+                c.add(Calendar.DATE, c.getFirstDayOfWeek() - c.get(Calendar.DAY_OF_WEEK));
+                int period_from = Tools.cal2time(c);
+                c.add(Calendar.DATE, 6);
+                int period_till = Tools.cal2time(c);
 
                 JSONObject body = null;
                 try {
                     body = new JSONObject()
-                            .put("username", usrName)
-                            .put("password", usrPassword)
-                            .put("period_from", start_date)
-                            .put("period_till", end_date);
+                            .put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null))
+                            .put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null))
+                            .put("period_from", period_from)
+                            .put("period_till", period_till);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
 
-                final String result = Tools.post(String.format(Locale.US, "%s/events/fetch", getResources().getString(R.string.server_ip)), body);
-
-                runOnUiThread(new Runnable() {
+                runOnUiThread(new MyRunnable(
+                        Tools.post(String.format(Locale.US, "%s/events/fetch", getResources().getString(R.string.server_ip)), body)
+                ) {
                     @Override
                     public void run() {
                         try {
-                            JSONObject json = new JSONObject(String.valueOf(result));
+                            JSONObject json = new JSONObject((String) args[0]);
                             int resultNumber = json.getInt("result");
                             if (resultNumber == Tools.RES_OK) {
                                 JSONArray jarray = json.getJSONArray("array");

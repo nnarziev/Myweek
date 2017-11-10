@@ -20,7 +20,7 @@
             android:layout_above="@+id/progressBar"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="20dp"
-            android:text="@string/logging_in"
+            android:text="@string/signing_in"
             android:textColor="@android:color/white"
             android:textSize="30sp" />
 

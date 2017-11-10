@@ -36,6 +36,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+
 public class SpeechDialog extends DialogFragment implements SpeechDelegate {
 
     @Override
@@ -81,12 +82,10 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
     }
 
     @Override
-    public void onSpeechResult(String _result) {
-        final String result = _result.toLowerCase();
-
-        text.setText(_result);
-
-        if (_result.isEmpty()) {
+    public void onSpeechResult(String result) {
+        result = result.toLowerCase();
+        text.setText(result);
+        if (result.isEmpty()) {
             Speech.getInstance().say("Repeat please", new TextToSpeechCallback() {
                 @Override
                 public void onStart() {
@@ -103,7 +102,6 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
 
                 }
             });
-
             return;
         }
 
@@ -111,17 +109,18 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
             exec.shutdownNow();
         exec = Executors.newCachedThreadPool();
 
-        exec.execute(new Runnable() {
+        exec.execute(new MyRunnable(result) {
             @Override
             public void run() {
                 try {
-                    Object[] match = stringMatchingWithCategories(result);
+                    String speech_result = (String) args[0];
+
+                    Object[] match = stringMatchingWithCategories(speech_result);
                     if (match == null)
                         throw new Exception();
 
-                    // TODO: Temporary, for presentation use only
-                    final String category = Character.toUpperCase(((String) match[1]).charAt(0)) + ((String) match[1]).substring(1);
-                    final int category_id = (int) match[0];
+                    String category = Character.toUpperCase(((String) match[1]).charAt(0)) + ((String) match[1]).substring(1);
+                    int category_id = (int) match[0];
 
                     String username = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
                     String password = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
@@ -131,35 +130,26 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                     body.put("password", password);
                     body.put("category_id", category_id);
 
-                    // TODO: this must be chosen instead of following constant values (when server is fixed)
-                    // Calendar c = Calendar.getInstance();
-                    // int today = (c.get(Calendar.YEAR) % 100) * 10000 + (c.get(Calendar.MONTH) + 1) * 100 + c.get(Calendar.DAY_OF_MONTH);
-                    // c.add(Calendar.DATE, 6 - c.get(Calendar.DAY_OF_WEEK));
-                    // int weekend = (c.get(Calendar.YEAR) % 100) * 10000 + (c.get(Calendar.MONTH) + 1) * 100 + c.get(Calendar.DAY_OF_MONTH);
-                    body.put("today", 171022);
-                    body.put("weekend", 171028);
-
                     JSONObject raw = new JSONObject(Tools.post(String.format(Locale.US, "%s/events/suggest", getResources().getString(R.string.server_ip)), body));
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
-                    final int suggested_time = raw.getInt("suggested_time");
-
-                    Log.e("DATA", suggested_time + "");
-
-                    getActivity().runOnUiThread(new Runnable() {
+                    getActivity().runOnUiThread(new MyRunnable(
+                            Tools.suggestion2time(raw.getInt("suggested_time")),
+                            category,
+                            speech_result,
+                            category_id
+                    ) {
                         @Override
                         public void run() {
-                            int sugested_time_recalc = (suggested_time / 1000000 - 1) * 1000000 + suggested_time % 1000000;
-
                             Event event = new Event(
-                                    sugested_time_recalc,
+                                    (int) args[0],
                                     0,
                                     (short) 60,
-                                    category,
-                                    result,
+                                    (String) args[1],
+                                    (String) args[2],
                                     0,
-                                    category_id
+                                    (int) args[3]
                             );
 
                             EditViewDialog conf = new EditViewDialog(event, false);
@@ -266,7 +256,7 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                     }
                     break;
                 case Tools.RES_SRV_ERR:
-                    Toast.makeText(getActivity().getApplicationContext(), "ERROR with Server happened", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity().getApplicationContext(), "Error occurred on the Server side!", Toast.LENGTH_SHORT).show();
                     return null;
                 default:
                     return null;
@@ -276,18 +266,6 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
             return null;
         }
         // endregion
-
-        // TODO: Lying part
-        if (event_text.contains("hiking") || event_text.contains("jumping"))
-            return new Object[]{map.get("adrenaline"), "adrenaline"};
-        else if (event_text.contains("museum"))
-            return new Object[]{map.get("silent"), "silent"};
-        else if (event_text.contains("romantic"))
-            return new Object[]{map.get("couple"), "couple"};
-        else if (event_text.contains("walk") || event_text.contains("wander"))
-            return new Object[]{map.get("alone"), "alone"};
-        else if (event_text.contains("club") || event_text.contains("party"))
-            return new Object[]{map.get("loud"), "loud"};
 
         int cat = -1;
         String key = null;

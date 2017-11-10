@@ -7,10 +7,11 @@ import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 
-//Initialization of Tools
+
 class Tools {
     static final short
             RES_OK = 0,
@@ -18,13 +19,13 @@ class Tools {
             RES_FAIL = 1;
 
     static final short
-            MON = 0b0100000,
-            TUE = 0b0010000,
-            WED = 0b0001000,
-            THU = 0b0000100,
-            FRI = 0b0000010,
-            SAT = 0b0000001,
-            SUN = 0b1000000;
+            SUN = 6,
+            MON = 5,
+            TUE = 4,
+            WED = 3,
+            THU = 2,
+            FRI = 1,
+            SAT = 0;
 
     static String post(String _url, JSONObject json_body) {
         try {
@@ -64,28 +65,70 @@ class Tools {
         }
     }
 
-    static String[] eventDateTimeToString(int event_time) {
-        // calculate time part (hh:mm)
-        short time = (short) (event_time % 10000 / 100);
-        String timeStr = String.format(Locale.US, "%d:00", time);
+    // region Time formatting
+    static String[] decode_time(Calendar calendar) {
+        String time_part = String.format(Locale.US, "%02d:00", calendar.get(Calendar.HOUR));
+        String date_part = String.format(Locale.US, "%s. %d, %d",
+                calendar.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()),
+                calendar.get(Calendar.DAY_OF_MONTH),
+                calendar.get(Calendar.YEAR)
+        );
 
-        // calculate date part (mmm. dd, yy)
-        short day = (short) (event_time % 1000000 / 10000);
-        short month = (short) (event_time % 100000000 / 1000000);
-        short year = (short) (event_time / 100000000);
-        Calendar cal = Calendar.getInstance();
-        cal.set(year + 2000, month, day);
-        String dateStr = String.format(Locale.US, "%s. %d, %d", cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()), day, year + 2000);
-
-        // return as a sequenced array
-        return new String[]{dateStr, timeStr};
+        return new String[]{date_part, time_part};
     }
+
+    static String[] decode_time(int time) {
+        Calendar cal = time2cal(time);
+
+        String time_part = String.format(Locale.US, "%02d:00", cal.get(Calendar.HOUR));
+        String date_part = String.format(Locale.US, "%s. %d, %d",
+                cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()),
+                cal.get(Calendar.DAY_OF_MONTH),
+                cal.get(Calendar.YEAR)
+        );
+
+        return new String[]{date_part, time_part};
+    }
+
+    static Calendar suggestion2cal(int suggestion) {
+        // create calendar on current day
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), suggestion / 10, 0, 0);
+
+        // shift date to closest match suggested weekday
+        suggestion %= 10;
+        while (calendar.get(Calendar.DAY_OF_WEEK) != suggestion)
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+
+        return calendar;
+    }
+
+    static int suggestion2time(int suggestion) {
+        return cal2time(suggestion2cal(suggestion));
+    }
+
+    static int cal2time(Calendar c) {
+        return Integer.parseInt(String.format(Locale.US,
+                "%02d%02d%02d%02d",
+                c.get(Calendar.YEAR) % 100,
+                c.get(Calendar.MONTH),
+                c.get(Calendar.DAY_OF_MONTH) + 1,
+                c.get(Calendar.HOUR)
+        ));
+    }
+
+    static Calendar time2cal(int time) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2000 + (time / 1000000) % 100, (time / 10000) % 100 - 1, (time / 100) % 100, time % 100, 0, 0);
+        return calendar;
+    }
+    // endregion
 }
 
 class Event {
-    public Event(int start_time, int repeat_mode, short length, String event_name, String event_note, long event_id, int category_id) {
+    public Event(int start_time, int day, short length, String event_name, String event_note, long event_id, int category_id) {
         this.start_time = start_time;
-        this.repeat_mode = repeat_mode;
+        this.day = day;
         this.length = length;
         this.event_name = event_name;
         this.event_note = event_note;
@@ -95,7 +138,7 @@ class Event {
 
     //region Variables
     int start_time;
-    int repeat_mode;
+    int day;
     short length;
     String event_name = "";
     String event_note = "";
@@ -114,7 +157,7 @@ class Event {
 
         try {
             start_time = data.getInt("start_time");
-            repeat_mode = data.getInt("repeat_mode");
+            repeat_mode = data.getInt("day");
             event_name = data.getString("event_name");
             event_note = data.getString("event_note");
             event_id = data.getLong("event_id");
@@ -127,4 +170,12 @@ class Event {
             return null;
         }
     }
+}
+
+abstract class MyRunnable implements Runnable {
+    MyRunnable(Object... args) {
+        this.args = Arrays.copyOf(args, args.length);
+    }
+
+    Object[] args;
 }

@@ -62,7 +62,7 @@ public class SignInActivity extends AppCompatActivity {
         overridePendingTransition(0, 0);
     }
 
-    public void signIn(final String usrLogin, final String usrPass) {
+    public void signIn(String username, String password) {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
             exec.shutdownNow();
 
@@ -70,13 +70,14 @@ public class SignInActivity extends AppCompatActivity {
 
         loadingPanel.setVisibility(View.VISIBLE);
 
-        exec.execute(new Runnable() {
+        exec.execute(new MyRunnable(username, password) {
             @Override
             public void run() {
                 try {
+
                     String raw_json = Tools.post(String.format(Locale.US, "%s/users/login", getResources().getString(R.string.server_ip)), new JSONObject()
-                            .put("username", usrLogin)
-                            .put("password", usrPass));
+                            .put("username", args[0])
+                            .put("password", args[1]));
                     if (raw_json == null)
                         throw new Exception();
 
@@ -84,15 +85,17 @@ public class SignInActivity extends AppCompatActivity {
                     int resultNumber = json.getInt("result");
 
                     if (resultNumber == Tools.RES_OK)
-                        runOnUiThread(new Runnable() {
+                        runOnUiThread(new MyRunnable(args) {
                             @Override
                             public void run() {
                                 SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
-                                editor.putString(SignInActivity.username, usrLogin);
-                                editor.putString(SignInActivity.password, usrPass);
+                                editor.putString(SignInActivity.username, (String) args[0]);
+                                editor.putString(SignInActivity.password, (String) args[1]);
                                 editor.apply();
+
                                 Intent intent = new Intent(SignInActivity.this, MainActivity.class);
                                 startActivity(intent);
+
                                 finish();
                                 overridePendingTransition(0, 0);
                             }

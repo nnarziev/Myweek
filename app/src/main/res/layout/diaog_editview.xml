@@ -108,98 +108,106 @@
             android:maxLines="2" />
     </LinearLayout>
 
-    <LinearLayout
+    <RadioGroup
         android:id="@+id/weekdaysGroup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        android:gravity="center_horizontal">
+        android:gravity="center_horizontal"
+        android:orientation="horizontal">
 
-        <ToggleButton
-            android:id="@+id/check_monday"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_margin="3dp"
-            android:layout_marginStart="3dp"
-            android:background="@drawable/weekday_bg"
-            android:tag="@string/mon"
-            android:textOff="@string/mon"
-            android:textOn="@string/mon"
-            android:textSize="12sp" />
-
-        <ToggleButton
-            android:id="@+id/check_tuesday"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_margin="3dp"
-            android:layout_marginStart="3dp"
-            android:background="@drawable/weekday_bg"
-            android:tag="@string/tue"
-            android:textOff="@string/tue"
-            android:textOn="@string/tue"
-            android:textSize="12sp" />
-
-        <ToggleButton
-            android:id="@+id/check_wednesday"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_margin="3dp"
-            android:layout_marginStart="3dp"
-            android:background="@drawable/weekday_bg"
-            android:tag="@string/wed"
-            android:textOff="@string/wed"
-            android:textOn="@string/wed"
-            android:textSize="12sp" />
-
-        <ToggleButton
-            android:id="@+id/check_thursday"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_margin="3dp"
-            android:layout_marginStart="3dp"
-            android:background="@drawable/weekday_bg"
-            android:tag="@string/thu"
-            android:textOff="@string/thu"
-            android:textOn="@string/thu"
-            android:textSize="12sp" />
-
-        <ToggleButton
-            android:id="@+id/check_friday"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_margin="3dp"
-            android:layout_marginStart="3dp"
-            android:background="@drawable/weekday_bg"
-            android:tag="@string/fri"
-            android:textOff="@string/fri"
-            android:textOn="@string/fri"
-            android:textSize="12sp" />
-
-        <ToggleButton
-            android:id="@+id/check_saturday"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_margin="3dp"
-            android:layout_marginStart="3dp"
-            android:background="@drawable/weekday_bg"
-            android:tag="@string/sat"
-            android:textOff="@string/sat"
-            android:textOn="@string/sat"
-            android:textSize="12sp" />
-
-        <ToggleButton
-            android:id="@+id/check_sunday"
+        <RadioButton
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_margin="3dp"
             android:layout_marginEnd="3dp"
             android:layout_marginStart="3dp"
             android:background="@drawable/weekday_bg"
+            android:button="@drawable/weekday_bg"
+            android:gravity="center"
             android:tag="@string/sun"
-            android:textOff="@string/sun"
-            android:textOn="@string/sun"
-            android:textSize="12sp" />
-    </LinearLayout>
+            android:text="@string/sun"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:button="@drawable/weekday_bg"
+            android:gravity="center"
+            android:tag="@string/mon"
+            android:text="@string/mon"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:button="@drawable/weekday_bg"
+            android:gravity="center"
+            android:tag="@string/tue"
+            android:text="@string/tue"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:button="@drawable/weekday_bg"
+            android:gravity="center"
+            android:tag="@string/wed"
+            android:text="@string/wed"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:button="@drawable/weekday_bg"
+            android:gravity="center"
+            android:tag="@string/thu"
+            android:text="@string/thu"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:button="@drawable/weekday_bg"
+            android:gravity="center"
+            android:tag="@string/fri"
+            android:text="@string/fri"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="3dp"
+            android:layout_marginStart="3dp"
+            android:background="@drawable/weekday_bg"
+            android:button="@drawable/weekday_bg"
+            android:gravity="center"
+            android:tag="@string/sat"
+            android:text="@string/sat"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </RadioGroup>
 
     <LinearLayout
         android:id="@+id/eventActionButtonsContainer"
