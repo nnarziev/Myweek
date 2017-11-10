@@ -13,19 +13,9 @@ import java.util.Locale;
 
 
 class Tools {
-    static final short
-            RES_OK = 0,
-            RES_SRV_ERR = -1,
-            RES_FAIL = 1;
-
-    static final short
-            SUN = 6,
-            MON = 5,
-            TUE = 4,
-            WED = 3,
-            THU = 2,
-            FRI = 1,
-            SAT = 0;
+    // region Server Constants
+    static final int RES_OK = 0, RES_SRV_ERR = -1, RES_FAIL = 1;
+    // endregion
 
     static String post(String _url, JSONObject json_body) {
         try {
@@ -90,30 +80,29 @@ class Tools {
         return new String[]{date_part, time_part};
     }
 
+    static int suggestion2time(int suggestion) {
+        return cal2time(suggestion2cal(suggestion));
+    }
+
     static Calendar suggestion2cal(int suggestion) {
         // create calendar on current day
         Calendar calendar = Calendar.getInstance();
         calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), suggestion / 10, 0, 0);
 
         // shift date to closest match suggested weekday
-        suggestion %= 10;
-        while (calendar.get(Calendar.DAY_OF_WEEK) != suggestion)
+        while (calendar.get(Calendar.DAY_OF_WEEK) != suggestion % 10)
             calendar.add(Calendar.DAY_OF_MONTH, 1);
 
         return calendar;
-    }
-
-    static int suggestion2time(int suggestion) {
-        return cal2time(suggestion2cal(suggestion));
     }
 
     static int cal2time(Calendar c) {
         return Integer.parseInt(String.format(Locale.US,
                 "%02d%02d%02d%02d",
                 c.get(Calendar.YEAR) % 100,
-                c.get(Calendar.MONTH),
-                c.get(Calendar.DAY_OF_MONTH) + 1,
-                c.get(Calendar.HOUR)
+                c.get(Calendar.MONTH) + 1,
+                c.get(Calendar.DAY_OF_MONTH),
+                c.get(Calendar.HOUR_OF_DAY)
         ));
     }
 

@@ -44,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
         initialize();
     }
 
@@ -139,7 +138,9 @@ public class MainActivity extends AppCompatActivity {
         for (Event event : events) {
             Calendar calendar = Tools.time2cal(event.start_time);
 
-            int row = calendar.get(Calendar.HOUR);
+            Log.e("POPULATE TIME", event.start_time + "");
+
+            int row = calendar.get(Calendar.HOUR_OF_DAY);
             int col = calendar.get(Calendar.DAY_OF_WEEK);
 
             tv[col][row].setBackgroundResource(R.drawable.single_mode_bg);

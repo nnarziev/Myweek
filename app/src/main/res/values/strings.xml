@@ -45,13 +45,7 @@
     <string name="event_date">Event date:</string>
     <string name="event_note">Event note:</string>
     <string name="repeat">Repeat:</string>
-    <string name="mon">Mo</string>
-    <string name="tue">Tu</string>
-    <string name="wed">We</string>
-    <string name="thu">Th</string>
-    <string name="fri">Fr</string>
-    <string name="sat">Sa</string>
-    <string name="sun">Su</string>
+
     <string name="save">Save</string>
     <string name="signing_in">Signing in…</string>
     <string name="sign_in">Sign in</string>
@@ -66,4 +60,12 @@
     <string name="event_details">Event Details</string>
     <string name="speak_event_details">Speak Event Details</string>
     <string name="signing_up">Signing up…</string>
+
+    <string name="SUN">Su</string>
+    <string name="MON">Mo</string>
+    <string name="TUE">Tu</string>
+    <string name="WED">We</string>
+    <string name="THU">Th</string>
+    <string name="FRI">Fr</string>
+    <string name="SAT">Sa</string>
 </resources>

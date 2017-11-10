@@ -125,8 +125,8 @@
             android:background="@drawable/weekday_bg"
             android:button="@drawable/weekday_bg"
             android:gravity="center"
-            android:tag="@string/sun"
-            android:text="@string/sun"
+            android:tag="@string/SUN"
+            android:text="@string/SUN"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -138,8 +138,8 @@
             android:background="@drawable/weekday_bg"
             android:button="@drawable/weekday_bg"
             android:gravity="center"
-            android:tag="@string/mon"
-            android:text="@string/mon"
+            android:tag="@string/MON"
+            android:text="@string/MON"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -151,8 +151,8 @@
             android:background="@drawable/weekday_bg"
             android:button="@drawable/weekday_bg"
             android:gravity="center"
-            android:tag="@string/tue"
-            android:text="@string/tue"
+            android:tag="@string/TUE"
+            android:text="@string/TUE"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -164,8 +164,8 @@
             android:background="@drawable/weekday_bg"
             android:button="@drawable/weekday_bg"
             android:gravity="center"
-            android:tag="@string/wed"
-            android:text="@string/wed"
+            android:tag="@string/WED"
+            android:text="@string/WED"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -177,8 +177,8 @@
             android:background="@drawable/weekday_bg"
             android:button="@drawable/weekday_bg"
             android:gravity="center"
-            android:tag="@string/thu"
-            android:text="@string/thu"
+            android:tag="@string/THU"
+            android:text="@string/THU"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -190,8 +190,8 @@
             android:background="@drawable/weekday_bg"
             android:button="@drawable/weekday_bg"
             android:gravity="center"
-            android:tag="@string/fri"
-            android:text="@string/fri"
+            android:tag="@string/FRI"
+            android:text="@string/FRI"
             android:textSize="12sp"
             android:textStyle="bold" />
 
@@ -203,8 +203,8 @@
             android:background="@drawable/weekday_bg"
             android:button="@drawable/weekday_bg"
             android:gravity="center"
-            android:tag="@string/sat"
-            android:text="@string/sat"
+            android:tag="@string/SAT"
+            android:text="@string/SAT"
             android:textSize="12sp"
             android:textStyle="bold" />
     </RadioGroup>

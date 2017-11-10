@@ -134,8 +134,10 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
+                    int suggested_time = raw.getInt("suggested_time");
                     getActivity().runOnUiThread(new MyRunnable(
-                            Tools.suggestion2time(raw.getInt("suggested_time")),
+                            Tools.suggestion2time(suggested_time), // chosen, suggested time
+                            suggested_time % 10, // day of week
                             category,
                             speech_result,
                             category_id
@@ -144,12 +146,12 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                         public void run() {
                             Event event = new Event(
                                     (int) args[0],
-                                    0,
+                                    (int) args[1],
                                     (short) 60,
-                                    (String) args[1],
                                     (String) args[2],
+                                    (String) args[3],
                                     0,
-                                    (int) args[3]
+                                    (int) args[4]
                             );
 
                             EditViewDialog conf = new EditViewDialog(event, false);
@@ -248,11 +250,6 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                     for (int i = 0; i < jarray.length(); i++) {
                         String cat_name = jarray.getJSONObject(i).names().getString(0);
                         map.put(cat_name, jarray.getJSONObject(i).getInt(cat_name));
-                    }
-
-                    for (String name : map.keySet()) {
-                        String value = map.get(name).toString();
-                        Log.v(name, ": " + value);
                     }
                     break;
                 case Tools.RES_SRV_ERR:
