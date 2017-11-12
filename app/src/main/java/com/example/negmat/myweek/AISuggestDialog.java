@@ -2,6 +2,7 @@ package com.example.negmat.myweek;
 
 import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -72,6 +73,13 @@ public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnIn
         super.onDestroy();
 
         Tools.enable_touch(getActivity());
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
+        if (exitJob != null)
+            exitJob.run();
     }
 
     @Override

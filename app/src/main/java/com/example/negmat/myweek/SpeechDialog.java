@@ -16,7 +16,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import net.gotev.speech.GoogleVoiceTypingDisabledException;
-import net.gotev.speech.Logger;
 import net.gotev.speech.Speech;
 import net.gotev.speech.SpeechDelegate;
 import net.gotev.speech.SpeechRecognitionNotAvailable;
