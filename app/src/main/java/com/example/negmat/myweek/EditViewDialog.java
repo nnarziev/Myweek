@@ -6,8 +6,11 @@ import android.app.DialogFragment;
 import android.app.TimePickerDialog;
 import android.content.DialogInterface;
 import android.graphics.Color;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
+import android.nfc.NfcEvent;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,7 +37,24 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
-public class EditViewDialog extends DialogFragment {
+public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateNdefMessageCallback {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(getActivity());
+        if (mAdapter == null) {
+            Toast.makeText(getActivity(), "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!mAdapter.isEnabled()) {
+            Toast.makeText(getActivity(), "Please enable NFC via Settings.", Toast.LENGTH_LONG).show();
+        }
+
+        mAdapter.setNdefPushMessageCallback(this, this.getActivity());
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -45,10 +65,10 @@ public class EditViewDialog extends DialogFragment {
         return view;
     }
 
-    public EditViewDialog(Event event, boolean readOnly) {
+    public EditViewDialog(Event event, boolean readOnly, MyRunnable onExit) {
         this.event = event;
         this.readOnly = readOnly;
-        this.calc_calendar = Tools.time2cal(event.start_time);
+        this.exitJob = onExit;
     }
 
     private void initialize() {
@@ -82,28 +102,31 @@ public class EditViewDialog extends DialogFragment {
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked) {
                     Calendar c = Tools.suggestion2cal(10 + str2day.get(String.valueOf(compoundButton.getTag())));
-                    calc_calendar.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH));
-                    txtEventDate.setText(Tools.decode_time(calc_calendar)[0]);
+                    event.start_time = Tools.alter_date(event.start_time, c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
+                    event.day = c.get(Calendar.DAY_OF_WEEK);
+                    txtEventDate.setText(Tools.decode_time(c)[0]);
                     compoundButton.setTextColor(Color.WHITE);
                 } else
                     compoundButton.setTextColor(Color.BLACK);
             }
         };
 
-        calc_calendar = Tools.time2cal(event.start_time);
-
         for (int n = 0; n < weekdaysParent.getChildCount(); n++) {
             RadioButton button = (RadioButton) weekdaysParent.getChildAt(n);
+            int day = str2day.get(String.valueOf(button.getTag()));
 
-            button.setOnCheckedChangeListener(listener);
-            day2btn.put(str2day.get(String.valueOf(button.getTag())), button);
-
-            if (event.day == calc_calendar.get(Calendar.DAY_OF_WEEK))
+            if (day == event.day)
                 weekdaysParent.check(button.getId());
+
+            day2btn.put(day, button);
+            button.setOnCheckedChangeListener(listener);
         }
         // endregion
 
-        refreshEditMode();
+        if (!Tools.time2cal(event.start_time).before(Calendar.getInstance()))
+            refreshEditMode();
+        else
+            loadViewHistoryMode();
     }
 
 
@@ -124,11 +147,10 @@ public class EditViewDialog extends DialogFragment {
     //endregion
 
     static ExecutorService exec;
+    private MyRunnable exitJob;
 
     private boolean readOnly = false;
     private Event event;
-
-    private Calendar calc_calendar = Calendar.getInstance();
 
     private HashMap<String, Integer> str2day = new HashMap<>();
     private SparseArray<String> day2str = new SparseArray<>();
@@ -136,11 +158,32 @@ public class EditViewDialog extends DialogFragment {
     // endregion
 
 
-    private void refreshEditMode() {
+    private void loadViewHistoryMode() {
         for (int n = 0; n < eventActionBtnsParent.getChildCount(); n++) {
             View view = eventActionBtnsParent.getChildAt(n);
-            view.setVisibility(readOnly == Boolean.parseBoolean((String) view.getTag()) ? View.VISIBLE : View.GONE);
+            view.setVisibility(view.getId() == R.id.btn_cancel || view.getId() == R.id.btn_delete ? View.VISIBLE : View.GONE);
         }
+
+        txtEventName.setEnabled(false);
+        txtEventTime.setEnabled(false);
+        txtEventDate.setEnabled(false);
+        txtEventNote.setEnabled(false);
+
+        for (int n = 0; n < weekdaysParent.getChildCount(); n++)
+            weekdaysParent.getChildAt(n).setClickable(false);
+    }
+
+    private void refreshEditMode() {
+        if (event.event_id == Event.NEW_EVENT)
+            for (int n = 0; n < eventActionBtnsParent.getChildCount(); n++) {
+                View view = eventActionBtnsParent.getChildAt(n);
+                view.setVisibility(view.getId() == R.id.btn_cancel || view.getId() == R.id.btn_save ? View.VISIBLE : View.GONE);
+            }
+        else
+            for (int n = 0; n < eventActionBtnsParent.getChildCount(); n++) {
+                View view = eventActionBtnsParent.getChildAt(n);
+                view.setVisibility(readOnly == Boolean.parseBoolean((String) view.getTag()) ? View.VISIBLE : View.GONE);
+            }
 
         txtEventName.setEnabled(!readOnly);
         txtEventTime.setEnabled(!readOnly);
@@ -152,12 +195,21 @@ public class EditViewDialog extends DialogFragment {
     }
 
     @Override
+    public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+        JSONObject msg = event.toJson(true);
+        if (msg == null)
+            return null;
+        return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
+    }
+
+    @Override
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
 
-        if (getActivity() instanceof MainActivity)
-            ((MainActivity) getActivity()).updateClick(null);
+        if (exitJob != null)
+            exitJob.run();
     }
+
 
     private void createEvent(Event event) {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
@@ -165,13 +217,14 @@ public class EditViewDialog extends DialogFragment {
 
         exec = Executors.newCachedThreadPool();
 
+        Tools.disable_touch(getActivity());
         exec.execute(new MyRunnable(event, getActivity()) {
             @Override
             public void run() {
-                try {
-                    Event event = (Event) args[0];
-                    final Activity activity = (Activity) args[1];
+                Event event = (Event) args[0];
+                Activity activity = (Activity) args[1];
 
+                try {
                     JSONObject data = new JSONObject();
                     data.put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null));
                     data.put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null));
@@ -183,29 +236,122 @@ public class EditViewDialog extends DialogFragment {
                     data.put("event_name", event.event_name);
                     data.put("event_note", event.event_note);
 
-                    Log.e("CREATED TIME", event.start_time + "");
-
                     String url = String.format(Locale.US, "%s/events/create", getResources().getString(R.string.server_ip));
 
                     JSONObject raw = new JSONObject(Tools.post(url, data));
-                    if (raw.getLong("result") != Tools.RES_OK)
+                    if (raw.getLong("result") != Tools.RES_OK) {
+                        activity.runOnUiThread(new MyRunnable(activity) {
+                            @Override
+                            public void run() {
+                                Tools.enable_touch(((Activity) args[0]));
+                            }
+                        });
                         throw new Exception();
+                    }
 
                     activity.runOnUiThread(new MyRunnable(Tools.time2cal(event.start_time), activity) {
                         @Override
                         public void run() {
                             Calendar c = (Calendar) args[0];
-                            Toast.makeText((Activity) args[1], String.format(Locale.US, "Event has been created on %d/%d/%d at %02d:%02d",
+                            Activity activity = (Activity) args[1];
+                            Toast.makeText(activity, String.format(Locale.US, "Event has been created on %d/%d/%d at %02d:%02d",
                                     c.get(Calendar.DAY_OF_MONTH),
                                     c.get(Calendar.MONTH),
                                     c.get(Calendar.YEAR),
                                     c.get(Calendar.HOUR_OF_DAY),
                                     c.get(Calendar.MINUTE)),
-                                    Toast.LENGTH_SHORT
+                                    Toast.LENGTH_LONG
                             ).show();
+                            Tools.enable_touch(activity);
+                            dismiss();
                         }
                     });
                 } catch (Exception e) {
+                    activity.runOnUiThread(new MyRunnable(activity) {
+                        @Override
+                        public void run() {
+                            Tools.enable_touch((Activity) args[0]);
+                        }
+                    });
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+
+    @SuppressWarnings("unused")
+    @OnClick(R.id.btn_edit)
+    public void editButtonClick() {
+        readOnly = false;
+        refreshEditMode();
+    }
+
+    @SuppressWarnings("unused")
+    @OnClick(R.id.btn_cancel)
+    public void cancelButtonClick() {
+        dismiss();
+    }
+
+    @SuppressWarnings("unused")
+    @OnClick(R.id.btn_save)
+    public void saveButtonClick() {
+        event.event_note = txtEventNote.getText().toString();
+        createEvent(event);
+    }
+
+    @SuppressWarnings("unused")
+    @OnClick(R.id.btn_delete)
+    public void deleteButtonClick() {
+        if (exec != null && !exec.isTerminated() && !exec.isShutdown())
+            exec.shutdownNow();
+
+        exec = Executors.newCachedThreadPool();
+
+        Tools.disable_touch(getActivity());
+        exec.execute(new MyRunnable(event, getActivity()) {
+            @Override
+            public void run() {
+                Activity activity = (Activity) args[1];
+                Event event = (Event) args[0];
+
+                try {
+                    JSONObject data = new JSONObject();
+                    data.put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null));
+                    data.put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null));
+                    data.put("event_id", event.event_id);
+
+                    String url = String.format(Locale.US, "%s/events/disable", getResources().getString(R.string.server_ip));
+
+                    JSONObject raw = new JSONObject(Tools.post(url, data));
+
+                    if (raw.getLong("result") != Tools.RES_OK) {
+                        activity.runOnUiThread(new MyRunnable(activity) {
+                            @Override
+                            public void run() {
+                                Tools.enable_touch((Activity) args[0]);
+                            }
+                        });
+                        throw new Exception();
+                    }
+
+                    activity.runOnUiThread(new MyRunnable(args[1]) {
+                        @Override
+                        public void run() {
+                            Activity activity = (Activity) args[0];
+                            Toast.makeText(activity, "Event was deleted successfully!", Toast.LENGTH_SHORT).show();
+                            Tools.enable_touch(activity);
+                            dismiss();
+                        }
+                    });
+
+                } catch (Exception e) {
+                    activity.runOnUiThread(new MyRunnable(activity) {
+                        @Override
+                        public void run() {
+                            Tools.enable_touch(((Activity) args[0]));
+                        }
+                    });
                     e.printStackTrace();
                 }
             }
@@ -213,47 +359,28 @@ public class EditViewDialog extends DialogFragment {
     }
 
     @SuppressWarnings("unused")
-    @OnClick(R.id.btn_edit)
-    public void onEditClick() {
-        readOnly = false;
-        refreshEditMode();
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.btn_cancel)
-    public void onCancelClick() {
-        dismiss();
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.btn_save)
-    public void saveClick() {
-        event.start_time = Tools.cal2time(calc_calendar);
-        event.day = calc_calendar.get(Calendar.DAY_OF_WEEK);
-        event.event_note = txtEventNote.getText().toString();
-
-        createEvent(event);
-        dismiss();
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.btn_delete)
-    public void delete() {
-        dismiss();
-    }
-
-    @SuppressWarnings("unused")
     @OnClick(R.id.txt_event_date)
-    public void selectDate() {
+    public void selectDateClick() {
+        Calendar cal = Tools.time2cal(event.start_time);
+
         DatePickerDialog datePicker = new DatePickerDialog(getActivity(), 0, new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int y, int m, int d) {
-                calc_calendar.set(y, m, d);
-                txtEventDate.setText(Tools.decode_time(calc_calendar)[0]);
-                RadioButton button = day2btn.get(calc_calendar.get(Calendar.DAY_OF_WEEK));
-                ((RadioGroup) button.getParent()).check(button.getId());
+                Calendar today = Calendar.getInstance();
+                Calendar selec = Calendar.getInstance();
+                selec.set(y, m, d);
+                if (selec.before(today))
+                    event.start_time = Tools.suggestion2time(10 + selec.get(Calendar.DAY_OF_WEEK));
+                else
+                    event.start_time = Tools.alter_date(event.start_time, y, m + 1, d);
+
+                event.day = Tools.time2cal(event.start_time).get(Calendar.DAY_OF_WEEK);
+                txtEventDate.setText(Tools.decode_time(event.start_time)[0]);
+
+                RadioButton button = day2btn.get(event.day);
+                weekdaysParent.check(button.getId());
             }
-        }, calc_calendar.get(Calendar.YEAR), calc_calendar.get(Calendar.MONTH), calc_calendar.get(Calendar.DAY_OF_MONTH));
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
 
         datePicker.setTitle("Select date");
         datePicker.show();
@@ -261,17 +388,14 @@ public class EditViewDialog extends DialogFragment {
 
     @SuppressWarnings("unused")
     @OnClick(R.id.txt_event_time)
-    public void selectTime() {
+    public void selectTimeClick() {
         Calendar c = Tools.time2cal(event.start_time);
 
         TimePickerDialog timePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
             @Override
             public void onTimeSet(TimePicker timePicker, int h, int m) {
-                calc_calendar.set(Calendar.HOUR_OF_DAY, h);
-                calc_calendar.set(Calendar.MINUTE, 0);
-                calc_calendar.set(Calendar.SECOND, 0);
-
-                txtEventTime.setText(Tools.decode_time(calc_calendar)[1]);
+                event.start_time = Tools.alter_hour(event.start_time, h);
+                txtEventTime.setText(Tools.decode_time(event.start_time)[1]);
             }
         }, c.get(Calendar.HOUR_OF_DAY), 0, true);
 

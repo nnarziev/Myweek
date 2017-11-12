@@ -16,8 +16,8 @@
     </style>
 
     <!--style name="ActionBarStyle" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:background">@drawable/actionbar_bg</item>
-        <item name="background">@drawable/actionbar_bg</item>
+        <item name="android:background">@drawabg_actionbarr_bg</item>
+        <item name="background">@drawabg_actionbarr_bg</item>
     </style-->
 
     <style name="SignTheme" parent="Theme.AppCompat.Light.NoActionBar">

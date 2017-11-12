@@ -5,14 +5,14 @@
 
     <item
         android:id="@+id/action_selectweek"
-        android:icon="@drawable/ic_calendar"
+        android:icon="@drawable/ic_weekchoice"
         android:onClick="selectWeekClick"
         android:title="@string/select_week"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/action_prevweek"
-        android:icon="@drawable/arrow_left"
+        android:icon="@drawable/ic_arrow_left"
         android:onClick="navPrevWeekClick"
         android:title="@string/previous_week"
         app:showAsAction="always"
@@ -20,7 +20,7 @@
 
     <item
         android:id="@+id/action_nextweek"
-        android:icon="@drawable/arrow_right"
+        android:icon="@drawable/ic_arrow_right"
         android:onClick="navNextWeekClick"
         android:title="@string/next_week"
         app:showAsAction="always"

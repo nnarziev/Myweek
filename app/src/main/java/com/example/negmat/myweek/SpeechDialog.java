@@ -150,11 +150,18 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                                     (short) 60,
                                     (String) args[2],
                                     (String) args[3],
-                                    0,
+                                    Event.NEW_EVENT,
                                     (int) args[4]
                             );
 
-                            EditViewDialog conf = new EditViewDialog(event, false);
+                            EditViewDialog conf = new EditViewDialog(event, false, new MyRunnable(getActivity()) {
+                                @Override
+                                public void run() {
+                                    if (args[0] instanceof MainActivity) {
+                                        ((MainActivity) args[0]).updateClick(null);
+                                    }
+                                }
+                            });
                             conf.show(getActivity().getFragmentManager(), "confirmdialog");
                         }
                     });

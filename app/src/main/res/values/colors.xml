@@ -7,8 +7,7 @@
     <color name="grey">#eceef1</color>
     <color name="yellow">#ff0</color>
 
-    <color name="color_repeat_mode">#bbdefb</color>
-    <color name="color_single_mode">#dfdfee</color>
-    <color name="event_text_color">#1b443b</color>
-    <!--color name="event_text_color">#1a237e</color-->
+    <color name="color_active_cell">#ffee58</color>
+    <color name="color_inactive_cell">#acacac</color>
+    <color name="event_text">#1b443b</color>
 </resources>

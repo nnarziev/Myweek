@@ -7,7 +7,10 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
+import android.nfc.NdefMessage;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -47,6 +50,33 @@ public class MainActivity extends AppCompatActivity {
         initialize();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent intent = getIntent();
+
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+            Parcelable[] rawMessages = intent.getParcelableArrayExtra(
+                    NfcAdapter.EXTRA_NDEF_MESSAGES);
+
+            NdefMessage message = (NdefMessage) rawMessages[0]; // only one message transferred
+            Event event = null;
+            try {
+                event = Event.parseJson(new JSONObject(new String(message.getRecords()[0].getPayload())));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            EditViewDialog dialog = new EditViewDialog(event, true, new MyRunnable() {
+                @Override
+                public void run() {
+                    updateClick(null);
+                }
+            });
+            FragmentManager manager = getFragmentManager();
+            dialog.show(manager, "Editdialog");
+
+        }
+    }
 
     // region Variables
     @BindView(R.id.btn_add_event)
@@ -78,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < grid_fixed.getColumnCount(); i++) {
             TextView weekNames = new TextView(getApplicationContext());
             weekNames.setTextColor(Color.BLACK);
-            weekNames.setBackgroundResource(R.drawable.cell_shape);
+            weekNames.setBackgroundResource(R.drawable.bg_cell_empty);
             weekNames.setTypeface(null, Typeface.BOLD);
             weekNames.setText(weekDays[i]);
             weekNames.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
@@ -110,10 +140,11 @@ public class MainActivity extends AppCompatActivity {
             for (int row = 0; row < event_grid.getRowCount(); row++) {
                 // Properties for all cells in the DataGridView
                 tv[col][row] = new TextView(getApplicationContext());
-                tv[col][row].setTextColor(getResources().getColor(R.color.event_text_color));
-                tv[col][row].setBackgroundResource(R.drawable.cell_shape);
+                tv[col][row].setTextColor(getResources().getColor(R.color.event_text));
+                tv[col][row].setBackgroundResource(R.drawable.bg_cell_empty);
                 tv[col][row].setWidth(cellDimen);
                 tv[col][row].setHeight(cellDimen);
+                tv[col][row].setPadding(10, 5, 10, 5);
                 tv[col][row].setTextSize(10f);
                 tv[col][row].setMaxLines(1);
                 tv[col][row].setEllipsize(TextUtils.TruncateAt.END);
@@ -122,8 +153,6 @@ public class MainActivity extends AppCompatActivity {
                     tv[col][row].setTypeface(null, Typeface.BOLD);
                     tv[col][row].setGravity(Gravity.CENTER_HORIZONTAL);
                     tv[col][row].setText(String.format(Locale.US, "%02d:00", row));
-                } else {
-                    tv[col][row].setTextColor(Color.BLUE);
                 }
 
                 // Populate the prepared TextView
@@ -135,15 +164,14 @@ public class MainActivity extends AppCompatActivity {
     private void populateGrid(Event[] events) {
         initGrid();
 
+        Calendar today = Calendar.getInstance();
         for (Event event : events) {
-            Calendar calendar = Tools.time2cal(event.start_time);
+            Calendar time = Tools.time2cal(event.start_time);
 
-            Log.e("POPULATE TIME", event.start_time + "");
+            int row = time.get(Calendar.HOUR_OF_DAY);
+            int col = time.get(Calendar.DAY_OF_WEEK);
 
-            int row = calendar.get(Calendar.HOUR_OF_DAY);
-            int col = calendar.get(Calendar.DAY_OF_WEEK);
-
-            tv[col][row].setBackgroundResource(R.drawable.single_mode_bg);
+            tv[col][row].setBackgroundResource(time.before(today) ? R.drawable.bg_cell_inactive : R.drawable.bg_cell_active);
             tv[col][row].setText(event.event_name);
             tv[col][row].setTag(event.event_id);
         }
@@ -164,7 +192,12 @@ public class MainActivity extends AppCompatActivity {
             int index = eventIdIndexMap.get(event_id);
 
             //make event global and show all info on it*/
-            EditViewDialog dialog = new EditViewDialog(events[index], true);
+            EditViewDialog dialog = new EditViewDialog(events[index], true, new MyRunnable() {
+                @Override
+                public void run() {
+                    updateClick(null);
+                }
+            });
             FragmentManager manager = getFragmentManager();
             dialog.show(manager, "Editdialog");
         }
@@ -208,9 +241,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 Calendar c = (Calendar) selCalDate.clone();
+                c.set(Calendar.HOUR_OF_DAY, 0);
+                c.set(Calendar.MINUTE, 0);
+                c.set(Calendar.SECOND, 0);
 
                 c.add(Calendar.DATE, c.getFirstDayOfWeek() - c.get(Calendar.DAY_OF_WEEK));
                 int period_from = Tools.cal2time(c);
+
+                c.set(Calendar.HOUR_OF_DAY, 23);
+                c.set(Calendar.MINUTE, 59);
+                c.set(Calendar.SECOND, 59);
                 c.add(Calendar.DATE, 6);
                 int period_till = Tools.cal2time(c);
 

@@ -39,6 +39,6 @@
         android:contentDescription="@string/app_name"
         android:elevation="2dp"
         android:onClick="addEventClick"
-        android:src="@drawable/new_event" />
+        android:src="@drawable/ic_add_event" />
 
 </RelativeLayout>

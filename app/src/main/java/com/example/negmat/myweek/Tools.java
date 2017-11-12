@@ -1,5 +1,9 @@
 package com.example.negmat.myweek;
 
+import android.app.Activity;
+import android.util.Log;
+import android.view.WindowManager;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -69,8 +73,8 @@ class Tools {
 
     static String[] decode_time(int time) {
         Calendar cal = time2cal(time);
-
-        String time_part = String.format(Locale.US, "%02d:00", cal.get(Calendar.HOUR));
+        Log.v("CHECK:", "month: " + String.valueOf(cal.get(Calendar.MONTH)) + "day" + String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
+        String time_part = String.format(Locale.US, "%02d:00", cal.get(Calendar.HOUR_OF_DAY));
         String date_part = String.format(Locale.US, "%s. %d, %d",
                 cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()),
                 cal.get(Calendar.DAY_OF_MONTH),
@@ -109,7 +113,24 @@ class Tools {
     static Calendar time2cal(int time) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(2000 + (time / 1000000) % 100, (time / 10000) % 100 - 1, (time / 100) % 100, time % 100, 0, 0);
+
         return calendar;
+    }
+
+    static int alter_date(int origin, int year, int month, int day) {
+        return year % 100 * 1000000 + month * 10000 + day * 100 + origin % 100;
+    }
+
+    static int alter_hour(int origin, int hour) {
+        return origin / 100 * 100 + hour;
+    }
+
+    static void disable_touch(Activity activity) {
+        activity.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+    }
+
+    static void enable_touch(Activity activity) {
+        activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
     // endregion
 }
@@ -124,6 +145,10 @@ class Event {
         this.event_id = event_id;
         this.category_id = category_id;
     }
+
+    // region Constants
+    static final int NEW_EVENT = 0;
+    // endregion
 
     //region Variables
     int start_time;
@@ -154,6 +179,22 @@ class Event {
             length = (short) data.getInt("length");
 
             return new Event(start_time, repeat_mode, length, event_name, event_note, event_id, ev_cat_id);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    JSONObject toJson(boolean newInstance) {
+        try {
+            return new JSONObject()
+                    .put("start_time", start_time)
+                    .put("day", day)
+                    .put("length", length)
+                    .put("event_name", event_name)
+                    .put("event_note", event_note)
+                    .put("event_id", newInstance ? NEW_EVENT : event_id)
+                    .put("category_id", category_id);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
