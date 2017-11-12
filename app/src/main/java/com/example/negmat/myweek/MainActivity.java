@@ -27,6 +27,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import net.gotev.speech.Speech;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;

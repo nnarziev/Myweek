@@ -43,9 +43,8 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_speech, container, false);
         ButterKnife.bind(this, view);
-
-        Speech.init(getActivity(), getActivity().getPackageName());
-        Logger.setLogLevel(Logger.LogLevel.DEBUG);
+        Speech.init(getActivity().getApplicationContext(), getActivity().getPackageName());
+        speech = Speech.getInstance();
 
         //granting permission to user
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
@@ -57,6 +56,7 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
 
     // region Variables
     static ExecutorService exec;
+    Speech speech;
 
     private static final int REQUEST_MICROPHONE = 2;
     @BindView(R.id.text)
@@ -64,6 +64,12 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
     // endregion
 
     // region Speech handlers
+    @Override
+    public void onStop() {
+        super.onStop();
+        speech.shutdown();
+    }
+
     @Override
     public void onStartOfSpeech() {
 
@@ -86,7 +92,7 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
         result = result.toLowerCase();
         text.setText(result);
         if (result.isEmpty()) {
-            Speech.getInstance().say("Repeat please", new TextToSpeechCallback() {
+            speech.say("Repeat please", new TextToSpeechCallback() {
                 @Override
                 public void onStart() {
 
@@ -154,7 +160,7 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                                     (int) args[4]
                             );
 
-                            EditViewDialog conf = new EditViewDialog(event, false, new MyRunnable(getActivity()) {
+                            /*EditViewDialog conf = new EditViewDialog(event, false, new MyRunnable(getActivity()) {
                                 @Override
                                 public void run() {
                                     if (args[0] instanceof MainActivity) {
@@ -162,7 +168,17 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                                     }
                                 }
                             });
-                            conf.show(getActivity().getFragmentManager(), "confirmdialog");
+                            conf.show(getActivity().getFragmentManager(), "confirmdialog");*/
+
+                            AISuggestDialog dialog = new AISuggestDialog(event, new MyRunnable(getActivity()) {
+                                @Override
+                                public void run() {
+                                    if (args[0] instanceof MainActivity) {
+                                        ((MainActivity) args[0]).updateClick(null);
+                                    }
+                                }
+                            });
+                            dialog.show(getActivity().getFragmentManager(), "suggest_dialog");
                         }
                     });
                 } catch (Exception e) {
@@ -226,12 +242,6 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                 .show();
     }
     // endregion
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Speech.getInstance().shutdown();
-    }
 
     @OnClick(R.id.btn_cancel)
     public void cancelClick() {
