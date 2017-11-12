@@ -38,6 +38,7 @@
     <!--View Event Dialog elements-->
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
+    <string name="ok">OK</string>
 
     <!--Confirm Event Dialog elements-->
     <string name="event_name">Event name:</string>
@@ -60,6 +61,8 @@
     <string name="event_details">Event Details</string>
     <string name="speak_event_details">Speak Event Details</string>
     <string name="signing_up">Signing up…</string>
+    <string name="ai_suggest">AI Suggest</string>
+    <string name="best_time">The best time is</string>
 
     <string name="SUN">Su</string>
     <string name="MON">Mo</string>
