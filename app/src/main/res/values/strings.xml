@@ -1,7 +1,7 @@
 <resources>
     <!--Init Screen elements-->
     <string name="server_ip">http://165.246.165.130:2222</string>
-    <string name="app_name">MY WEEK</string>
+    <string name="app_name">My week</string>
     <string name="sign_up_label"><u>Sign up</u></string>
 
     <!--API elements-->
