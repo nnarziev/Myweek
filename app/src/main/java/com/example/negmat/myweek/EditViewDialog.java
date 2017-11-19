@@ -1,16 +1,26 @@
 package com.example.negmat.myweek;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.DialogFragment;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.TimePickerDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Bundle;
+import android.provider.CalendarContract;
+import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +49,22 @@ import butterknife.OnClick;
 
 public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateNdefMessageCallback {
 
+    private void startAlarm(Calendar when, String event_name, String event_note) {
+        AlarmManager manager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
+        Intent myIntent;
+        PendingIntent pendingIntent;
+
+        myIntent = new Intent(getActivity(), MainActivity.AlarmNotificationReceiver.class);
+        myIntent.putExtra("event_name", event_name);
+        myIntent.putExtra("event_note", event_note);
+        pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, myIntent, 0);
+        when.add(Calendar.MINUTE, -2);
+        if (manager != null) {
+            manager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
+        } else
+            Log.e("ERROR", "manager is null");
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +81,8 @@ public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateN
 
         mAdapter.setNdefPushMessageCallback(this, this.getActivity());
     }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -128,7 +156,6 @@ public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateN
         else
             loadViewHistoryMode();
     }
-
 
     // region Variables
     //region UI variables
@@ -221,7 +248,7 @@ public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateN
         exec.execute(new MyRunnable(event, getActivity()) {
             @Override
             public void run() {
-                Event event = (Event) args[0];
+                final Event event = (Event) args[0];
                 Activity activity = (Activity) args[1];
 
                 try {
@@ -254,6 +281,7 @@ public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateN
                         public void run() {
                             Calendar c = (Calendar) args[0];
                             Activity activity = (Activity) args[1];
+                            startAlarm(c, event.event_name, event.event_note);
                             Toast.makeText(activity, String.format(Locale.US, "Event has been created on %d/%d/%d at %02d:%02d",
                                     c.get(Calendar.DAY_OF_MONTH),
                                     c.get(Calendar.MONTH),

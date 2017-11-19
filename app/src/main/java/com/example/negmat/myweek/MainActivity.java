@@ -1,7 +1,13 @@
 package com.example.negmat.myweek;
 
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.FragmentManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -11,6 +17,8 @@ import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.os.SystemClock;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -39,8 +47,27 @@ import java.util.concurrent.Executors;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-
 public class MainActivity extends AppCompatActivity {
+    public static class AlarmNotificationReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "notification_channel");
+            builder.setAutoCancel(true)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle(intent.getStringExtra("event_name") + " after 2 minutes")
+                    .setContentText(intent.getStringExtra("event_note"))
+                    .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
+                    .setContentInfo("Info");
+
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null)
+                notificationManager.notify(1, builder.build());
+            else
+                Log.e("ERROR", "notificationManager is null");
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +75,27 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         initialize();
+
+        Calendar cal = Calendar.getInstance();
+        cal.set(2017, 10, 20, 2, 0, 0);
+        //startAlarm(cal, "Event note");
     }
+
+   /* private void startAlarm(Calendar when, String content) {
+        AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Intent myIntent;
+        PendingIntent pendingIntent;
+
+        myIntent = new Intent(MainActivity.this, AlarmNotificationReceiver.class);
+        myIntent.putExtra("Content", content);
+        pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, 0);
+
+        if (manager != null) {
+            manager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
+            Log.v("ALARM", when.toString() + " ");
+        } else
+            Log.e("ERROR", "manager is null");
+    }*/
 
     @Override
     protected void onResume() {
