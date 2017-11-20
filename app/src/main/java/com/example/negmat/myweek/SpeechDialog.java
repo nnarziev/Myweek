@@ -130,12 +130,15 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                     String username = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
                     String password = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
 
+                    Log.v("CAT_ID", category_id + " ");
+
                     JSONObject body = new JSONObject();
                     body.put("username", username);
                     body.put("password", password);
                     body.put("category_id", category_id);
 
                     JSONObject raw = new JSONObject(Tools.post(String.format(Locale.US, "%s/events/suggest", getResources().getString(R.string.server_ip)), body));
+                    Log.e("DATA", "SUGGESTED " + raw);
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
@@ -253,6 +256,7 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
             return null;
 
         HashMap<String, Integer> map = new HashMap<>();
+        String def = null;
 
         // region Load map
         try {
@@ -266,6 +270,7 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                     for (int i = 0; i < jarray.length(); i++) {
                         String cat_name = jarray.getJSONObject(i).names().getString(0);
                         map.put(cat_name, jarray.getJSONObject(i).getInt(cat_name));
+                        if (jarray.getJSONObject(i).getInt(cat_name) == 0) def = cat_name;
                     }
                     break;
                 case Tools.RES_SRV_ERR:
@@ -289,10 +294,7 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                 break;
             }
         if (cat == -1) {
-            //Toast.makeText(getActivity().getApplicationContext(), "Matching lacks data, random category selection is on!", Toast.LENGTH_SHORT).show();
-            key = map.keySet().toArray(new String[map.keySet().size()])[0];
-            cat = map.get(key);
-            return new Object[]{cat, key};
+            return new Object[]{map.get(def), def};
         }
 
         return new Object[]{cat, key};
