@@ -130,15 +130,12 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                     String username = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
                     String password = SignInActivity.loginPrefs.getString(SignInActivity.password, null);
 
-                    Log.v("CAT_ID", category_id + " ");
-
                     JSONObject body = new JSONObject();
                     body.put("username", username);
                     body.put("password", password);
                     body.put("category_id", category_id);
 
                     JSONObject raw = new JSONObject(Tools.post(String.format(Locale.US, "%s/events/suggest", getResources().getString(R.string.server_ip)), body));
-                    Log.e("DATA", "SUGGESTED " + raw);
                     if (raw.getInt("result") != Tools.RES_OK)
                         throw new Exception();
 
@@ -294,7 +291,10 @@ public class SpeechDialog extends DialogFragment implements SpeechDelegate {
                 break;
             }
         if (cat == -1) {
-            return new Object[]{map.get(def), def};
+            key = map.keySet().toArray(new String[map.keySet().size()])[0];
+            cat = map.get(key);
+            return new Object[]{cat, key};
+            //return new Object[]{map.get(def), def};
         }
 
         return new Object[]{cat, key};

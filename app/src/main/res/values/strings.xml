@@ -71,4 +71,8 @@
     <string name="THU">Th</string>
     <string name="FRI">Fr</string>
     <string name="SAT">Sa</string>
+    <string name="add_group_event">Add group event</string>
+    <string name="instruction_group_event">Tap your device to devices you want to share the event with</string>
+
+    <string name="weekday">%1$d\n%2$s</string>
 </resources>
