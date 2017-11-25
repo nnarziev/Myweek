@@ -1,21 +1,16 @@
 package com.example.negmat.myweek;
 
 import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.DatePickerDialog;
 import android.app.DialogFragment;
-import android.app.PendingIntent;
 import android.app.TimePickerDialog;
-import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Color;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,27 +33,13 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-
 
 public class EditViewDialog extends DialogFragment {
 
-    private void startAlarm(Calendar when, String event_name, String event_note) {
-        AlarmManager manager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
-        Intent myIntent;
-        PendingIntent pendingIntent;
-
-        myIntent = new Intent(getActivity(), MainActivity.AlarmNotificationReceiver.class);
-        myIntent.putExtra("event_name", event_name);
-        myIntent.putExtra("event_note", event_note);
-        pendingIntent = PendingIntent.getBroadcast(getActivity(), 0, myIntent, 0);
-        when.add(Calendar.MINUTE, -2);
-        if (manager != null) {
-            manager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
-        } else
-            Log.e("ERROR", "manager is null");
+    public EditViewDialog(Event event, boolean readOnly, MyRunnable onExit) {
+        this.event = event;
+        this.readOnly = readOnly;
+        this.exitJob = onExit;
     }
 
     @Override
@@ -68,8 +49,198 @@ public class EditViewDialog extends DialogFragment {
     }
 
     @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.diaog_editview, container, false);
+        initialize(view);
+        return view;
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
+    }
+
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
+
+        if (exitJob != null)
+            exitJob.run();
+    }
+
+    // region Variables
+    //region UI variables
+    EditText txtEventName;
+    TextView txtEventDate;
+    TextView txtEventTime;
+    EditText txtEventNote;
+    RadioGroup weekdaysParent;
+    ViewGroup eventActionBtnsParent;
+    //endregion
+
+    private static ExecutorService exec;
+    private MyRunnable exitJob;
+
+    private boolean readOnly = false;
+    private Event event;
+
+    private HashMap<String, Integer> map_str2day = new HashMap<>();
+    private SparseArray<String> map_day2str = new SparseArray<>();
+    private SparseArray<RadioButton> map_day2btn = new SparseArray<>();
+    // endregion
+
+    private void initialize(View root) {
+        // region Assign UI variables
+        txtEventName = root.findViewById(R.id.txt_event_name);
+        txtEventDate = root.findViewById(R.id.txt_event_date);
+        txtEventTime = root.findViewById(R.id.txt_event_time);
+        txtEventNote = root.findViewById(R.id.txt_event_note);
+        weekdaysParent = root.findViewById(R.id.weekdaysGroup);
+        eventActionBtnsParent = root.findViewById(R.id.eventActionButtonsContainer);
+        // endregion
+
+        // region Assign OnClickListeners
+        root.findViewById(R.id.btn_edit).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                readOnly = false;
+                refreshEditMode();
+            }
+        });
+        root.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dismiss();
+            }
+        });
+        root.findViewById(R.id.btn_save).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                event.event_note = txtEventNote.getText().toString();
+                createEvent(event);
+            }
+        });
+        root.findViewById(R.id.btn_delete).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                deleteEvent();
+            }
+        });
+        txtEventDate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Calendar cal = Tools.time2cal(event.start_time);
+
+                DatePickerDialog datePicker = new DatePickerDialog(getActivity(), 0, new DatePickerDialog.OnDateSetListener() {
+                    @Override
+                    public void onDateSet(DatePicker datePicker, int y, int m, int d) {
+                        Calendar today = Calendar.getInstance();
+                        today.setFirstDayOfWeek(Calendar.MONDAY);
+
+                        Calendar selec = Calendar.getInstance();
+                        selec.setFirstDayOfWeek(Calendar.MONDAY);
+                        selec.set(y, m, d);
+
+                        if (selec.before(today))
+                            // if a date before today (invalid) is choosen, change it to proper one
+                            event.start_time = Tools.suggestion2time(10 + selec.get(Calendar.DAY_OF_WEEK));
+                        else
+                            // if a valid date is chosen, set it to event.start_time
+                            event.start_time = Tools.alter_date(event.start_time, y, m + 1, d);
+
+                        event.day = Tools.time2cal(event.start_time).get(Calendar.DAY_OF_WEEK);
+                        txtEventDate.setText(Tools.decode_time(event.start_time)[0]);
+
+                        RadioButton button = map_day2btn.get(event.day);
+                        weekdaysParent.check(button.getId());
+                    }
+                }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+
+                datePicker.setTitle("Select date");
+                datePicker.show();
+            }
+        });
+        txtEventTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Calendar c = Tools.time2cal(event.start_time);
+
+                TimePickerDialog timePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int h, int m) {
+                        event.start_time = Tools.alter_hour(event.start_time, h);
+                        txtEventTime.setText(Tools.decode_time(event.start_time)[1]);
+                    }
+                }, c.get(Calendar.HOUR_OF_DAY), 0, true);
+
+                timePicker.setTitle("Select Time");
+                timePicker.show();
+            }
+        });
+        // endregion
+
+        String[] dateTime = Tools.decode_time(event.start_time);
+        txtEventDate.setText(dateTime[0]);
+        txtEventTime.setText(dateTime[1]);
+        txtEventName.setText(event.event_name);
+        txtEventNote.setText(event.event_note);
+
+        // region Weekday ToggleButtons setup
+        map_day2str.put(Calendar.SUNDAY, getResources().getString(R.string.SUN));
+        map_day2str.put(Calendar.MONDAY, getResources().getString(R.string.MON));
+        map_day2str.put(Calendar.TUESDAY, getResources().getString(R.string.TUE));
+        map_day2str.put(Calendar.WEDNESDAY, getResources().getString(R.string.WED));
+        map_day2str.put(Calendar.THURSDAY, getResources().getString(R.string.THU));
+        map_day2str.put(Calendar.FRIDAY, getResources().getString(R.string.FRI));
+        map_day2str.put(Calendar.SATURDAY, getResources().getString(R.string.SAT));
+
+        map_str2day.put(getResources().getString(R.string.SUN), Calendar.SUNDAY);
+        map_str2day.put(getResources().getString(R.string.MON), Calendar.MONDAY);
+        map_str2day.put(getResources().getString(R.string.TUE), Calendar.TUESDAY);
+        map_str2day.put(getResources().getString(R.string.WED), Calendar.WEDNESDAY);
+        map_str2day.put(getResources().getString(R.string.THU), Calendar.THURSDAY);
+        map_str2day.put(getResources().getString(R.string.FRI), Calendar.FRIDAY);
+        map_str2day.put(getResources().getString(R.string.SAT), Calendar.SATURDAY);
+
+        CompoundButton.OnClickListener weekdayClickListener = new CompoundButton.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                CompoundButton selectedButton = (CompoundButton) view;
+                Calendar c = Tools.suggestion2cal(10 + map_str2day.get(String.valueOf(selectedButton.getTag())));
+                event.start_time = Tools.alter_date(event.start_time, c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
+                event.day = c.get(Calendar.DAY_OF_WEEK);
+                txtEventDate.setText(Tools.decode_time(c)[0]);
+            }
+        };
+        CompoundButton.OnCheckedChangeListener checkedChangeListener = new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                if (isChecked) compoundButton.setTextColor(Color.WHITE);
+                else compoundButton.setTextColor(Color.BLACK);
+            }
+        };
+
+        int checkedButtonId = -1;
+        for (int n = 0; n < weekdaysParent.getChildCount(); n++) {
+            RadioButton button = (RadioButton) weekdaysParent.getChildAt(n);
+            int day = map_str2day.get(String.valueOf(button.getTag()));
+
+            if (day == event.day)
+                checkedButtonId = button.getId();
+
+            map_day2btn.put(day, button);
+            button.setOnClickListener(weekdayClickListener);
+            button.setOnCheckedChangeListener(checkedChangeListener);
+        }
+        weekdaysParent.check(checkedButtonId);
+        // endregion
+
+        Calendar today = Calendar.getInstance();
+        today.setFirstDayOfWeek(Calendar.MONDAY);
+        if (!Tools.time2cal(event.start_time).before(today))
+            refreshEditMode();
+        else
+            loadViewHistoryMode();
     }
 
     private void setUpNFCSender() {
@@ -94,107 +265,6 @@ public class EditViewDialog extends DialogFragment {
             }
         }, getActivity());
     }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.diaog_editview, container, false);
-        ButterKnife.bind(this, view);
-
-        initialize();
-        return view;
-    }
-
-    public EditViewDialog(Event event, boolean readOnly, MyRunnable onExit) {
-        this.event = event;
-        this.readOnly = readOnly;
-        this.exitJob = onExit;
-    }
-
-    private void initialize() {
-        String[] dateTime = Tools.decode_time(event.start_time);
-
-        txtEventDate.setText(dateTime[0]);
-        txtEventTime.setText(dateTime[1]);
-
-        txtEventName.setText(event.event_name);
-        txtEventNote.setText(event.event_note);
-
-        // region Weekday ToggleButtons setup
-        day2str.put(Calendar.SUNDAY, getResources().getString(R.string.SUN));
-        day2str.put(Calendar.MONDAY, getResources().getString(R.string.MON));
-        day2str.put(Calendar.TUESDAY, getResources().getString(R.string.TUE));
-        day2str.put(Calendar.WEDNESDAY, getResources().getString(R.string.WED));
-        day2str.put(Calendar.THURSDAY, getResources().getString(R.string.THU));
-        day2str.put(Calendar.FRIDAY, getResources().getString(R.string.FRI));
-        day2str.put(Calendar.SATURDAY, getResources().getString(R.string.SAT));
-
-        str2day.put(getResources().getString(R.string.SUN), Calendar.SUNDAY);
-        str2day.put(getResources().getString(R.string.MON), Calendar.MONDAY);
-        str2day.put(getResources().getString(R.string.TUE), Calendar.TUESDAY);
-        str2day.put(getResources().getString(R.string.WED), Calendar.WEDNESDAY);
-        str2day.put(getResources().getString(R.string.THU), Calendar.THURSDAY);
-        str2day.put(getResources().getString(R.string.FRI), Calendar.FRIDAY);
-        str2day.put(getResources().getString(R.string.SAT), Calendar.SATURDAY);
-
-        CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
-                if (isChecked) {
-                    Calendar c = Tools.suggestion2cal(10 + str2day.get(String.valueOf(compoundButton.getTag())));
-                    event.start_time = Tools.alter_date(event.start_time, c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH));
-                    event.day = c.get(Calendar.DAY_OF_WEEK);
-                    txtEventDate.setText(Tools.decode_time(c)[0]);
-                    compoundButton.setTextColor(Color.WHITE);
-                } else
-                    compoundButton.setTextColor(Color.BLACK);
-            }
-        };
-
-        for (int n = 0; n < weekdaysParent.getChildCount(); n++) {
-            RadioButton button = (RadioButton) weekdaysParent.getChildAt(n);
-            int day = str2day.get(String.valueOf(button.getTag()));
-
-            if (day == event.day)
-                weekdaysParent.check(button.getId());
-
-            day2btn.put(day, button);
-            button.setOnCheckedChangeListener(listener);
-        }
-        // endregion
-
-        if (!Tools.time2cal(event.start_time).before(Calendar.getInstance()))
-            refreshEditMode();
-        else
-            loadViewHistoryMode();
-    }
-
-    // region Variables
-    //region UI variables
-    @BindView(R.id.txt_event_name)
-    EditText txtEventName;
-    @BindView(R.id.txt_event_date)
-    TextView txtEventDate;
-    @BindView(R.id.txt_event_time)
-    TextView txtEventTime;
-    @BindView(R.id.txt_event_note)
-    EditText txtEventNote;
-    @BindView(R.id.weekdaysGroup)
-    RadioGroup weekdaysParent;
-    @BindView(R.id.eventActionButtonsContainer)
-    ViewGroup eventActionBtnsParent;
-    //endregion
-
-    static ExecutorService exec;
-    private MyRunnable exitJob;
-
-    private boolean readOnly = false;
-    private Event event;
-
-    private HashMap<String, Integer> str2day = new HashMap<>();
-    private SparseArray<String> day2str = new SparseArray<>();
-    private SparseArray<RadioButton> day2btn = new SparseArray<>();
-    // endregion
-
 
     private void loadViewHistoryMode() {
         for (int n = 0; n < eventActionBtnsParent.getChildCount(); n++) {
@@ -232,26 +302,16 @@ public class EditViewDialog extends DialogFragment {
             weekdaysParent.getChildAt(n).setClickable(!readOnly);
     }
 
-    @Override
-    public void onDismiss(DialogInterface dialog) {
-        super.onDismiss(dialog);
-
-        if (exitJob != null)
-            exitJob.run();
-    }
-
-
     private void createEvent(Event event) {
+        Tools.disable_touch(getActivity());
+
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
             exec.shutdownNow();
-
         exec = Executors.newCachedThreadPool();
-
-        Tools.disable_touch(getActivity());
         exec.execute(new MyRunnable(event, getActivity()) {
             @Override
             public void run() {
-                final Event event = (Event) args[0];
+                Event event = (Event) args[0];
                 Activity activity = (Activity) args[1];
 
                 try {
@@ -269,30 +329,27 @@ public class EditViewDialog extends DialogFragment {
                     String url = String.format(Locale.US, "%s/events/create", getResources().getString(R.string.server_ip));
 
                     JSONObject raw = new JSONObject(Tools.post(url, data));
-                    if (raw.getLong("result") != Tools.RES_OK) {
-                        activity.runOnUiThread(new MyRunnable(activity) {
-                            @Override
-                            public void run() {
-                                Tools.enable_touch(((Activity) args[0]));
-                            }
-                        });
-                        throw new Exception();
-                    }
-
-                    activity.runOnUiThread(new MyRunnable(Tools.time2cal(event.start_time), activity) {
+                    activity.runOnUiThread(new MyRunnable(activity, event, raw.getInt("result")) {
                         @Override
                         public void run() {
-                            Calendar c = (Calendar) args[0];
-                            Activity activity = (Activity) args[1];
-                            startAlarm(c, event.event_name, event.event_note);
-                            Toast.makeText(activity, String.format(Locale.US, "Event has been created on %d/%d/%d at %02d:%02d",
-                                    c.get(Calendar.DAY_OF_MONTH),
-                                    c.get(Calendar.MONTH),
-                                    c.get(Calendar.YEAR),
-                                    c.get(Calendar.HOUR_OF_DAY),
-                                    c.get(Calendar.MINUTE)),
-                                    Toast.LENGTH_LONG
-                            ).show();
+                            int result = (int) args[0];
+                            Event event = (Event) args[1];
+                            Activity activity = (Activity) args[2];
+
+                            if (result == Tools.RES_OK) {
+                                Calendar cal = Tools.time2cal(event.start_time);
+                                Toast.makeText(activity, String.format(Locale.US, "Event has been created on %d/%d/%d at %02d:%02d",
+                                        cal.get(Calendar.DAY_OF_MONTH),
+                                        cal.get(Calendar.MONTH),
+                                        cal.get(Calendar.YEAR),
+                                        cal.get(Calendar.HOUR_OF_DAY),
+                                        cal.get(Calendar.MINUTE)),
+                                        Toast.LENGTH_LONG
+                                ).show();
+                                Tools.setAlarm(getActivity(), cal, event.event_name, event.event_note);
+                            } else if (result == Tools.RES_FAIL)
+                                Toast.makeText(activity, "Specified time is already occupied. \nPlease choose another time!", Toast.LENGTH_LONG).show();
+
                             Tools.enable_touch(activity);
                             dismiss();
                         }
@@ -310,30 +367,7 @@ public class EditViewDialog extends DialogFragment {
         });
     }
 
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.btn_edit)
-    public void editButtonClick() {
-        readOnly = false;
-        refreshEditMode();
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.btn_cancel)
-    public void cancelButtonClick() {
-        dismiss();
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.btn_save)
-    public void saveButtonClick() {
-        event.event_note = txtEventNote.getText().toString();
-        createEvent(event);
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.btn_delete)
-    public void deleteButtonClick() {
+    public void deleteEvent() {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
             exec.shutdownNow();
 
@@ -387,50 +421,5 @@ public class EditViewDialog extends DialogFragment {
                 }
             }
         });
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.txt_event_date)
-    public void selectDateClick() {
-        Calendar cal = Tools.time2cal(event.start_time);
-
-        DatePickerDialog datePicker = new DatePickerDialog(getActivity(), 0, new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker datePicker, int y, int m, int d) {
-                Calendar today = Calendar.getInstance();
-                Calendar selec = Calendar.getInstance();
-                selec.set(y, m, d);
-                if (selec.before(today))
-                    event.start_time = Tools.suggestion2time(10 + selec.get(Calendar.DAY_OF_WEEK));
-                else
-                    event.start_time = Tools.alter_date(event.start_time, y, m + 1, d);
-
-                event.day = Tools.time2cal(event.start_time).get(Calendar.DAY_OF_WEEK);
-                txtEventDate.setText(Tools.decode_time(event.start_time)[0]);
-
-                RadioButton button = day2btn.get(event.day);
-                weekdaysParent.check(button.getId());
-            }
-        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
-
-        datePicker.setTitle("Select date");
-        datePicker.show();
-    }
-
-    @SuppressWarnings("unused")
-    @OnClick(R.id.txt_event_time)
-    public void selectTimeClick() {
-        Calendar c = Tools.time2cal(event.start_time);
-
-        TimePickerDialog timePicker = new TimePickerDialog(getActivity(), new TimePickerDialog.OnTimeSetListener() {
-            @Override
-            public void onTimeSet(TimePicker timePicker, int h, int m) {
-                event.start_time = Tools.alter_hour(event.start_time, h);
-                txtEventTime.setText(Tools.decode_time(event.start_time)[1]);
-            }
-        }, c.get(Calendar.HOUR_OF_DAY), 0, true);
-
-        timePicker.setTitle("Select Time");
-        timePicker.show();
     }
 }

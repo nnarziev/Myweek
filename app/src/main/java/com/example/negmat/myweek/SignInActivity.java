@@ -16,9 +16,6 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 
 public class SignInActivity extends AppCompatActivity {
 
@@ -26,7 +23,33 @@ public class SignInActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signin);
-        ButterKnife.bind(this);
+        initialize();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        loadingPanel.setVisibility(View.GONE);
+        if (exec != null && !exec.isShutdown() && !exec.isTerminated())
+            exec.shutdownNow();
+    }
+
+    // region Variables
+    private EditText userLogin;
+    private EditText userPassword;
+    private RelativeLayout loadingPanel;
+
+    static SharedPreferences loginPrefs = null;
+    static final String username = "username", password = "password";
+    private static ExecutorService exec;
+    // endregion
+
+    private void initialize() {
+        // region Initialize UI Variables
+        userLogin = findViewById(R.id.txt_login);
+        userPassword = findViewById(R.id.txt_password);
+        loadingPanel = findViewById(R.id.loadingPanel);
+        // endregion
 
         if (loginPrefs == null)
             loginPrefs = getSharedPreferences("UserLogin", 0);
@@ -34,23 +57,8 @@ public class SignInActivity extends AppCompatActivity {
         if (loginPrefs.contains(SignInActivity.username) && loginPrefs.contains(SignInActivity.password)) {
             loadingPanel.setVisibility(View.VISIBLE);
             signIn(loginPrefs.getString(SignInActivity.username, null), loginPrefs.getString(SignInActivity.password, null));
-        } else
-            Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
+        } else Toast.makeText(this, "No log in yet", Toast.LENGTH_SHORT).show();
     }
-
-    // region Variables
-    static SharedPreferences loginPrefs = null;
-    static final String username = "username", password = "password";
-    static ExecutorService exec;
-
-    @BindView(R.id.txt_login)
-    EditText userLogin;
-    @BindView(R.id.txt_password)
-    EditText userPassword;
-    @BindView(R.id.loadingPanel)
-    RelativeLayout loadingPanel;
-    // @BindView(R.id.btn_signup)  TextView btnSignUp;
-    // endregion
 
     public void signInClick(View view) {
         signIn(userLogin.getText().toString(), userPassword.getText().toString());
@@ -124,13 +132,5 @@ public class SignInActivity extends AppCompatActivity {
                 }
             }
         });
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        loadingPanel.setVisibility(View.GONE);
-        if (exec != null && !exec.isShutdown() && !exec.isTerminated())
-            exec.shutdownNow();
     }
 }

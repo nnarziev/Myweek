@@ -17,6 +17,7 @@ import android.nfc.NfcAdapter;
 import android.nfc.NfcEvent;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -31,7 +32,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.DatePicker;
 import android.widget.GridLayout;
-import android.widget.ImageButton;
 import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,11 +44,6 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-import static com.example.negmat.myweek.SignInActivity.username;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -77,9 +72,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
         initialize();
-
         setUpNFCSender();
     }
 
@@ -114,53 +107,49 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setUpNFCSender() {
-        NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(this);
-        if (mAdapter == null) {
-            Toast.makeText(this, "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (!mAdapter.isEnabled())
-            Toast.makeText(this, "Please enable NFC via Settings.", Toast.LENGTH_LONG).show();
+    @Override
+    public void onBackPressed() {
+        finish();
+    }
 
-        mAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
-            @Override
-            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
-                try {
-                    JSONObject msg = new JSONObject();
-                    msg.put(Tools.KEY_NFC_GROUP, Tools.NFC_GROUP);
-                    msg.put("username", SignInActivity.loginPrefs.getString(username, null));
-                    return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
-                } catch (JSONException | NullPointerException e) {
-                    e.printStackTrace();
-                    return null;
-                }
-            }
-        }, this);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.option_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == speechDialog.REQUEST_MICROPHONE)
+            if (grantResults[0] == 0)
+                speechDialog.startSpeechToText();
+            else speechDialog.dismiss();
     }
 
     // region Variables
-    @BindView(R.id.btn_add_event)
-    ImageButton btnAddEvent;
-    @BindView(R.id.grid_fixed)
-    GridLayout grid_fixed;
-    @BindView(R.id.event_grid)
-    protected GridLayout event_grid;
+    private GridLayout grid_fixed;
+    private GridLayout event_grid;
 
-    static Calendar selCalDate = Calendar.getInstance(); //selected Calendar date, keeps changing
-    TextView[][] tv = new TextView[8][24];
-    Event[] events;
-    LongSparseArray<Integer> eventIdIndexMap = new LongSparseArray<>();
+    private SpeechDialog speechDialog;
 
-    static ExecutorService exec;
-
+    private static Calendar selCalDate;
+    private TextView[][] tv = new TextView[8][24];
+    private Event[] events;
+    private LongSparseArray<Integer> eventIdIndexMap = new LongSparseArray<>();
+    private static ExecutorService exec;
     private int count = 0;
-
     private int cellDimen = -1;
     // endregion
 
-    // region Initialization Functions
     private void initialize() {
+        // region Initialize UI Variables
+        grid_fixed = findViewById(R.id.grid_fixed);
+        event_grid = findViewById(R.id.event_grid);
+        // endregion
+
         //region Fixed head with week names
         Display display = getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -170,11 +159,12 @@ public class MainActivity extends AppCompatActivity {
         //endregion
 
         selCalDate = Calendar.getInstance();
+        selCalDate.setFirstDayOfWeek(Calendar.MONDAY);
         String selectedWeek;
 
         // region Update the fixed weekdays gridview
         Calendar cal = (Calendar) selCalDate.clone();
-        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK) - 1);
+        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
 
         if (grid_fixed.getChildCount() == 0) {
             // inflate first
@@ -214,9 +204,10 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         //endregion
+
         if (count < 6) {
             Calendar thisMonth = (Calendar) selCalDate.clone();
-            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
+            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
 
             Calendar nextMonth = (Calendar) thisMonth.clone();
             nextMonth.add(Calendar.MONTH, 1);
@@ -227,9 +218,9 @@ public class MainActivity extends AppCompatActivity {
                     nextMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US)
             );
         } else selectedWeek = selCalDate.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
-        setTitle(selectedWeek);
 
-        initGrid(); //initialize the grid view
+        setTitle(selectedWeek);
+        initGrid();
         updateClick(null);
     }
 
@@ -260,10 +251,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-
         // region Update the fixed weekdays gridview
         Calendar cal = (Calendar) selCalDate.clone();
-        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK) - 1);
+        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
 
         if (grid_fixed.getChildCount() == 0) {
             // inflate first
@@ -305,197 +295,96 @@ public class MainActivity extends AppCompatActivity {
         //endregion
     }
 
-    private void populateGrid(Event[] events) {
+    private void populateGrid() {
         initGrid();
 
         Calendar today = Calendar.getInstance();
+        today.setFirstDayOfWeek(Calendar.MONDAY);
         for (Event event : events) {
             Calendar time = Tools.time2cal(event.start_time);
 
             int row = time.get(Calendar.HOUR_OF_DAY);
-            int col = time.get(Calendar.DAY_OF_WEEK);
+            int col;
+            if (time.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                col = 7;
+            else
+                col = time.get(Calendar.DAY_OF_WEEK) - 1;
 
             tv[col][row].setBackgroundResource(time.before(today) ? R.drawable.bg_cell_inactive : R.drawable.bg_cell_active);
             tv[col][row].setText(event.event_name);
             tv[col][row].setTag(event.event_id);
         }
 
+        View.OnClickListener onCellClick = new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (view.getTag() == null)
+                    return;
+
+                long event_id = (long) view.getTag();
+                int index = eventIdIndexMap.get(event_id);
+                EditViewDialog dialog = new EditViewDialog(events[index], true, new MyRunnable() {
+                    @Override
+                    public void run() {
+                        updateClick(null);
+                    }
+                });
+                FragmentManager manager = getFragmentManager();
+                dialog.show(manager, "Editdialog");
+            }
+        };
+
         for (int n = 0; n < event_grid.getColumnCount(); n++)
             for (int m = 0; m < event_grid.getRowCount(); m++)
                 if (!tv[n][m].getText().toString().equals(""))
-                    tv[n][m].setOnClickListener(onTextClick);
+                    tv[n][m].setOnClickListener(onCellClick);
     }
 
-    private View.OnClickListener onTextClick = new View.OnClickListener() {
-        @Override
-        public void onClick(View view) {
-            if (view.getTag() == null)
-                return;
-
-            long event_id = (long) view.getTag();
-            int index = eventIdIndexMap.get(event_id);
-
-            //make event global and show all info on it*/
-            EditViewDialog dialog = new EditViewDialog(events[index], true, new MyRunnable() {
-                @Override
-                public void run() {
-                    updateClick(null);
-                }
-            });
-            FragmentManager manager = getFragmentManager();
-            dialog.show(manager, "Editdialog");
+    private void setUpNFCSender() {
+        NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(this);
+        if (mAdapter == null) {
+            Toast.makeText(this, "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
+            return;
         }
-    };
+        if (!mAdapter.isEnabled())
+            Toast.makeText(this, "Please enable NFC via Settings.", Toast.LENGTH_LONG).show();
 
-    // endregion
+        mAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
+            @Override
+            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+                try {
+                    JSONObject msg = new JSONObject();
+                    msg.put(Tools.KEY_NFC_GROUP, Tools.NFC_GROUP);
+                    msg.put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null));
+                    return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
+                } catch (JSONException | NullPointerException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        }, this);
+    }
+
+    public void newVoiceEventClick(View view) {
+        FragmentManager manager = getFragmentManager();
+        speechDialog = new SpeechDialog();
+        speechDialog.show(manager, "Speech-dialog");
+    }
 
     //region Options-Menu Buttons' handlers
-    public void navNextWeekClick(MenuItem item) {
-        selCalDate.add(Calendar.DATE, 7);
-        String selectedWeek;
-        if (count < 6) {
-            Calendar thisMonth = (Calendar) selCalDate.clone();
-            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
-
-            Calendar nextMonth = (Calendar) thisMonth.clone();
-            nextMonth.add(Calendar.MONTH, 1);
-
-            selectedWeek = String.format(Locale.US,
-                    "%s, %s",
-                    thisMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US),
-                    nextMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US)
-            );
-        } else selectedWeek = selCalDate.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
-        setTitle(selectedWeek);
-        updateClick(null);
-    }
-
-    public void navPrevWeekClick(MenuItem item) {
-        selCalDate.add(Calendar.DATE, -7);
-        String selectedWeek;
-        if (count < 6) {
-            Calendar thisMonth = (Calendar) selCalDate.clone();
-            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
-
-            Calendar nextMonth = (Calendar) thisMonth.clone();
-            nextMonth.add(Calendar.MONTH, 1);
-
-            selectedWeek = String.format(Locale.US,
-                    "%s, %s",
-                    thisMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US),
-                    nextMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US)
-            );
-        } else selectedWeek = selCalDate.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
-        setTitle(selectedWeek);
-        updateClick(null);
-    }
-
-    public void onLogoutClick(MenuItem item) {
-        SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
-        editor.clear();
-        editor.apply();
-        Intent intent = new Intent(MainActivity.this, SignInActivity.class);
-        startActivity(intent);
-        finish();
-    }
-
-    public void updateClick(MenuItem item) {
-        count = 0;
-        if (exec != null && !exec.isShutdown() && !exec.isTerminated())
-            exec.shutdownNow();
-
-        exec = Executors.newCachedThreadPool();
-
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                Calendar c = (Calendar) selCalDate.clone();
-                c.set(Calendar.HOUR_OF_DAY, 0);
-                c.set(Calendar.MINUTE, 0);
-                c.set(Calendar.SECOND, 0);
-
-                c.add(Calendar.DATE, c.getFirstDayOfWeek() - c.get(Calendar.DAY_OF_WEEK) - 1);
-                int period_from = Tools.cal2time(c);
-
-                c.set(Calendar.HOUR_OF_DAY, 23);
-                c.set(Calendar.MINUTE, 59);
-                c.set(Calendar.SECOND, 59);
-                c.add(Calendar.DATE, 6);
-                int period_till = Tools.cal2time(c);
-
-                JSONObject body = null;
-                try {
-                    body = new JSONObject()
-                            .put("username", SignInActivity.loginPrefs.getString(username, null))
-                            .put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null))
-                            .put("period_from", period_from)
-                            .put("period_till", period_till);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
-                runOnUiThread(new MyRunnable(
-                        Tools.post(String.format(Locale.US, "%s/events/fetch", getResources().getString(R.string.server_ip)), body)
-                ) {
-                    @Override
-                    public void run() {
-                        try {
-                            JSONObject json = new JSONObject((String) args[0]);
-                            int resultNumber = json.getInt("result");
-                            if (resultNumber == Tools.RES_OK) {
-                                JSONArray jarray = json.getJSONArray("array");
-                                events = new Event[jarray.length()];
-
-                                if (jarray.length() != 0) {
-                                    for (int n = 0; n < jarray.length(); n++) {
-                                        events[n] = Event.parseJson(jarray.getJSONObject(n));
-                                        eventIdIndexMap.put(events[n].event_id, n);
-                                    }
-                                    populateGrid(events);
-                                } else {
-                                    initGrid();
-                                    Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
-                                }
-                            } else
-                                Log.e("ERROR", "Code: " + resultNumber);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-    public void onShareEventClick(MenuItem item) {
-        FragmentManager manager = getFragmentManager();
-        GroupEvents GroupEventsDialog = new GroupEvents();
-        GroupEventsDialog.show(manager, "Dialog");
-    }
-
-    public void settingsClick(MenuItem item) {
-
-    }
-
-    //endregion
-
-
-    public void addEventClick(View view) {
-        FragmentManager manager = getFragmentManager();
-        SpeechDialog dialog = new SpeechDialog();
-        dialog.show(manager, "Dialog");
-    }
-
     public void selectWeekClick(MenuItem item) {
         Calendar calendar = Calendar.getInstance();
+        calendar.setFirstDayOfWeek(Calendar.MONDAY);
         DatePickerDialog.OnDateSetListener listener = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                Tools.disable_touch(MainActivity.this);
+
                 selCalDate.set(year, month, day);
                 String selectedWeek;
                 if (count < 6) {
                     Calendar thisMonth = (Calendar) selCalDate.clone();
-                    thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
+                    thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
 
                     Calendar nextMonth = (Calendar) thisMonth.clone();
                     nextMonth.add(Calendar.MONTH, 1);
@@ -520,28 +409,143 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-   /* @Override
-    public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
-        JSONObject msg = event.toJson(true);
-        try {
-            msg.put(Tools.KEY_NFC_SINGLE, Tools.NFC_SINGLE);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
-    }*/
+    public void navNextWeekClick(MenuItem item) {
+        Tools.disable_touch(this);
 
-    @Override
-    public void onBackPressed() {
+        selCalDate.add(Calendar.DATE, 7);
+        String selectedWeek;
+        if (count < 6) {
+            Calendar thisMonth = (Calendar) selCalDate.clone();
+            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
+
+            Calendar nextMonth = (Calendar) thisMonth.clone();
+            nextMonth.add(Calendar.MONTH, 1);
+
+            selectedWeek = String.format(Locale.US,
+                    "%s, %s",
+                    thisMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US),
+                    nextMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US)
+            );
+        } else selectedWeek = selCalDate.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
+        setTitle(selectedWeek);
+        updateClick(null);
+    }
+
+    public void navPrevWeekClick(MenuItem item) {
+        Tools.disable_touch(this);
+
+        selCalDate.add(Calendar.DATE, -7);
+        String selectedWeek;
+        if (count < 6) {
+            Calendar thisMonth = (Calendar) selCalDate.clone();
+            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
+
+            Calendar nextMonth = (Calendar) thisMonth.clone();
+            nextMonth.add(Calendar.MONTH, 1);
+
+            selectedWeek = String.format(Locale.US,
+                    "%s, %s",
+                    thisMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US),
+                    nextMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US)
+            );
+        } else selectedWeek = selCalDate.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
+        setTitle(selectedWeek);
+        updateClick(null);
+    }
+
+    public void onLogoutClick(MenuItem item) {
+        SharedPreferences.Editor editor = SignInActivity.loginPrefs.edit();
+        editor.clear();
+        editor.apply();
+        Intent intent = new Intent(MainActivity.this, SignInActivity.class);
+        startActivity(intent);
         finish();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.option_menu, menu);
-        return super.onCreateOptionsMenu(menu);
+    public void updateClick(MenuItem item) {
+        Tools.disable_touch(this);
+
+        count = 0;
+        if (exec != null && !exec.isShutdown() && !exec.isTerminated())
+            exec.shutdownNow();
+
+        exec = Executors.newCachedThreadPool();
+
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                Calendar cal = (Calendar) selCalDate.clone();
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+
+                if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                    cal.add(Calendar.DATE, -6);
+                else
+                    cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
+                int period_from = Tools.cal2time(cal);
+
+                cal.set(Calendar.HOUR_OF_DAY, 23);
+                cal.set(Calendar.MINUTE, 59);
+                cal.set(Calendar.SECOND, 59);
+                cal.add(Calendar.DATE, 6);
+                int period_till = Tools.cal2time(cal);
+
+                JSONObject body = null;
+                try {
+                    body = new JSONObject()
+                            .put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null))
+                            .put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null))
+                            .put("period_from", period_from)
+                            .put("period_till", period_till);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                runOnUiThread(new MyRunnable(
+                        Tools.post(String.format(Locale.US, "%s/events/fetch", getResources().getString(R.string.server_ip)), body)
+                ) {
+                    @Override
+                    public void run() {
+                        try {
+                            JSONObject json = new JSONObject((String) args[0]);
+                            int resultNumber = json.getInt("result");
+                            if (resultNumber == Tools.RES_OK) {
+                                JSONArray jarray = json.getJSONArray("array");
+                                events = new Event[jarray.length()];
+
+                                if (jarray.length() != 0) {
+                                    for (int n = 0; n < jarray.length(); n++) {
+                                        events[n] = Event.parseJson(jarray.getJSONObject(n));
+                                        eventIdIndexMap.put(events[n].event_id, n);
+                                    }
+                                    populateGrid();
+                                } else {
+                                    initGrid();
+                                    Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
+                                }
+                            } else
+                                Log.e("ERROR", "Code: " + resultNumber);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        Tools.enable_touch(MainActivity.this);
+                    }
+                });
+            }
+        });
     }
 
+    public void onShareEventClick(MenuItem item) {
+        FragmentManager manager = getFragmentManager();
+        GroupEvents GroupEventsDialog = new GroupEvents();
+        GroupEventsDialog.show(manager, "Dialog");
+    }
+
+    public void settingsClick(MenuItem item) {
+
+    }
+
+    //endregion
 }
 

@@ -21,11 +21,6 @@ import java.util.ArrayList;
 
 public class GroupEvents extends DialogFragment {
 
-    ListView lvUsernames;
-    ArrayList<String> usernames;
-    ArrayAdapter<String> adapter;
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_group_event, container, false);
@@ -37,7 +32,6 @@ public class GroupEvents extends DialogFragment {
         lvUsernames.setAdapter(adapter);
         return view;
     }
-
 
     @Override
     public void onResume() {
@@ -68,4 +62,9 @@ public class GroupEvents extends DialogFragment {
 
     }
 
+    // region Variables
+    private ListView lvUsernames;
+    private ArrayList<String> usernames;
+    private ArrayAdapter<String> adapter;
+    // endregion
 }

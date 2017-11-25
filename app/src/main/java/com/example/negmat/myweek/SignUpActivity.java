@@ -15,37 +15,45 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 
 public class SignUpActivity extends AppCompatActivity {
-
-    // region Variables
-    static ExecutorService exec;
-
-    @BindView(R.id.txt_email)
-    EditText email;
-    @BindView(R.id.txt_login)
-    EditText login;
-    @BindView(R.id.txt_password)
-    EditText password;
-    @BindView(R.id.txt_conf_password)
-    EditText confPassword;
-    @BindView(R.id.loadingPanel)
-    RelativeLayout loadingPanel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
-        ButterKnife.bind(this);
+        initialize();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        overridePendingTransition(0, 0);
+    }
+
+    // region Variables
+    private EditText email;
+    private EditText login;
+    private EditText password;
+    private EditText confPassword;
+    private RelativeLayout loadingPanel;
+
+    private static ExecutorService exec;
+    // endregion
+
+    private void initialize() {
+        // region Initialize UI Variables
+        email = findViewById(R.id.txt_email);
+        login = findViewById(R.id.txt_login);
+        password = findViewById(R.id.txt_password);
+        confPassword = findViewById(R.id.txt_conf_password);
+        loadingPanel = findViewById(R.id.loadingPanel);
+        // endregion
+
         ActionBar bar = getSupportActionBar();
         if (bar != null)
             bar.setTitle("Sign up");
     }
-    // @BindView(R.id.btn_register) TextView btnRegister;
-    // endregion
 
     public void userRegister(String email, String username, String password) {
         if (exec != null && !exec.isTerminated() && !exec.isShutdown())
@@ -121,15 +129,17 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     public boolean isRegistrationValid(String email, String login, String password, String confirmPass) {
-        //TODO: validate the input data
-        return (email != null && login != null && password != null && confirmPass != null) && (email.contains("@")) &&
-                (login.length() >= 4 && login.length() <= 12) && (password.length() >= 6 && password.length() <= 16) && (password.equals(confirmPass));
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        overridePendingTransition(0, 0);
+        // fixme: validation must be more complex
+        return email != null &&
+                login != null &&
+                password != null &&
+                confirmPass != null &&
+                email.contains("@") &&
+                login.length() >= 4 &&
+                login.length() <= 12 &&
+                password.length() >= 6 &&
+                password.length() <= 16 &&
+                password.equals(confirmPass);
     }
 }
 

@@ -19,49 +19,20 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-
 
 public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnInitListener {
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.dialog_aisuggest, container, false);
-        ButterKnife.bind(this, view);
-
-        tts = new TextToSpeech(getActivity(), this);
-
-        Tools.disable_touch(getActivity());
-        Calendar cal = Tools.time2cal(event.start_time);
-        String text = String.format(
-                Locale.US,
-                "I think the best time for this event is %s o'clock on %s, %s %d, %d.",
-                cal.get(Calendar.HOUR_OF_DAY),
-                cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.US),
-                cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US),
-                cal.get(Calendar.DAY_OF_MONTH),
-                cal.get(Calendar.YEAR)
-        );
-        text_suggest.setText(text);
-        return view;
-    }
 
     public AISuggestDialog(Event event, MyRunnable onExit) {
         this.event = event;
         this.exitJob = onExit;
     }
 
-    //region Variables
-    @BindView(R.id.text_suggest)
-    TextView text_suggest;
-    Event event;
-    private TextToSpeech tts;
-    static ExecutorService exec;
-    private MyRunnable exitJob;
-    //endregion
-
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.dialog_aisuggest, container, false);
+        initialize(view);
+        return view;
+    }
 
     @Override
     public void onDestroy() {
@@ -85,43 +56,68 @@ public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnIn
     @Override
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
-
             int result = tts.setLanguage(Locale.US);
-
-            if (result == TextToSpeech.LANG_MISSING_DATA
-                    || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)
                 Log.e("TTS", "This Language is not supported");
-            } else {
-                speakText();
-            }
-
-        } else {
-            Log.e("TTS", "Initilization Failed!");
-        }
+            else speakText();
+        } else Log.e("TTS", "Initilization Failed!");
     }
 
-    @OnClick(R.id.btn_edit)
-    public void editButtonClick() {
-        EditViewDialog conf = new EditViewDialog(event, false, new MyRunnable(getActivity()) {
+    //region Variables
+    private TextView text_suggest;
+
+    private Event event;
+    private TextToSpeech tts;
+    private static ExecutorService exec;
+    private MyRunnable exitJob;
+    //endregion
+
+    private void initialize(View root) {
+        text_suggest = root.findViewById(R.id.text_suggest);
+
+        tts = new TextToSpeech(getActivity(), this);
+
+        Tools.disable_touch(getActivity());
+        Calendar cal = Tools.time2cal(event.start_time);
+        String text = String.format(
+                Locale.US,
+                "I think the best time for this event is %s o'clock on %s, %s %d, %d.",
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.US),
+                cal.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US),
+                cal.get(Calendar.DAY_OF_MONTH),
+                cal.get(Calendar.YEAR)
+        );
+        text_suggest.setText(text);
+
+        root.findViewById(R.id.btn_ok).setOnClickListener(new View.OnClickListener() {
             @Override
-            public void run() {
-                if (args[0] instanceof MainActivity) {
-                    ((MainActivity) args[0]).updateClick(null);
-                }
+            public void onClick(View view) {
+                createEvent(event);
             }
         });
-        conf.show(getActivity().getFragmentManager(), "confirmdialog");
-        dismiss();
-    }
-
-    @OnClick(R.id.btn_ok)
-    public void OKButtonClick() {
-        createEvent(event);
-    }
-
-    @OnClick(R.id.btn_cancel)
-    public void cancelButtonClick() {
-        dismiss();
+        root.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dismiss();
+            }
+        });
+        root.findViewById(R.id.btn_edit).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditViewDialog conf = new EditViewDialog(event, false, new MyRunnable(getActivity()) {
+                    @Override
+                    public void run() {
+                        if (args[0] instanceof MainActivity) {
+                            ((MainActivity) args[0]).updateClick(null);
+                        }
+                    }
+                });
+                conf.show(getActivity().getFragmentManager(), "confirmdialog");
+                dismiss();
+            }
+        });
+        text_suggest = root.findViewById(R.id.text_suggest);
     }
 
     private void createEvent(Event event) {
@@ -152,23 +148,28 @@ public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnIn
                     String url = String.format(Locale.US, "%s/events/create", getResources().getString(R.string.server_ip));
 
                     JSONObject raw = new JSONObject(Tools.post(url, data));
-                    if (raw.getLong("result") != Tools.RES_OK) {
-                        activity.runOnUiThread(new MyRunnable(activity) {
-                            @Override
-                            public void run() {
-                                Tools.enable_touch(((Activity) args[0]));
-                            }
-                        });
-                        throw new Exception();
-                    }
-
-                    activity.runOnUiThread(new MyRunnable(Tools.time2cal(event.start_time), activity) {
+                    activity.runOnUiThread(new MyRunnable(activity, raw.getInt("result"), event) {
                         @Override
                         public void run() {
-                            Activity activity = (Activity) args[1];
-                            Toast.makeText(activity, "Event was created successfuly!", Toast.LENGTH_SHORT).show();
-                            Tools.enable_touch(activity);
-                            dismiss();
+                            Activity activity = (Activity) args[0];
+                            int result = (int) args[1];
+                            Event event = (Event) args[2];
+                            Calendar cal = Tools.time2cal(event.start_time);
+
+                            if (result == Tools.RES_OK) {
+                                Toast.makeText(activity, "Event was created successfuly!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(activity, String.format(Locale.US, "Event has been created on %d/%d/%d at %02d:%02d",
+                                        cal.get(Calendar.DAY_OF_MONTH),
+                                        cal.get(Calendar.MONTH),
+                                        cal.get(Calendar.YEAR),
+                                        cal.get(Calendar.HOUR_OF_DAY),
+                                        cal.get(Calendar.MINUTE)),
+                                        Toast.LENGTH_LONG
+                                ).show();
+                                Tools.setAlarm(getActivity(), cal, event.event_name, event.event_note);
+                                Tools.enable_touch(activity);
+                                dismiss();
+                            }
                         }
                     });
                 } catch (Exception e) {

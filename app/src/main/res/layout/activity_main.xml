@@ -38,7 +38,7 @@
         android:background="@android:color/transparent"
         android:contentDescription="@string/app_name"
         android:elevation="2dp"
-        android:onClick="addEventClick"
+        android:onClick="newVoiceEventClick"
         android:src="@drawable/ic_add_event" />
 
 </RelativeLayout>

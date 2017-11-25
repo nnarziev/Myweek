@@ -1,6 +1,10 @@
 package com.example.negmat.myweek;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -82,7 +86,6 @@ class Tools {
 
     static String[] decode_time(int time) {
         Calendar cal = time2cal(time);
-        Log.v("CHECK:", "month: " + String.valueOf(cal.get(Calendar.MONTH)) + "day" + String.valueOf(cal.get(Calendar.DAY_OF_MONTH)));
         String time_part = String.format(Locale.US, "%02d:00", cal.get(Calendar.HOUR_OF_DAY));
         String date_part = String.format(Locale.US, "%s. %d, %d",
                 cal.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.getDefault()),
@@ -100,6 +103,7 @@ class Tools {
     static Calendar suggestion2cal(int suggestion) {
         // create calendar on current day
         Calendar calendar = Calendar.getInstance();
+        calendar.setFirstDayOfWeek(Calendar.MONDAY);
         calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), suggestion / 10, 0, 0);
 
         // shift date to closest match suggested weekday
@@ -121,6 +125,7 @@ class Tools {
 
     static Calendar time2cal(int time) {
         Calendar calendar = Calendar.getInstance();
+        calendar.setFirstDayOfWeek(Calendar.MONDAY);
         calendar.set(2000 + (time / 1000000) % 100, (time / 10000) % 100 - 1, (time / 100) % 100, time % 100, 0, 0);
 
         return calendar;
@@ -142,6 +147,24 @@ class Tools {
         activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
     // endregion
+
+    static void setAlarm(Activity activity, Calendar when, String event_name, String event_note) {
+        when = (Calendar) when.clone();
+
+        AlarmManager manager = (AlarmManager) activity.getSystemService(Context.ALARM_SERVICE);
+        Intent myIntent;
+        PendingIntent pendingIntent;
+
+        myIntent = new Intent(activity, MainActivity.AlarmNotificationReceiver.class);
+        myIntent.putExtra("event_name", event_name);
+        myIntent.putExtra("event_note", event_note);
+        pendingIntent = PendingIntent.getBroadcast(activity, 0, myIntent, 0);
+        when.add(Calendar.MINUTE, -2);
+        if (manager != null) {
+            manager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
+        } else
+            Log.e("ERROR", "manager is null");
+    }
 }
 
 class Event {
