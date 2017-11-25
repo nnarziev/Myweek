@@ -282,7 +282,7 @@ public class EditViewDialog extends DialogFragment {
     }
 
     private void refreshEditMode() {
-        if (event.event_id == Event.NEW_EVENT)
+        if (event.event_id == Event.NEW_EVENT_ID)
             for (int n = 0; n < eventActionBtnsParent.getChildCount(); n++) {
                 View view = eventActionBtnsParent.getChildAt(n);
                 view.setVisibility(view.getId() == R.id.btn_cancel || view.getId() == R.id.btn_save ? View.VISIBLE : View.GONE);

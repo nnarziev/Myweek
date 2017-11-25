@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="SUN">0</integer>
-    <integer name="MON">1</integer>
-    <integer name="TUE">2</integer>
-    <integer name="WED">3</integer>
-    <integer name="THU">4</integer>
-    <integer name="FRI">5</integer>
-    <integer name="SAT">6</integer>
+    <integer name="MON">2</integer>
+    <integer name="TUE">3</integer>
+    <integer name="WED">4</integer>
+    <integer name="THU">5</integer>
+    <integer name="FRI">6</integer>
+    <integer name="SAT">7</integer>
+    <integer name="SUN">1</integer>
 </resources>

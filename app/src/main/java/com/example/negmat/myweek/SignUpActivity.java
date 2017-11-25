@@ -129,7 +129,6 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     public boolean isRegistrationValid(String email, String login, String password, String confirmPass) {
-        // fixme: validation must be more complex
         return email != null &&
                 login != null &&
                 password != null &&

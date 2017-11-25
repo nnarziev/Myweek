@@ -131,7 +131,7 @@ public class SpeechDialog extends DialogFragment {
                                 if (match == null)
                                     throw new Exception();
 
-                                String category = Character.toUpperCase(((String) match[1]).charAt(0)) + ((String) match[1]).substring(1);
+                                String category_key = Character.toUpperCase(((String) match[1]).charAt(0)) + ((String) match[1]).substring(1);
                                 int category_id = (int) match[0];
 
                                 String username = SignInActivity.loginPrefs.getString(SignInActivity.username, null);
@@ -148,22 +148,29 @@ public class SpeechDialog extends DialogFragment {
 
                                 int suggested_time = raw.getInt("suggested_time");
                                 getActivity().runOnUiThread(new MyRunnable(
-                                        Tools.suggestion2time(suggested_time), // chosen, suggested time
-                                        suggested_time % 10, // day of week
-                                        category,
+                                        suggested_time,
+                                        category_key,
                                         speech_result,
                                         category_id
                                 ) {
                                     @Override
                                     public void run() {
+                                        int suggested_time = (int) args[0];
+                                        Log.e("DATA", suggested_time + "");
+                                        int start_time = Tools.suggestion2time(suggested_time);
+                                        int day = suggested_time % 10;
+                                        String event_name = (String) args[1];
+                                        String event_note = (String) args[2];
+                                        int category_id = (int) args[3];
+
                                         Event event = new Event(
-                                                (int) args[0],
-                                                (int) args[1],
-                                                (short) 60,
-                                                (String) args[2],
-                                                (String) args[3],
-                                                Event.NEW_EVENT,
-                                                (int) args[4]
+                                                start_time,
+                                                day,
+                                                Event.DEFAULT_LENGTH,
+                                                event_name,
+                                                event_note,
+                                                Event.NEW_EVENT_ID,
+                                                category_id
                                         );
 
                                         AISuggestDialog dialog = new AISuggestDialog(event, new MyRunnable(getActivity()) {
@@ -179,7 +186,7 @@ public class SpeechDialog extends DialogFragment {
                                 });
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                Log.v("ERROR: ", e.getMessage());
+                                Log.v("ERROR", e.getMessage());
                             }
 
                             dismiss();
@@ -203,7 +210,6 @@ public class SpeechDialog extends DialogFragment {
     }
 
     public Object[] stringMatchingWithCategories(String event_text) {
-        // fixme: there's an error either in finding a category or in matching a default category if not found (probably this is an error case)
         String raw_json = Tools.post(String.format(Locale.US, "%s/events/categories", getResources().getString(R.string.server_ip)), null);
         if (raw_json == null)
             return null;
@@ -236,6 +242,7 @@ public class SpeechDialog extends DialogFragment {
         }
         // endregion
 
+        // TODO: Make a more complex string-matching algorithm
         int cat = -1;
         String key = null;
         for (String _key : map_cat2code.keySet())
@@ -245,10 +252,8 @@ public class SpeechDialog extends DialogFragment {
                 break;
             }
         if (cat == -1) {
-            key = map_cat2code.keySet().toArray(new String[map_cat2code.keySet().size()])[0];
+            key = Event.DEFAULT_CATEGORY;
             cat = map_cat2code.get(key);
-            return new Object[]{cat, key};
-            //return new Object[]{map.get(def), def};
         }
 
         return new Object[]{cat, key};

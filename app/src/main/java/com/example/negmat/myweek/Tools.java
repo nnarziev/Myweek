@@ -179,7 +179,9 @@ class Event {
     }
 
     // region Constants
-    static final int NEW_EVENT = 0;
+    static final int NEW_EVENT_ID = 0;
+    static final short DEFAULT_LENGTH = 60; // 60 minutes
+    static final String DEFAULT_CATEGORY = "default";
     // endregion
 
     //region Variables
@@ -225,7 +227,7 @@ class Event {
                     .put("length", length)
                     .put("event_name", event_name)
                     .put("event_note", event_note)
-                    .put("event_id", newInstance ? NEW_EVENT : event_id)
+                    .put("event_id", newInstance ? NEW_EVENT_ID : event_id)
                     .put("category_id", category_id);
         } catch (JSONException e) {
             e.printStackTrace();
