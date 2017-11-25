@@ -140,7 +140,6 @@ public class MainActivity extends AppCompatActivity {
     private Event[] events;
     private LongSparseArray<Integer> eventIdIndexMap = new LongSparseArray<>();
     private static ExecutorService exec;
-    private int count = 0;
     private int cellDimen = -1;
     // endregion
 
@@ -160,19 +159,21 @@ public class MainActivity extends AppCompatActivity {
 
         selCalDate = Calendar.getInstance();
         selCalDate.setFirstDayOfWeek(Calendar.MONDAY);
+        Log.e("TODAY", selCalDate.getTime().toString()+"");
         String selectedWeek;
 
         // region Update the fixed weekdays gridview
         Calendar cal = (Calendar) selCalDate.clone();
-        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
+        if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+            cal.add(Calendar.DATE, -6);
+        else
+            cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
 
         if (grid_fixed.getChildCount() == 0) {
             // inflate first
             Space space = new Space(getApplicationContext());
             grid_fixed.addView(space, cellDimen, cellDimen);
             for (int i = 1; i < grid_fixed.getColumnCount(); i++) {
-                if (cal.get(Calendar.MONTH) == selCalDate.get(Calendar.MONTH))
-                    count++;
                 TextView weekNames = new TextView(getApplicationContext());
                 weekNames.setTextColor(Color.BLACK);
                 weekNames.setBackgroundResource(R.drawable.bg_cell_empty);
@@ -205,12 +206,18 @@ public class MainActivity extends AppCompatActivity {
         }
         //endregion
 
-        if (count < 6) {
+        //check if current week consists of two months
+        if (Tools.twoMonthsWeek(selCalDate)) {
             Calendar thisMonth = (Calendar) selCalDate.clone();
-            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
+
+            //identifying the month of first day of week(Monday)
+            if (thisMonth.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                thisMonth.add(Calendar.DATE, -6);
+            else
+                thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
 
             Calendar nextMonth = (Calendar) thisMonth.clone();
-            nextMonth.add(Calendar.MONTH, 1);
+            nextMonth.add(Calendar.MONTH, 1); //identifying the next month of currnet week
 
             selectedWeek = String.format(Locale.US,
                     "%s, %s",
@@ -253,15 +260,16 @@ public class MainActivity extends AppCompatActivity {
 
         // region Update the fixed weekdays gridview
         Calendar cal = (Calendar) selCalDate.clone();
-        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
+        if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+            cal.add(Calendar.DATE, -6);
+        else
+            cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
 
         if (grid_fixed.getChildCount() == 0) {
             // inflate first
             Space space = new Space(getApplicationContext());
             grid_fixed.addView(space, cellDimen, cellDimen);
             for (int i = 1; i < grid_fixed.getColumnCount(); i++) {
-                if (cal.get(Calendar.MONTH) == selCalDate.get(Calendar.MONTH))
-                    count++;
                 TextView weekNames = new TextView(getApplicationContext());
                 weekNames.setTextColor(Color.BLACK);
                 weekNames.setBackgroundResource(R.drawable.bg_cell_empty);
@@ -382,12 +390,19 @@ public class MainActivity extends AppCompatActivity {
 
                 selCalDate.set(year, month, day);
                 String selectedWeek;
-                if (count < 6) {
+
+                //check if current week consists of two months
+                if (Tools.twoMonthsWeek(selCalDate)) {
                     Calendar thisMonth = (Calendar) selCalDate.clone();
-                    thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
+
+                    //identifying the month of first day of week(Monday)
+                    if (thisMonth.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                        thisMonth.add(Calendar.DATE, -6);
+                    else
+                        thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
 
                     Calendar nextMonth = (Calendar) thisMonth.clone();
-                    nextMonth.add(Calendar.MONTH, 1);
+                    nextMonth.add(Calendar.MONTH, 1); //identifying the next month of currnet week
 
                     selectedWeek = String.format(Locale.US,
                             "%s, %s",
@@ -414,12 +429,19 @@ public class MainActivity extends AppCompatActivity {
 
         selCalDate.add(Calendar.DATE, 7);
         String selectedWeek;
-        if (count < 6) {
+
+        //check if current week consists of two months
+        if (Tools.twoMonthsWeek(selCalDate)) {
             Calendar thisMonth = (Calendar) selCalDate.clone();
-            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
+
+            //identifying the month of first day of week(Monday)
+            if (thisMonth.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                thisMonth.add(Calendar.DATE, -6);
+            else
+                thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
 
             Calendar nextMonth = (Calendar) thisMonth.clone();
-            nextMonth.add(Calendar.MONTH, 1);
+            nextMonth.add(Calendar.MONTH, 1); //identifying the next month of currnet week
 
             selectedWeek = String.format(Locale.US,
                     "%s, %s",
@@ -436,12 +458,19 @@ public class MainActivity extends AppCompatActivity {
 
         selCalDate.add(Calendar.DATE, -7);
         String selectedWeek;
-        if (count < 6) {
+
+        //check if current week consists of two months
+        if (Tools.twoMonthsWeek(selCalDate)) {
             Calendar thisMonth = (Calendar) selCalDate.clone();
-            thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
+
+            //identifying the month of first day of week(Monday)
+            if (thisMonth.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+                thisMonth.add(Calendar.DATE, -6);
+            else
+                thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
 
             Calendar nextMonth = (Calendar) thisMonth.clone();
-            nextMonth.add(Calendar.MONTH, 1);
+            nextMonth.add(Calendar.MONTH, 1); //identifying the next month of currnet week
 
             selectedWeek = String.format(Locale.US,
                     "%s, %s",
@@ -465,7 +494,6 @@ public class MainActivity extends AppCompatActivity {
     public void updateClick(MenuItem item) {
         Tools.disable_touch(this);
 
-        count = 0;
         if (exec != null && !exec.isShutdown() && !exec.isTerminated())
             exec.shutdownNow();
 

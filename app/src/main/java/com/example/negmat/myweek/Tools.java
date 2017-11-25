@@ -146,6 +146,22 @@ class Tools {
     static void enable_touch(Activity activity) {
         activity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
     }
+
+    static boolean twoMonthsWeek(Calendar selCalDate) {
+        Calendar firstDay = (Calendar) selCalDate.clone();
+
+        //getting the date day of Monday
+        if (firstDay.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+            firstDay.add(Calendar.DATE, -6);
+        else
+            firstDay.add(Calendar.DATE, firstDay.getFirstDayOfWeek() - firstDay.get(Calendar.DAY_OF_WEEK));
+
+        Calendar lastDay = (Calendar) firstDay.clone();
+        lastDay.add(Calendar.DATE, 6); //getting the date of Sunday
+
+        //return true if the date of Monday is not equal to the date of Sunday
+        return firstDay.get(Calendar.MONTH) != lastDay.get(Calendar.MONTH);
+    }
     // endregion
 
     static void setAlarm(Activity activity, Calendar when, String event_name, String event_note) {
