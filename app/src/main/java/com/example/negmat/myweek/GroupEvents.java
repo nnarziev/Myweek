@@ -1,7 +1,6 @@
 package com.example.negmat.myweek;
 
 import android.app.DialogFragment;
-import android.app.ListActivity;
 import android.content.Intent;
 import android.nfc.NdefMessage;
 import android.nfc.NfcAdapter;
@@ -12,11 +11,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
 
-public class GroupEvents extends DialogFragment{
+public class GroupEvents extends DialogFragment {
 
     ListView lvUsernames;
     ArrayList<String> usernames;
@@ -36,24 +39,33 @@ public class GroupEvents extends DialogFragment{
     }
 
 
-
-
-
     @Override
     public void onResume() {
         super.onResume();
-        Intent intent = getActivity().getIntent();
 
+        Intent intent = getActivity().getIntent();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             Parcelable[] rawMessages = intent.getParcelableArrayExtra(
                     NfcAdapter.EXTRA_NDEF_MESSAGES);
 
             NdefMessage message = (NdefMessage) rawMessages[0]; // only one message transferred
 
-            usernames.add(message.toString());
-            adapter.notifyDataSetChanged();
-
+            try {
+                JSONObject object = new JSONObject(new String(message.getRecords()[0].getPayload()));
+                if (object.getInt(Tools.KEY_NFC_GROUP) == Tools.NFC_GROUP) {
+                    String username = object.getString("username");
+                    Toast.makeText(getActivity(), username + " is received!", Toast.LENGTH_SHORT).show();
+                    usernames.add(username);
+                    adapter.notifyDataSetChanged();
+                } else if (object.getInt(Tools.KEY_NFC_SINGLE) != Tools.NFC_SINGLE) {
+                    // must not happen
+                    throw new JSONException("JSON from NFC doesn't contain field " + Tools.KEY_NFC_GROUP);
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
 }

@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -42,7 +43,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
-public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateNdefMessageCallback {
+public class EditViewDialog extends DialogFragment {
 
     private void startAlarm(Calendar when, String event_name, String event_note) {
         AlarmManager manager = (AlarmManager) getActivity().getSystemService(Context.ALARM_SERVICE);
@@ -63,21 +64,36 @@ public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateN
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setUpNFCSender();
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    private void setUpNFCSender() {
         NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(getActivity());
         if (mAdapter == null) {
             Toast.makeText(getActivity(), "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        if (!mAdapter.isEnabled()) {
+        if (!mAdapter.isEnabled())
             Toast.makeText(getActivity(), "Please enable NFC via Settings.", Toast.LENGTH_LONG).show();
-        }
 
-        mAdapter.setNdefPushMessageCallback(this, this.getActivity());
+        mAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
+            @Override
+            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+                JSONObject msg = event.toJson(true);
+                try {
+                    msg.put(Tools.KEY_NFC_SINGLE, Tools.NFC_SINGLE);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
+            }
+        }, getActivity());
     }
-
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -214,14 +230,6 @@ public class EditViewDialog extends DialogFragment implements NfcAdapter.CreateN
 
         for (int n = 0; n < weekdaysParent.getChildCount(); n++)
             weekdaysParent.getChildAt(n).setClickable(!readOnly);
-    }
-
-    @Override
-    public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
-        JSONObject msg = event.toJson(true);
-        if (msg == null)
-            return null;
-        return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
     }
 
     @Override

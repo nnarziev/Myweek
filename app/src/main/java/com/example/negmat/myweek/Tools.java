@@ -21,6 +21,15 @@ class Tools {
     static final int RES_OK = 0, RES_SRV_ERR = -1, RES_FAIL = 1;
     // endregion
 
+    // region Client Constants
+    static final int
+            NFC_SINGLE = 0,
+            NFC_GROUP = 1;
+    static final String
+            KEY_NFC_SINGLE = "NFC_SINGLE",
+            KEY_NFC_GROUP = "NFC_GROUP";
+    // endregion
+
     static String post(String _url, JSONObject json_body) {
         try {
             URL url = new URL(_url);

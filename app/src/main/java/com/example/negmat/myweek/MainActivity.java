@@ -12,7 +12,9 @@ import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.Typeface;
 import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
+import android.nfc.NfcEvent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.NotificationCompat;
@@ -46,6 +48,8 @@ import java.util.concurrent.Executors;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.example.negmat.myweek.SignInActivity.username;
+
 public class MainActivity extends AppCompatActivity {
 
     public static class AlarmNotificationReceiver extends BroadcastReceiver {
@@ -76,37 +80,63 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
         initialize();
 
-        Calendar cal = Calendar.getInstance();
-        cal.set(2017, 10, 20, 2, 0, 0);
-        //startAlarm(cal, "Event note");
+        setUpNFCSender();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         Intent intent = getIntent();
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             Parcelable[] rawMessages = intent.getParcelableArrayExtra(
                     NfcAdapter.EXTRA_NDEF_MESSAGES);
 
             NdefMessage message = (NdefMessage) rawMessages[0]; // only one message transferred
-            Event event = null;
+            Event event;
             try {
-                event = Event.parseJson(new JSONObject(new String(message.getRecords()[0].getPayload())));
+                JSONObject object = new JSONObject(new String(message.getRecords()[0].getPayload()));
+
+                if (object.getInt(Tools.KEY_NFC_SINGLE) == Tools.NFC_SINGLE) {
+                    event = Event.parseJson(object);
+                    new EditViewDialog(event, true, new MyRunnable() {
+                        @Override
+                        public void run() {
+                            updateClick(null);
+                        }
+                    }).show(getFragmentManager(), "Editdialog");
+                } else if (object.getInt(Tools.KEY_NFC_GROUP) != Tools.NFC_GROUP) {
+                    // must not happen
+                    throw new JSONException("JSON from NFC doesn't contain field " + Tools.KEY_NFC_GROUP);
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            EditViewDialog dialog = new EditViewDialog(event, true, new MyRunnable() {
-                @Override
-                public void run() {
-                    updateClick(null);
-                }
-            });
-            FragmentManager manager = getFragmentManager();
-            dialog.show(manager, "Editdialog");
-
         }
+    }
+
+    private void setUpNFCSender() {
+        NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(this);
+        if (mAdapter == null) {
+            Toast.makeText(this, "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!mAdapter.isEnabled())
+            Toast.makeText(this, "Please enable NFC via Settings.", Toast.LENGTH_LONG).show();
+
+        mAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
+            @Override
+            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+                try {
+                    JSONObject msg = new JSONObject();
+                    msg.put(Tools.KEY_NFC_GROUP, Tools.NFC_GROUP);
+                    msg.put("username", SignInActivity.loginPrefs.getString(username, null));
+                    return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
+                } catch (JSONException | NullPointerException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        }, this);
     }
 
     // region Variables
@@ -124,6 +154,8 @@ public class MainActivity extends AppCompatActivity {
 
     static ExecutorService exec;
 
+    private int count = 0;
+
     private int cellDimen = -1;
     // endregion
 
@@ -139,7 +171,50 @@ public class MainActivity extends AppCompatActivity {
 
         selCalDate = Calendar.getInstance();
         String selectedWeek;
-        if (selCalDate.get(Calendar.WEEK_OF_MONTH) % 5 == 0) {
+
+        // region Update the fixed weekdays gridview
+        Calendar cal = (Calendar) selCalDate.clone();
+        cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK) - 1);
+
+        if (grid_fixed.getChildCount() == 0) {
+            // inflate first
+            Space space = new Space(getApplicationContext());
+            grid_fixed.addView(space, cellDimen, cellDimen);
+            for (int i = 1; i < grid_fixed.getColumnCount(); i++) {
+                if (cal.get(Calendar.MONTH) == selCalDate.get(Calendar.MONTH))
+                    count++;
+                TextView weekNames = new TextView(getApplicationContext());
+                weekNames.setTextColor(Color.BLACK);
+                weekNames.setBackgroundResource(R.drawable.bg_cell_empty);
+                weekNames.setTypeface(null, Typeface.BOLD);
+                weekNames.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.0f);
+                weekNames.setText(String.format(
+                        Locale.US,
+                        getResources().getString(R.string.weekday),
+                        cal.get(Calendar.DAY_OF_MONTH),
+                        cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US)
+                ));
+                cal.add(Calendar.DATE, 1);
+                weekNames.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+                weekNames.setWidth(cellDimen);
+                weekNames.setHeight(cellDimen);
+                grid_fixed.addView(weekNames);
+            }
+        } else {
+            // simply update (already inflated)
+            for (int i = 1; i < grid_fixed.getColumnCount(); i++) {
+                TextView weekNames = (TextView) grid_fixed.getChildAt(i);
+                weekNames.setText(String.format(
+                        Locale.US,
+                        getResources().getString(R.string.weekday),
+                        cal.get(Calendar.DAY_OF_MONTH),
+                        cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.US)
+                ));
+                cal.add(Calendar.DATE, 1);
+            }
+        }
+        //endregion
+        if (count < 6) {
             Calendar thisMonth = (Calendar) selCalDate.clone();
             thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
 
@@ -184,15 +259,19 @@ public class MainActivity extends AppCompatActivity {
                 event_grid.addView(tv[col][row]);
             }
 
+
+
+        // region Update the fixed weekdays gridview
         Calendar cal = (Calendar) selCalDate.clone();
         cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK) - 1);
 
-        // region Update the fixed weekdays gridview
         if (grid_fixed.getChildCount() == 0) {
             // inflate first
             Space space = new Space(getApplicationContext());
             grid_fixed.addView(space, cellDimen, cellDimen);
             for (int i = 1; i < grid_fixed.getColumnCount(); i++) {
+                if (cal.get(Calendar.MONTH) == selCalDate.get(Calendar.MONTH))
+                    count++;
                 TextView weekNames = new TextView(getApplicationContext());
                 weekNames.setTextColor(Color.BLACK);
                 weekNames.setBackgroundResource(R.drawable.bg_cell_empty);
@@ -223,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
                 cal.add(Calendar.DATE, 1);
             }
         }
+        //endregion
     }
 
     private void populateGrid(Event[] events) {
@@ -273,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
     public void navNextWeekClick(MenuItem item) {
         selCalDate.add(Calendar.DATE, 7);
         String selectedWeek;
-        if (selCalDate.get(Calendar.WEEK_OF_MONTH) % 5 == 0) {
+        if (count < 6) {
             Calendar thisMonth = (Calendar) selCalDate.clone();
             thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
 
@@ -293,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
     public void navPrevWeekClick(MenuItem item) {
         selCalDate.add(Calendar.DATE, -7);
         String selectedWeek;
-        if (selCalDate.get(Calendar.WEEK_OF_MONTH) % 5 == 0) {
+        if (count < 6) {
             Calendar thisMonth = (Calendar) selCalDate.clone();
             thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
 
@@ -320,6 +400,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateClick(MenuItem item) {
+        count = 0;
         if (exec != null && !exec.isShutdown() && !exec.isTerminated())
             exec.shutdownNow();
 
@@ -345,7 +426,7 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject body = null;
                 try {
                     body = new JSONObject()
-                            .put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null))
+                            .put("username", SignInActivity.loginPrefs.getString(username, null))
                             .put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null))
                             .put("period_from", period_from)
                             .put("period_till", period_till);
@@ -412,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                 selCalDate.set(year, month, day);
                 String selectedWeek;
-                if (selCalDate.get(Calendar.WEEK_OF_MONTH) % 5 == 0) {
+                if (count < 6) {
                     Calendar thisMonth = (Calendar) selCalDate.clone();
                     thisMonth.add(Calendar.DATE, selCalDate.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK) - 1);
 
@@ -439,6 +520,16 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
+   /* @Override
+    public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+        JSONObject msg = event.toJson(true);
+        try {
+            msg.put(Tools.KEY_NFC_SINGLE, Tools.NFC_SINGLE);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
+    }*/
 
     @Override
     public void onBackPressed() {
