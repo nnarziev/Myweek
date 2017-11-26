@@ -2,9 +2,13 @@ package com.example.negmat.myweek;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -26,12 +30,7 @@ class Tools {
     // endregion
 
     // region Client Constants
-    static final int
-            NFC_SINGLE = 0,
-            NFC_GROUP = 1;
-    static final String
-            KEY_NFC_SINGLE = "NFC_SINGLE",
-            KEY_NFC_GROUP = "NFC_GROUP";
+    static final int NOTIFY_DEL_MINS = 15;
     // endregion
 
     static String post(String _url, JSONObject json_body) {
@@ -103,11 +102,12 @@ class Tools {
     static Calendar suggestion2cal(int suggestion) {
         // create calendar on current day
         Calendar calendar = Calendar.getInstance();
+        Calendar today = Calendar.getInstance();
         calendar.setFirstDayOfWeek(Calendar.MONDAY);
         calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), suggestion / 10, 0, 0);
 
         // shift date to closest match suggested weekday
-        while (calendar.get(Calendar.DAY_OF_WEEK) != suggestion % 10)
+        while (calendar.before(today) || calendar.get(Calendar.DAY_OF_WEEK) != suggestion % 10)
             calendar.add(Calendar.DAY_OF_MONTH, 1);
 
         return calendar;
@@ -164,22 +164,19 @@ class Tools {
     }
     // endregion
 
-    static void setAlarm(Activity activity, Calendar when, String event_name, String event_note) {
-        when = (Calendar) when.clone();
+    static void setAlarm(Activity activity, Event event) {
+        Calendar cal = Tools.time2cal(event.start_time);
 
         AlarmManager manager = (AlarmManager) activity.getSystemService(Context.ALARM_SERVICE);
-        Intent myIntent;
-        PendingIntent pendingIntent;
+        Intent mainIntent = new Intent(activity, AlarmNotificationReceiver.class);
 
-        myIntent = new Intent(activity, MainActivity.AlarmNotificationReceiver.class);
-        myIntent.putExtra("event_name", event_name);
-        myIntent.putExtra("event_note", event_note);
-        pendingIntent = PendingIntent.getBroadcast(activity, 0, myIntent, 0);
-        when.add(Calendar.MINUTE, -2);
-        if (manager != null) {
-            manager.set(AlarmManager.RTC_WAKEUP, when.getTimeInMillis(), pendingIntent);
-        } else
-            Log.e("ERROR", "manager is null");
+        mainIntent.putExtra("event_json", event.toJson(false).toString());
+        cal.add(Calendar.MINUTE, -NOTIFY_DEL_MINS);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
+        if (manager != null)
+            manager.set(AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), PendingIntent.getBroadcast(activity, 0, mainIntent, 0));
     }
 }
 
@@ -196,7 +193,10 @@ class Event {
 
     // region Constants
     static final int NEW_EVENT_ID = 0;
+
     static final short DEFAULT_LENGTH = 60; // 60 minutes
+    static final short MIN_LENGTH = 30; // 30 minutes
+    static final short MAX_LENGTH = 240; // 240 minutes
     static final String DEFAULT_CATEGORY = "default";
     // endregion
 
@@ -238,6 +238,7 @@ class Event {
     JSONObject toJson(boolean newInstance) {
         try {
             return new JSONObject()
+                    .put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null))
                     .put("start_time", start_time)
                     .put("day", day)
                     .put("length", length)

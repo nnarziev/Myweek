@@ -72,7 +72,10 @@
     <string name="FRI">Fr</string>
     <string name="SAT">Sa</string>
     <string name="add_group_event">Add group event</string>
-    <string name="instruction_group_event">Tap your device to devices you want to share the event with</string>
+    <string name="instruction_group_event">NFC-tap group members\' devices to this phone to add them as group members for an event.</string>
 
     <string name="weekday">%1$d\n%2$s</string>
+    <string name="event_length">Event length:</string>
+    <string name="minutes">%1$d minutes</string>
+    <string name="members">Members: %1$s</string>
 </resources>

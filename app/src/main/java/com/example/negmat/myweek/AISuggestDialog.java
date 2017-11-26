@@ -5,13 +5,13 @@ import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Calendar;
@@ -57,10 +57,11 @@ public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnIn
     public void onInit(int status) {
         if (status == TextToSpeech.SUCCESS) {
             int result = tts.setLanguage(Locale.US);
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED)
-                Log.e("TTS", "This Language is not supported");
-            else speakText();
-        } else Log.e("TTS", "Initilization Failed!");
+            if (!(result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED))
+                speakText();
+            else
+                Toast.makeText(getActivity(), "Voice will not work without Internet connection.\nPlease connect to Internet if you are not connected!", Toast.LENGTH_LONG).show();
+        }
     }
 
     //region Variables
@@ -145,6 +146,10 @@ public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnIn
                     data.put("event_name", event.event_name);
                     data.put("event_note", event.event_note);
 
+                    // if event must be set to multiple users, group event creation must be called in create API
+                    if (GroupEventDialog.users.size() > 0)
+                        data.put("users", new JSONArray(GroupEventDialog.users));
+
                     String url = String.format(Locale.US, "%s/events/create", getResources().getString(R.string.server_ip));
 
                     JSONObject raw = new JSONObject(Tools.post(url, data));
@@ -166,10 +171,11 @@ public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnIn
                                         cal.get(Calendar.MINUTE)),
                                         Toast.LENGTH_LONG
                                 ).show();
-                                Tools.setAlarm(getActivity(), cal, event.event_name, event.event_note);
+                                Tools.setAlarm(getActivity(), event);
                                 Tools.enable_touch(activity);
                                 dismiss();
-                            }
+                            } else if (result == Tools.RES_FAIL)
+                                Toast.makeText(activity, "Specified time is already occupied. \nPlease choose another time!", Toast.LENGTH_LONG).show();
                         }
                     });
                 } catch (Exception e) {
@@ -186,9 +192,7 @@ public class AISuggestDialog extends DialogFragment implements TextToSpeech.OnIn
     }
 
     private void speakText() {
-
         String toSpeak = text_suggest.getText().toString();
-
-        tts.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
+        tts.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null, "my-utterance");
     }
 }

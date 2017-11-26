@@ -109,7 +109,6 @@ public class SignInActivity extends AppCompatActivity {
                             }
                         });
                     else {
-                        Log.e("ERROR", "Code: " + resultNumber);
                         Thread.sleep(2000);
                         runOnUiThread(new Runnable() {
                             @Override

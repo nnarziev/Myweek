@@ -27,12 +27,16 @@
         android:textSize="20sp"
         android:textStyle="italic" />
 
-    <ListView
-        android:id="@+id/lv_usernames"
+    <TextView
+        android:id="@+id/txt_usernames"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-    </ListView>
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="@drawable/bg_members_text"
+        android:padding="5dp"
+        android:text="@string/members"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="16sp" />
 
     <LinearLayout
         android:layout_width="match_parent"

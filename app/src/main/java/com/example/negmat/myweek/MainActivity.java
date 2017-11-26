@@ -1,11 +1,6 @@
 package com.example.negmat.myweek;
 
 import android.app.DatePickerDialog;
-import android.app.FragmentManager;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -18,7 +13,6 @@ import android.nfc.NfcEvent;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -45,66 +39,14 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
 public class MainActivity extends AppCompatActivity {
-
-    public static class AlarmNotificationReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "notification_channel");
-            builder.setAutoCancel(true)
-                    .setDefaults(Notification.DEFAULT_ALL)
-                    .setWhen(System.currentTimeMillis())
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle(intent.getStringExtra("event_name") + " after 2 minutes")
-                    .setContentText(intent.getStringExtra("event_note"))
-                    .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_SOUND)
-                    .setContentInfo("Info");
-
-            NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (notificationManager != null)
-                notificationManager.notify(1, builder.build());
-            else
-                Log.e("ERROR", "notificationManager is null");
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initialize();
-        setUpNFCSender();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Intent intent = getIntent();
-        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
-            Parcelable[] rawMessages = intent.getParcelableArrayExtra(
-                    NfcAdapter.EXTRA_NDEF_MESSAGES);
-
-            NdefMessage message = (NdefMessage) rawMessages[0]; // only one message transferred
-            Event event;
-            try {
-                JSONObject object = new JSONObject(new String(message.getRecords()[0].getPayload()));
-
-                if (object.getInt(Tools.KEY_NFC_SINGLE) == Tools.NFC_SINGLE) {
-                    event = Event.parseJson(object);
-                    new EditViewDialog(event, true, new MyRunnable() {
-                        @Override
-                        public void run() {
-                            updateClick(null);
-                        }
-                    }).show(getFragmentManager(), "Editdialog");
-                } else if (object.getInt(Tools.KEY_NFC_GROUP) != Tools.NFC_GROUP) {
-                    // must not happen
-                    throw new JSONException("JSON from NFC doesn't contain field " + Tools.KEY_NFC_GROUP);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -129,11 +71,63 @@ public class MainActivity extends AppCompatActivity {
             else speechDialog.dismiss();
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+            Parcelable[] rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+            NdefMessage message = (NdefMessage) rawMessages[0]; // only one message transferred
+            try {
+                JSONObject object = new JSONObject(new String(message.getRecords()[0].getPayload()));
+                String username = object.getString(SignInActivity.username);
+
+                if (isSingleMode) {
+                    if (object.has("event_id")) {
+                        Event event = Event.parseJson(object);
+                        if (editViewDialog != null)
+                            editViewDialog.dismiss();
+
+                        editViewDialog = new EditViewDialog(event, true, new MyRunnable() {
+                            @Override
+                            public void run() {
+                                updateClick(null);
+                                editViewDialog = null;
+                            }
+                        });
+                        editViewDialog.show(getFragmentManager(), "Editdialog");
+                    } else
+                        Toast.makeText(this, String.format("Hello from %s!", username), Toast.LENGTH_SHORT).show();
+                } else {
+                    if (username.equals(SignInActivity.loginPrefs.getString(SignInActivity.username, null))) {
+                        Toast.makeText(this, "It is bad to play aroud with the app!\nPlease sign in with different accounts!", Toast.LENGTH_SHORT).show();
+                        onLogoutClick(null);
+                        return;
+                    }
+
+                    if (GroupEventDialog.users.contains(username)) {
+                        GroupEventDialog.users.remove(username);
+                        groupEventDialog.updateMembers();
+                        Toast.makeText(this, "User has been deleted from list!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        GroupEventDialog.users.add(username);
+                        groupEventDialog.updateMembers();
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     // region Variables
     private GridLayout grid_fixed;
     private GridLayout event_grid;
 
     private SpeechDialog speechDialog;
+    private EditViewDialog editViewDialog;
+    GroupEventDialog groupEventDialog;
 
     private static Calendar selCalDate;
     private TextView[][] tv = new TextView[8][24];
@@ -141,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
     private LongSparseArray<Integer> eventIdIndexMap = new LongSparseArray<>();
     private static ExecutorService exec;
     private int cellDimen = -1;
+    static boolean isSingleMode = true;
     // endregion
 
     private void initialize() {
@@ -159,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
 
         selCalDate = Calendar.getInstance();
         selCalDate.setFirstDayOfWeek(Calendar.MONDAY);
-        Log.e("TODAY", selCalDate.getTime().toString()+"");
         String selectedWeek;
 
         // region Update the fixed weekdays gridview
@@ -171,10 +165,10 @@ public class MainActivity extends AppCompatActivity {
 
         if (grid_fixed.getChildCount() == 0) {
             // inflate first
-            Space space = new Space(getApplicationContext());
+            Space space = new Space(this);
             grid_fixed.addView(space, cellDimen, cellDimen);
             for (int i = 1; i < grid_fixed.getColumnCount(); i++) {
-                TextView weekNames = new TextView(getApplicationContext());
+                TextView weekNames = new TextView(this);
                 weekNames.setTextColor(Color.BLACK);
                 weekNames.setBackgroundResource(R.drawable.bg_cell_empty);
                 weekNames.setTypeface(null, Typeface.BOLD);
@@ -225,9 +219,10 @@ public class MainActivity extends AppCompatActivity {
                     nextMonth.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US)
             );
         } else selectedWeek = selCalDate.getDisplayName(Calendar.MONTH, Calendar.LONG, Locale.US);
-
         setTitle(selectedWeek);
+
         initGrid();
+        setNFCUsernameSender();
         updateClick(null);
     }
 
@@ -237,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
         for (int col = 0; col < event_grid.getColumnCount(); col++)
             for (int row = 0; row < event_grid.getRowCount(); row++) {
                 // Properties for all cells in the DataGridView
-                tv[col][row] = new TextView(getApplicationContext());
+                tv[col][row] = new TextView(this);
                 tv[col][row].setTextColor(getResources().getColor(R.color.event_text));
                 tv[col][row].setBackgroundResource(R.drawable.bg_cell_empty);
                 tv[col][row].setWidth(cellDimen);
@@ -267,10 +262,10 @@ public class MainActivity extends AppCompatActivity {
 
         if (grid_fixed.getChildCount() == 0) {
             // inflate first
-            Space space = new Space(getApplicationContext());
+            Space space = new Space(this);
             grid_fixed.addView(space, cellDimen, cellDimen);
             for (int i = 1; i < grid_fixed.getColumnCount(); i++) {
-                TextView weekNames = new TextView(getApplicationContext());
+                TextView weekNames = new TextView(this);
                 weekNames.setTextColor(Color.BLACK);
                 weekNames.setBackgroundResource(R.drawable.bg_cell_empty);
                 weekNames.setTypeface(null, Typeface.BOLD);
@@ -318,9 +313,31 @@ public class MainActivity extends AppCompatActivity {
             else
                 col = time.get(Calendar.DAY_OF_WEEK) - 1;
 
-            tv[col][row].setBackgroundResource(time.before(today) ? R.drawable.bg_cell_inactive : R.drawable.bg_cell_active);
+            boolean oldEvent = time.before(today);
+            if (oldEvent)
+                tv[col][row].setBackgroundResource(R.drawable.bg_cell_inactive);
+            else {
+                tv[col][row].setBackgroundResource(R.drawable.bg_cell_active);
+                Tools.setAlarm(this, event);
+            }
+
             tv[col][row].setText(event.event_name);
             tv[col][row].setTag(event.event_id);
+
+            int cellCount = (event.length / 60) + (event.length % 60 == 0 ? 0 : 1) - 1;
+            for (int cnt = 0, r = row + 1; r < event_grid.getRowCount() && cnt < cellCount; cnt++, r++) {
+                tv[col][r].setBackground(tv[col][row].getBackground());
+                tv[col][r].setTextColor(tv[col][row].getTextColors());
+
+                tv[col][r].setTag(row * 10 + col); // redirect to parent Event's cell
+                tv[col][r].setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        int loc = (int) view.getTag();
+                        tv[loc % 10][loc / 10].callOnClick();
+                    }
+                });
+            }
         }
 
         View.OnClickListener onCellClick = new View.OnClickListener() {
@@ -337,8 +354,7 @@ public class MainActivity extends AppCompatActivity {
                         updateClick(null);
                     }
                 });
-                FragmentManager manager = getFragmentManager();
-                dialog.show(manager, "Editdialog");
+                dialog.show(getFragmentManager(), "edit-view-dialog");
             }
         };
 
@@ -348,7 +364,7 @@ public class MainActivity extends AppCompatActivity {
                     tv[n][m].setOnClickListener(onCellClick);
     }
 
-    private void setUpNFCSender() {
+    private void setNFCUsernameSender() {
         NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(this);
         if (mAdapter == null) {
             Toast.makeText(this, "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
@@ -362,8 +378,7 @@ public class MainActivity extends AppCompatActivity {
             public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
                 try {
                     JSONObject msg = new JSONObject();
-                    msg.put(Tools.KEY_NFC_GROUP, Tools.NFC_GROUP);
-                    msg.put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null));
+                    msg.put(SignInActivity.username, SignInActivity.loginPrefs.getString(SignInActivity.username, null));
                     return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
                 } catch (JSONException | NullPointerException e) {
                     e.printStackTrace();
@@ -374,9 +389,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void newVoiceEventClick(View view) {
-        FragmentManager manager = getFragmentManager();
         speechDialog = new SpeechDialog();
-        speechDialog.show(manager, "Speech-dialog");
+        speechDialog.show(getFragmentManager(), "speech-dialog");
     }
 
     //region Options-Menu Buttons' handlers
@@ -513,9 +527,7 @@ public class MainActivity extends AppCompatActivity {
                     cal.add(Calendar.DATE, cal.getFirstDayOfWeek() - cal.get(Calendar.DAY_OF_WEEK));
                 int period_from = Tools.cal2time(cal);
 
-                cal.set(Calendar.HOUR_OF_DAY, 23);
-                cal.set(Calendar.MINUTE, 59);
-                cal.set(Calendar.SECOND, 59);
+                cal.set(Calendar.HOUR_OF_DAY, 24);
                 cal.add(Calendar.DATE, 6);
                 int period_till = Tools.cal2time(cal);
 
@@ -552,8 +564,7 @@ public class MainActivity extends AppCompatActivity {
                                     initGrid();
                                     Toast.makeText(MainActivity.this, "Empty week", Toast.LENGTH_SHORT).show();
                                 }
-                            } else
-                                Log.e("ERROR", "Code: " + resultNumber);
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -564,16 +575,23 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public void onShareEventClick(MenuItem item) {
-        FragmentManager manager = getFragmentManager();
-        GroupEvents GroupEventsDialog = new GroupEvents();
-        GroupEventsDialog.show(manager, "Dialog");
+    public void groupEventClick(MenuItem item) {
+        if (groupEventDialog != null)
+            groupEventDialog.dismiss();
+
+        groupEventDialog = new GroupEventDialog(new MyRunnable() {
+            @Override
+            public void run() {
+                isSingleMode = true;
+                groupEventDialog = null;
+            }
+        });
+        groupEventDialog.show(getFragmentManager(), "group-event-dialog");
+        GroupEventDialog.users.clear();
     }
 
     public void settingsClick(MenuItem item) {
 
     }
-
     //endregion
 }
-

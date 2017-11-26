@@ -92,6 +92,40 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="5dp"
+            android:labelFor="@+id/progressBar"
+            android:text="@string/event_length"
+            android:textColor="#000"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:typeface="monospace" />
+
+        <SeekBar
+            android:id="@+id/lengthChooser"
+            style="@style/Widget.AppCompat.SeekBar.Discrete"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="10" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txt_event_length"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/minutes"
+        android:textColor="@color/colorPrimaryDark"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:gravity="center">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp"
             android:labelFor="@+id/txt_event_note"
             android:text="@string/event_note"
             android:textColor="#000"

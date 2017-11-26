@@ -60,11 +60,12 @@ public class SpeechDialog extends DialogFragment {
         root.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                MainActivity.isSingleMode = true;
                 dismiss();
             }
         });
 
-        Speech.init(getActivity().getApplicationContext());
+        Speech.init(getActivity());
 
         // requesting microphone permission on devices with latest Android versions
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
@@ -127,7 +128,7 @@ public class SpeechDialog extends DialogFragment {
                             try {
                                 String speech_result = (String) args[0];
 
-                                Object[] match = stringMatchingWithCategories(speech_result);
+                                Object[] match = matchCategory(speech_result);
                                 if (match == null)
                                     throw new Exception();
 
@@ -141,6 +142,10 @@ public class SpeechDialog extends DialogFragment {
                                 body.put("username", username);
                                 body.put("password", password);
                                 body.put("category_id", category_id);
+
+                                // if event must be set to multiple users, group suggestion mode is on (users[] must be inserted to suggest API request to ask for AI to calculate for all users)
+                                if (GroupEventDialog.users.size() > 0)
+                                    body.put("users", new JSONArray(GroupEventDialog.users));
 
                                 JSONObject raw = new JSONObject(Tools.post(String.format(Locale.US, "%s/events/suggest", getResources().getString(R.string.server_ip)), body));
                                 if (raw.getInt("result") != Tools.RES_OK)
@@ -156,7 +161,6 @@ public class SpeechDialog extends DialogFragment {
                                     @Override
                                     public void run() {
                                         int suggested_time = (int) args[0];
-                                        Log.e("DATA", suggested_time + "");
                                         int start_time = Tools.suggestion2time(suggested_time);
                                         int day = suggested_time % 10;
                                         String event_name = (String) args[1];
@@ -209,7 +213,7 @@ public class SpeechDialog extends DialogFragment {
         }
     }
 
-    public Object[] stringMatchingWithCategories(String event_text) {
+    private Object[] matchCategory(String event_text) {
         String raw_json = Tools.post(String.format(Locale.US, "%s/events/categories", getResources().getString(R.string.server_ip)), null);
         if (raw_json == null)
             return null;
@@ -231,7 +235,7 @@ public class SpeechDialog extends DialogFragment {
                     }
                     break;
                 case Tools.RES_SRV_ERR:
-                    Toast.makeText(getActivity().getApplicationContext(), "Error occurred on the Server side!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "Error occurred on the Server side!", Toast.LENGTH_SHORT).show();
                     return null;
                 default:
                     return null;

@@ -33,7 +33,7 @@
 
     <item
         android:id="@+id/action_group_event"
-        android:onClick="onShareEventClick"
+        android:onClick="groupEventClick"
         android:title="@string/add_group_event" />
 
     <item

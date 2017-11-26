@@ -3,7 +3,6 @@ package com.example.negmat.myweek;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -85,16 +84,15 @@ public class SignUpActivity extends AppCompatActivity {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Toast.makeText(getApplicationContext(), "Successfully signed up. You can sign in now!", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(SignUpActivity.this, "Successfully signed up. You can sign in now!", Toast.LENGTH_SHORT).show();
                                             onBackPressed();
                                         }
                                     });
                                     break;
                                 case Tools.RES_SRV_ERR:
-                                    Log.e("SERVER ERROR", String.format(Locale.US, "Failure code %d", (int) args[0]));
                                     break;
                                 case Tools.RES_FAIL:
-                                    Toast.makeText(getApplicationContext(), "Registration failed!", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(SignUpActivity.this, "Registration failed!", Toast.LENGTH_SHORT).show();
                                     break;
                                 default:
                                     break;
@@ -103,7 +101,6 @@ public class SignUpActivity extends AppCompatActivity {
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
-                    Log.e("ERROR", e.getMessage());
                 }
 
                 runOnUiThread(new Runnable() {

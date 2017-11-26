@@ -20,10 +20,12 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,12 +45,6 @@ public class EditViewDialog extends DialogFragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setUpNFCSender();
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.diaog_editview, container, false);
         initialize(view);
@@ -64,18 +60,21 @@ public class EditViewDialog extends DialogFragment {
     public void onDismiss(DialogInterface dialog) {
         super.onDismiss(dialog);
 
+        MainActivity.isSingleMode = true;
         if (exitJob != null)
             exitJob.run();
     }
 
     // region Variables
     //region UI variables
-    EditText txtEventName;
-    TextView txtEventDate;
-    TextView txtEventTime;
-    EditText txtEventNote;
-    RadioGroup weekdaysParent;
-    ViewGroup eventActionBtnsParent;
+    private EditText txtEventName;
+    private TextView txtEventDate;
+    private TextView txtEventTime;
+    private TextView txtEventLength;
+    private SeekBar lengthChooser;
+    private EditText txtEventNote;
+    private RadioGroup weekdaysParent;
+    private ViewGroup eventActionBtnsParent;
     //endregion
 
     private static ExecutorService exec;
@@ -94,9 +93,33 @@ public class EditViewDialog extends DialogFragment {
         txtEventName = root.findViewById(R.id.txt_event_name);
         txtEventDate = root.findViewById(R.id.txt_event_date);
         txtEventTime = root.findViewById(R.id.txt_event_time);
+        lengthChooser = root.findViewById(R.id.lengthChooser);
+        txtEventLength = root.findViewById(R.id.txt_event_length);
         txtEventNote = root.findViewById(R.id.txt_event_note);
         weekdaysParent = root.findViewById(R.id.weekdaysGroup);
         eventActionBtnsParent = root.findViewById(R.id.eventActionButtonsContainer);
+
+        lengthChooser.setMax((Event.MAX_LENGTH - Event.MIN_LENGTH) / Event.MIN_LENGTH);
+        lengthChooser.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int value, boolean fromUser) {
+                short length = (short) (Event.MIN_LENGTH * (value + 1));
+                txtEventLength.setText(String.format(
+                        Locale.US,
+                        getResources().getString(R.string.minutes),
+                        length
+                ));
+                event.length = length;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
         // endregion
 
         // region Assign OnClickListeners
@@ -184,7 +207,7 @@ public class EditViewDialog extends DialogFragment {
         txtEventTime.setText(dateTime[1]);
         txtEventName.setText(event.event_name);
         txtEventNote.setText(event.event_note);
-
+        lengthChooser.setProgress((event.length / Event.MIN_LENGTH) - 1);
         // region Weekday ToggleButtons setup
         map_day2str.put(Calendar.SUNDAY, getResources().getString(R.string.SUN));
         map_day2str.put(Calendar.MONDAY, getResources().getString(R.string.MON));
@@ -241,29 +264,8 @@ public class EditViewDialog extends DialogFragment {
             refreshEditMode();
         else
             loadViewHistoryMode();
-    }
 
-    private void setUpNFCSender() {
-        NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(getActivity());
-        if (mAdapter == null) {
-            Toast.makeText(getActivity(), "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (!mAdapter.isEnabled())
-            Toast.makeText(getActivity(), "Please enable NFC via Settings.", Toast.LENGTH_LONG).show();
-
-        mAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
-            @Override
-            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
-                JSONObject msg = event.toJson(true);
-                try {
-                    msg.put(Tools.KEY_NFC_SINGLE, Tools.NFC_SINGLE);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
-            }
-        }, getActivity());
+        setNFCEventSender();
     }
 
     private void loadViewHistoryMode() {
@@ -276,6 +278,8 @@ public class EditViewDialog extends DialogFragment {
         txtEventTime.setEnabled(false);
         txtEventDate.setEnabled(false);
         txtEventNote.setEnabled(false);
+        lengthChooser.setEnabled(false);
+        txtEventLength.setText(String.format(Locale.US, getResources().getString(R.string.minutes), event.length));
 
         for (int n = 0; n < weekdaysParent.getChildCount(); n++)
             weekdaysParent.getChildAt(n).setClickable(false);
@@ -297,6 +301,7 @@ public class EditViewDialog extends DialogFragment {
         txtEventTime.setEnabled(!readOnly);
         txtEventDate.setEnabled(!readOnly);
         txtEventNote.setEnabled(!readOnly);
+        lengthChooser.setEnabled(!readOnly);
 
         for (int n = 0; n < weekdaysParent.getChildCount(); n++)
             weekdaysParent.getChildAt(n).setClickable(!readOnly);
@@ -326,15 +331,19 @@ public class EditViewDialog extends DialogFragment {
                     data.put("event_name", event.event_name);
                     data.put("event_note", event.event_note);
 
+                    // if event must be set to multiple users, group event creation must be called in create API
+                    if (GroupEventDialog.users.size() > 0)
+                        data.put("users", new JSONArray(GroupEventDialog.users));
+
                     String url = String.format(Locale.US, "%s/events/create", getResources().getString(R.string.server_ip));
 
                     JSONObject raw = new JSONObject(Tools.post(url, data));
                     activity.runOnUiThread(new MyRunnable(activity, event, raw.getInt("result")) {
                         @Override
                         public void run() {
-                            int result = (int) args[0];
+                            Activity activity = (Activity) args[0];
                             Event event = (Event) args[1];
-                            Activity activity = (Activity) args[2];
+                            int result = (int) args[2];
 
                             if (result == Tools.RES_OK) {
                                 Calendar cal = Tools.time2cal(event.start_time);
@@ -346,12 +355,13 @@ public class EditViewDialog extends DialogFragment {
                                         cal.get(Calendar.MINUTE)),
                                         Toast.LENGTH_LONG
                                 ).show();
-                                Tools.setAlarm(getActivity(), cal, event.event_name, event.event_note);
+                                Tools.setAlarm(getActivity(), event);
+
+                                dismiss();
                             } else if (result == Tools.RES_FAIL)
                                 Toast.makeText(activity, "Specified time is already occupied. \nPlease choose another time!", Toast.LENGTH_LONG).show();
 
                             Tools.enable_touch(activity);
-                            dismiss();
                         }
                     });
                 } catch (Exception e) {
@@ -400,11 +410,15 @@ public class EditViewDialog extends DialogFragment {
                         throw new Exception();
                     }
 
-                    activity.runOnUiThread(new MyRunnable(args[1]) {
+                    activity.runOnUiThread(new MyRunnable(args[1], event) {
                         @Override
                         public void run() {
                             Activity activity = (Activity) args[0];
+                            Event event = (Event) args[1];
+
                             Toast.makeText(activity, "Event was deleted successfully!", Toast.LENGTH_SHORT).show();
+                            AlarmNotificationReceiver.toggleNotification(getActivity(), event, false);
+
                             Tools.enable_touch(activity);
                             dismiss();
                         }
@@ -421,5 +435,29 @@ public class EditViewDialog extends DialogFragment {
                 }
             }
         });
+    }
+
+    private void setNFCEventSender() {
+        NfcAdapter mAdapter = NfcAdapter.getDefaultAdapter(getActivity());
+        if (mAdapter == null) {
+            Toast.makeText(getActivity(), "Sorry this device does not have NFC.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!mAdapter.isEnabled())
+            Toast.makeText(getActivity(), "Please enable NFC via Settings.", Toast.LENGTH_LONG).show();
+
+        mAdapter.setNdefPushMessageCallback(new NfcAdapter.CreateNdefMessageCallback() {
+            @Override
+            public NdefMessage createNdefMessage(NfcEvent nfcEvent) {
+                JSONObject msg = null;
+                try {
+                    msg = event.toJson(true);
+                    msg.put(SignInActivity.username, SignInActivity.loginPrefs.getString(SignInActivity.username, null));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return new NdefMessage(NdefRecord.createMime("text/plain", msg.toString().getBytes()));
+            }
+        }, getActivity());
     }
 }
