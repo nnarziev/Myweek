@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         finish();
+        overridePendingTransition(R.anim.activity_in_reverse, R.anim.activity_out_reverse);
     }
 
     @Override
@@ -523,6 +524,7 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
         Intent intent = new Intent(MainActivity.this, SignInActivity.class);
         startActivity(intent);
+        overridePendingTransition(R.anim.activity_in_reverse, R.anim.activity_out_reverse);
         finish();
     }
 
