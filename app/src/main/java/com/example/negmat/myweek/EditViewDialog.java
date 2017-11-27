@@ -140,6 +140,7 @@ public class EditViewDialog extends DialogFragment {
             @Override
             public void onClick(View view) {
                 event.event_note = txtEventNote.getText().toString();
+                event.event_name = txtEventName.getText().toString();
                 createEvent(event);
             }
         });
