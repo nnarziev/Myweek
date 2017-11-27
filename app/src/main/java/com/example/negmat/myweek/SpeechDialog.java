@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,11 +43,15 @@ public class SpeechDialog extends DialogFragment {
     @Override
     public void onStop() {
         super.onStop();
+        aiLoading.setVisibility(View.GONE);
         Speech.getInstance().shutdown();
     }
 
     // region Variables
+    // region UI Variables
     private TextView text;
+    private ProgressBar aiLoading;
+    // endregion
 
     private static ExecutorService exec;
     final int REQUEST_MICROPHONE = 2;
@@ -55,6 +60,7 @@ public class SpeechDialog extends DialogFragment {
     private void initialize(View root) {
         // region Initialize UI Variables
         text = root.findViewById(R.id.text);
+        aiLoading = root.findViewById(R.id.ai_loading);
         // endregion
 
         root.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
@@ -121,6 +127,9 @@ public class SpeechDialog extends DialogFragment {
                     if (exec != null && !exec.isTerminated() && !exec.isShutdown())
                         exec.shutdownNow();
                     exec = Executors.newCachedThreadPool();
+
+                    aiLoading.setVisibility(View.VISIBLE);
+                    text.setText(R.string.calculating);
 
                     exec.execute(new MyRunnable(result) {
                         @Override
@@ -213,7 +222,7 @@ public class SpeechDialog extends DialogFragment {
         }
     }
 
-    private Object[] matchCategory(String event_text) {
+    private Object[] matchCategory(String event_text) throws Exception {
         String raw_json = Tools.post(String.format(Locale.US, "%s/events/categories", getResources().getString(R.string.server_ip)), null);
         if (raw_json == null)
             return null;

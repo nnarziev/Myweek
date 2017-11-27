@@ -78,4 +78,5 @@
     <string name="event_length">Event length:</string>
     <string name="minutes">%1$d minutes</string>
     <string name="members">Members: %1$s</string>
+    <string name="calculating">AI is calculating now…</string>
 </resources>

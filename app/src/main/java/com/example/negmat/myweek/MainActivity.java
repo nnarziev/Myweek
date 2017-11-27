@@ -301,16 +301,27 @@ public class MainActivity extends AppCompatActivity {
     private void populateGrid() {
         initGrid();
 
+        Calendar weekStart = (Calendar) selCalDate.clone();
+        weekStart.add(Calendar.DATE, weekStart.getFirstDayOfWeek() - selCalDate.get(Calendar.DAY_OF_WEEK));
         Calendar today = Calendar.getInstance();
         today.setFirstDayOfWeek(Calendar.MONDAY);
+
         for (Event event : events) {
             Calendar time = Tools.time2cal(event.start_time);
+            boolean leftOver = false;
 
             int row = time.get(Calendar.HOUR_OF_DAY);
             int col;
-            if (time.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
-                col = 7;
-            else
+            if (time.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+                // whether evnet is leftover from last sunday night or not
+                leftOver = time.before(weekStart);
+                if (leftOver) {
+                    col = 1;
+                    row = 0;
+                } else
+                    // if normal case (Sunday case)
+                    col = 7;
+            } else
                 col = time.get(Calendar.DAY_OF_WEEK) - 1;
 
             boolean oldEvent = time.before(today);
@@ -325,12 +336,22 @@ public class MainActivity extends AppCompatActivity {
             tv[col][row].setTag(event.event_id);
 
             int cellCount = (event.length / 60) + (event.length % 60 == 0 ? 0 : 1) - 1;
-            for (int cnt = 0, r = row + 1; r < event_grid.getRowCount() && cnt < cellCount; cnt++, r++) {
-                tv[col][r].setBackground(tv[col][row].getBackground());
-                tv[col][r].setTextColor(tv[col][row].getTextColors());
+            if (leftOver)
+                cellCount -= event_grid.getRowCount() - time.get(Calendar.HOUR_OF_DAY);
+            for (int cnt = 0, c = col, r = row + 1; cnt < cellCount; cnt++, r++) {
+                if (r == event_grid.getRowCount()) {
+                    r = 0;
+                    c++;
+                }
+                if (c == event_grid.getColumnCount())
+                    break;
 
-                tv[col][r].setTag(row * 10 + col); // redirect to parent Event's cell
-                tv[col][r].setOnClickListener(new View.OnClickListener() {
+                Log.e("R<M,  C<M", r + "<" + event_grid.getRowCount() + ", " + c + "<" + event_grid.getColumnCount());
+
+                tv[c][r].setBackground(tv[col][row].getBackground());
+                tv[c][r].setTextColor(tv[col][row].getTextColors());
+                tv[c][r].setTag(row * 10 + col); // redirect to parent Event's cell
+                tv[c][r].setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         int loc = (int) view.getTag();
@@ -531,20 +552,29 @@ public class MainActivity extends AppCompatActivity {
                 cal.add(Calendar.DATE, 6);
                 int period_till = Tools.cal2time(cal);
 
-                JSONObject body = null;
+                String result;
                 try {
-                    body = new JSONObject()
-                            .put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null))
-                            .put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null))
-                            .put("period_from", period_from)
-                            .put("period_till", period_till);
-                } catch (JSONException e) {
+                    result = Tools.post(
+                            String.format(Locale.US, "%s/events/fetch", getResources().getString(R.string.server_ip)),
+                            new JSONObject()
+                                    .put("username", SignInActivity.loginPrefs.getString(SignInActivity.username, null))
+                                    .put("password", SignInActivity.loginPrefs.getString(SignInActivity.password, null))
+                                    .put("period_from", period_from)
+                                    .put("period_till", period_till)
+                    );
+                } catch (Exception e) {
                     e.printStackTrace();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, "Please connect to Internet if you are not connected!", Toast.LENGTH_LONG).show();
+                            Tools.enable_touch(MainActivity.this);
+                        }
+                    });
+                    return;
                 }
 
-                runOnUiThread(new MyRunnable(
-                        Tools.post(String.format(Locale.US, "%s/events/fetch", getResources().getString(R.string.server_ip)), body)
-                ) {
+                runOnUiThread(new MyRunnable(result) {
                     @Override
                     public void run() {
                         try {

@@ -2,14 +2,9 @@ package com.example.negmat.myweek;
 
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.view.WindowManager;
 
 import org.json.JSONException;
@@ -33,41 +28,36 @@ class Tools {
     static final int NOTIFY_DEL_MINS = 15;
     // endregion
 
-    static String post(String _url, JSONObject json_body) {
-        try {
-            URL url = new URL(_url);
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setDoOutput(json_body != null);
-            con.setDoInput(true);
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.connect();
+    static String post(String _url, JSONObject json_body) throws Exception {
+        URL url = new URL(_url);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setDoOutput(json_body != null);
+        con.setDoInput(true);
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.connect();
 
-            if (json_body != null) {
-                DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-                wr.writeBytes(json_body.toString());
-                wr.flush();
-                wr.close();
-            }
+        if (json_body != null) {
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(json_body.toString());
+            wr.flush();
+            wr.close();
+        }
 
-            int status = con.getResponseCode();
-            if (status != HttpURLConnection.HTTP_OK) {
-                con.disconnect();
-                return null;
-            } else {
-                byte[] buf = new byte[1024];
-                int rd;
-                StringBuilder sb = new StringBuilder();
-                BufferedInputStream is = new BufferedInputStream(con.getInputStream());
-                while ((rd = is.read(buf)) > 0)
-                    sb.append(new String(buf, 0, rd, "utf-8"));
-                is.close();
-                con.disconnect();
-                return sb.toString();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        int status = con.getResponseCode();
+        if (status != HttpURLConnection.HTTP_OK) {
+            con.disconnect();
             return null;
+        } else {
+            byte[] buf = new byte[1024];
+            int rd;
+            StringBuilder sb = new StringBuilder();
+            BufferedInputStream is = new BufferedInputStream(con.getInputStream());
+            while ((rd = is.read(buf)) > 0)
+                sb.append(new String(buf, 0, rd, "utf-8"));
+            is.close();
+            con.disconnect();
+            return sb.toString();
         }
     }
 

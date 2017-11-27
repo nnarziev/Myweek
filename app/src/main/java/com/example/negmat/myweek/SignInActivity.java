@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -82,12 +81,11 @@ public class SignInActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-
-                    String raw_json = Tools.post(String.format(Locale.US, "%s/users/login", getResources().getString(R.string.server_ip)), new JSONObject()
-                            .put("username", args[0])
-                            .put("password", args[1]));
-                    if (raw_json == null)
-                        throw new Exception();
+                    String raw_json = Tools.post(
+                            String.format(Locale.US, "%s/users/login", getResources().getString(R.string.server_ip)),
+                            new JSONObject()
+                                    .put("username", args[0])
+                                    .put("password", args[1]));
 
                     JSONObject json = new JSONObject(raw_json);
                     int resultNumber = json.getInt("result");
