@@ -43,7 +43,12 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/actionlogout"
+        android:id="@+id/action_logout"
         android:onClick="onLogoutClick"
         android:title="@string/log_out" />
+
+    <item
+        android:id="@+id/action_about"
+        android:onClick="onAboutClick"
+        android:title="@string/about" />
 </menu>

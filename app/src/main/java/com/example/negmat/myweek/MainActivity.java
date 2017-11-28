@@ -422,8 +422,7 @@ public class MainActivity extends AppCompatActivity {
     private int _y;
     public void newVoiceEventClick() {//changed func
 
-
-        mainlayout=findViewById(R.id.mainlayout);
+        mainlayout=null;//findViewById(R.id.mainlayout);
         img=findViewById(R.id.btn_add_event);
 
         RelativeLayout.LayoutParams param=new RelativeLayout.LayoutParams(160,160);
@@ -597,6 +596,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
         overridePendingTransition(R.anim.activity_in_reverse, R.anim.activity_out_reverse);
         finish();
+    }
+
+    public void onAboutClick(MenuItem item) {
+        startActivity(new Intent(this, AboutActivity.class));
+        overridePendingTransition(R.anim.activity_in, R.anim.activity_out);
     }
 
     public void updateClick(MenuItem item) {

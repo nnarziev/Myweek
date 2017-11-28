@@ -79,4 +79,15 @@
     <string name="minutes">%1$d minutes</string>
     <string name="members">Members: %1$s</string>
     <string name="calculating">AI is calculating now…</string>
+    <string name="about">About</string>
+
+    <string name="app_info">Currently, app can detect 9 event categories. \n\nThey are: \n\'trip\', \'hang out\',
+        \'sport\', \'game\', \'project\', \'meet\', \'party\', \'study\', and
+        \'shop\'. \n\nAll when event category is not found, it is considered as a
+        \'default\' cateogy.\n\nServer is written in plain Python, using frameworks Django, Tensorflow,
+        Numpy, and PyBrain.\n\nAI is currently running and we will be more than happy if you could
+        help us by signing up and starting using our app :)\nThank you\n\n
+        Inha University, Incheon, South Korea\n\nCreators:\n\n
+        Kobiljon Toshnazarov\nNematjon Narziev
+    </string>
 </resources>
