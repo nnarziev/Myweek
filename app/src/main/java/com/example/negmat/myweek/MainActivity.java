@@ -23,9 +23,13 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.DatePicker;
 import android.widget.GridLayout;
+import android.widget.ImageButton;
+import android.widget.RelativeLayout;
 import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -225,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
         initGrid();
         setNFCUsernameSender();
         updateClick(null);
+        newVoiceEventClick();//call the function to drag btn
     }
 
     private void initGrid() {
@@ -410,10 +415,76 @@ public class MainActivity extends AppCompatActivity {
         }, this);
     }
 
-    public void newVoiceEventClick(View view) {
-        speechDialog = new SpeechDialog();
-        speechDialog.show(getFragmentManager(), "speech-dialog");
+    //region draging btn main
+    private ImageButton img;
+    private ViewGroup mainlayout;
+    private int _x;
+    private int _y;
+    public void newVoiceEventClick() {//changed func
+
+
+        mainlayout=findViewById(R.id.mainlayout);
+        img=findViewById(R.id.btn_add_event);
+
+        RelativeLayout.LayoutParams param=new RelativeLayout.LayoutParams(160,160);
+        param.topMargin=1300;
+        param.leftMargin=850;
+        img.setLayoutParams(param);
+
+
+        img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                speechDialog = new SpeechDialog();
+                speechDialog.show(getFragmentManager(), "speech-dialog");
+
+            }
+        });
+        img.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                img.setOnTouchListener(new MyTouch());//TODO: fix warning, get rid of double sound, make boundaries for dragging button
+                return true;
+
+            }
+        });
     }
+    //endregion
+
+    //region drag button class
+    private final class MyTouch implements View.OnTouchListener {
+        public boolean onTouch(View v,MotionEvent e){
+            final int x=(int)e.getRawX();
+            final int y=(int)e.getRawY();
+            switch (e.getAction()& MotionEvent.ACTION_MASK){
+                case MotionEvent.ACTION_DOWN:
+                    RelativeLayout.LayoutParams param=(RelativeLayout.LayoutParams)v.getLayoutParams();
+                    _x=x-param.leftMargin;
+                    _y=y-param.topMargin;
+                    break;
+                case MotionEvent.ACTION_UP:
+                    break;
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    break;
+                case MotionEvent.ACTION_POINTER_UP:
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    RelativeLayout.LayoutParams _param=(RelativeLayout.LayoutParams)v.getLayoutParams();
+                    _param.leftMargin=x-_x;
+                    _param.topMargin=y-_y;
+                    _param.rightMargin=-250;
+                    _param.bottomMargin=-250;
+                    v.setLayoutParams(_param);
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                    v.performClick();
+                    break;
+            }
+            mainlayout.invalidate();
+            return false;
+        }
+    }
+    //endregion
 
     //region Options-Menu Buttons' handlers
     public void selectWeekClick(MenuItem item) {
